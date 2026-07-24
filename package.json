@@ -61,7 +61,8 @@
       "identityName": "Deepender.EdgeDrop",
       "publisher": "CN=55FECDC4-7144-4A41-98FC-056C003F76FD",
       "publisherDisplayName": "Deepender",
-      "applicationId": "EdgeDrop"
+      "applicationId": "EdgeDrop",
+      "displayName": "Edge Drop"
     }
   },
   "devDependencies": {
