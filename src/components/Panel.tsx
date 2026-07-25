@@ -30,7 +30,6 @@ export function Panel() {
   const setQuery = useStore((s) => s.setQuery)
   const copyFlareActive = useStore((s) => s.copyFlareActive)
   const bounceAnimation = settings.bounceAnimation
-  const blurAnimation = settings.blurAnimation
 
   useEffect(() => {
     if (!open) {
@@ -235,12 +234,10 @@ export function Panel() {
         style={containerStyle}
         animate={{
           scale: bounceAnimation && open ? [0.92, 1.05, 0.98, 1] : 1,
-          filter: blurAnimation ? (open ? 'blur(0px)' : 'blur(16px)') : 'blur(0px)',
           opacity: open ? 1 : 0.98
         }}
         transition={{
           scale: bounceAnimation && open ? { duration: 0.55, ease: [0.22, 1, 0.36, 1] } : { duration: 0.15 },
-          filter: blurAnimation ? { duration: open ? 0.8 : 0.45, ease: open ? [0.16, 1, 0.3, 1] : [0.4, 0, 0.2, 1] } : { duration: 0.1 },
           opacity: { duration: open ? 0.12 : 0.08, ease: 'easeOut' }
         }}
       >

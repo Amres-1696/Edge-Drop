@@ -5,6 +5,7 @@ import type { DisplayInfo } from '../../shared/types'
 import { LiquidOctopusLoader } from './LiquidOctopusLoader'
 import { TickIndicatorIcon, CopyIndicatorIcon, SparkleIndicatorIcon } from './CopyIndicatorCurve'
 import { ChevronRightIcon, CloseIcon } from './icons'
+import { ChangelogView } from './ChangelogView'
 import '../styles/settings.css'
 
 export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: boolean }) {
@@ -14,6 +15,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
   const currentVersion = useStore((s) => s.currentVersion)
   const styleFlyoutOpen = useStore((s) => s.styleFlyoutOpen)
   const setStyleFlyoutOpen = useStore((s) => s.setStyleFlyoutOpen)
+  const settingsSubView = useStore((s) => s.settingsSubView)
 
   const [localInlineOpen, setLocalInlineOpen] = useState(false)
   const isTutorial = inlineIndicatorStyle || (typeof window !== 'undefined' && window.location.hash.includes('onboarding'))
@@ -34,7 +36,28 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
   }, [])
 
   return (
-    <div className="settings-list">
+    <AnimatePresence mode="wait">
+      {settingsSubView === 'changelog' ? (
+        <motion.div
+          key="changelog-view"
+          initial={{ opacity: 0, x: 12 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -12 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 36, mass: 0.6 }}
+          style={{ width: '100%', height: '100%', overflowY: 'auto' }}
+        >
+          <ChangelogView />
+        </motion.div>
+      ) : (
+        <motion.div
+          key="main-settings"
+          initial={{ opacity: 0, x: -12 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 12 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 36, mass: 0.6 }}
+          style={{ width: '100%', height: '100%', overflowY: 'auto' }}
+        >
+          <div className="settings-list">
 
       {/* ── Update banner ───────────────────────────────────────────── */}
       {updateInfo?.hasUpdate && (
@@ -440,36 +463,18 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
         </>
       )}
 
-      {/* ══ GROUP: Animations ═══════════════════════════════════════════ */}
-      <div className="setting-group-label" style={{ marginTop: 20 }}>Animations</div>
+      {/* ══ GROUP: ANIMATIONS ═══════════════════════════════════════════ */}
+      <div className="setting-group-label" style={{ marginTop: 20 }}>ANIMATIONS</div>
 
       <div className="setting-row">
         <div className="setting-info">
-          <div className="setting-title">Bounce animation</div>
-          <div className="setting-desc">
-            Adds a springy overshoot pop when the panel opens.
-            <span className="setting-badge-subtle">May slightly affect performance</span>
-          </div>
+          <div className="setting-title">Bounce Animation</div>
+          <div className="setting-desc">Adds a springy overshoot pop when the panel opens.</div>
+          <div className="setting-badge-subtle">May slightly affect performance</div>
         </div>
         <Toggle
           checked={settings.bounceAnimation ?? false}
           onChange={(v) => patch({ bounceAnimation: v })}
-        />
-      </div>
-
-      <div className="setting-divider" />
-
-      <div className="setting-row">
-        <div className="setting-info">
-          <div className="setting-title">Blur animation</div>
-          <div className="setting-desc">
-            Blurs the panel as it opens and closes.
-            <span className="setting-badge-subtle">May slightly affect performance</span>
-          </div>
-        </div>
-        <Toggle
-          checked={settings.blurAnimation ?? false}
-          onChange={(v) => patch({ blurAnimation: v })}
         />
       </div>
 
@@ -495,7 +500,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
 
       <div className="github-promo">
         <div className="github-promo-text">
-          If you like the application, please give a star to the GitHub repository — it means a lot!
+          If you like Edge-Drop, please consider starring the project on GitHub!
         </div>
         <button
           className="github-promo-btn"
@@ -517,8 +522,10 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
           Version {currentVersion || '0.1.0'}
         </div>
       </div>
-
     </div>
+  </motion.div>
+)}
+</AnimatePresence>
   )
 }
 
@@ -536,8 +543,43 @@ function Toggle({
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
+      style={{
+        flexShrink: 0,
+        width: 38,
+        height: 22,
+        borderRadius: 999,
+        background: checked ? '#ffffff' : 'rgba(255, 255, 255, 0.12)',
+        border: checked ? '1px solid #ffffff' : '1px solid rgba(255, 255, 255, 0.18)',
+        position: 'relative',
+        cursor: 'pointer',
+        padding: 0,
+        outline: 'none',
+        transition: 'background 0.22s ease, border-color 0.22s ease',
+        boxShadow: checked ? '0 0 12px rgba(255, 255, 255, 0.25)' : 'none'
+      }}
     >
-      <span className="toggle-thumb" />
+      <motion.span
+        className="toggle-thumb"
+        initial={false}
+        animate={{
+          x: checked ? 18 : 2,
+          backgroundColor: checked ? '#000000' : '#ffffff'
+        }}
+        transition={{
+          type: 'spring',
+          stiffness: 600,
+          damping: 35
+        }}
+        style={{
+          position: 'absolute',
+          top: 2,
+          left: 0,
+          width: 16,
+          height: 16,
+          borderRadius: '50%',
+          boxShadow: '0 1.5px 4px rgba(0, 0, 0, 0.4)'
+        }}
+      />
     </button>
   )
 }

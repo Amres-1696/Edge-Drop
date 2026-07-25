@@ -129,11 +129,6 @@ export interface Settings {
    */
   bounceAnimation: boolean
   /**
-   * When true, blurs the panel during open/close.
-   * Off by default because filter: blur is resource-heavy.
-   */
-  blurAnimation: boolean
-  /**
    * When true, automatically suppresses edge hover when a fullscreen game or app is active.
    * On by default to prevent accidental opening during PC gameplay.
    */
@@ -142,6 +137,8 @@ export interface Settings {
   showCopyIndicator: boolean
   /** Style variant of the copy indicator icon ('logo' | 'check' | 'copy' | 'sparkle'). Default: 'logo'. */
   copyIndicatorStyle: 'logo' | 'check' | 'copy' | 'sparkle'
+  /** Last version for which the user opened/viewed the What's New changelog panel. */
+  lastSeenChangelogVersion?: string
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -159,10 +156,10 @@ export const DEFAULT_SETTINGS: Settings = {
   stickPosition: 'left',
   stickDisplayId: undefined,
   bounceAnimation: false,
-  blurAnimation: false,
   suppressInFullscreen: true,
   showCopyIndicator: true,
-  copyIndicatorStyle: 'logo'
+  copyIndicatorStyle: 'logo',
+  lastSeenChangelogVersion: undefined
 }
 
 

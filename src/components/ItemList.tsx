@@ -14,7 +14,7 @@ import { useStore } from '../store/appStore'
 import { useFilteredItems } from '../hooks/useFilteredItems'
 import { ClipboardItemCard } from './ClipboardItem'
 import { EmptyState } from './EmptyState'
-import { ChevronUpIcon, ChevronDownIcon } from './icons'
+import { ChevronUpIcon, ChevronDownIcon, PinFillIcon } from './icons'
 
 export function ItemList() {
   const { pinned, recent } = useFilteredItems()
@@ -193,23 +193,34 @@ export function ItemList() {
               <div 
                 className={`section-label pinned-header-interactive ${pinnedCollapsed ? 'is-collapsed' : ''}`}
                 onClick={() => setPinnedCollapsed(!pinnedCollapsed)}
-                title={pinnedCollapsed ? "Click to expand pinned items" : "Click to compress pinned items"}
+                title={pinnedCollapsed ? "Click to expand pinned items" : "Click to collapse pinned items"}
               >
                 <div className="pinned-header-left">
+                  <PinFillIcon width={13} height={13} style={{ opacity: 0.9, color: '#ffffff' }} />
                   <span>Pinned</span>
                   <span className="pinned-count-badge">{pinned.length}</span>
                 </div>
                 <div className="pinned-header-right">
-                  <span className="pinned-toggle-hint">{pinnedCollapsed ? 'Expand' : 'Compress'}</span>
-                  <button className="act bundle-collapse-btn">
-                    {pinnedCollapsed ? <ChevronDownIcon /> : <ChevronUpIcon />}
+                  <button className="act bundle-collapse-btn" type="button" aria-label="Toggle pinned section">
+                    <ChevronDownIcon style={{ transform: pinnedCollapsed ? 'rotate(0deg)' : 'rotate(180deg)', transition: 'transform 0.22s ease' }} />
                   </button>
                 </div>
               </div>
               <AnimatePresence initial={false}>
-                {!pinnedCollapsed && pinned.map((it) => (
-                  <ClipboardItemCard key={it.id} item={it} />
-                ))}
+                {!pinnedCollapsed && (
+                  <motion.div
+                    key="pinned-items-container"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                    style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 8, marginTop: 6 }}
+                  >
+                    {pinned.map((it) => (
+                      <ClipboardItemCard key={it.id} item={it} />
+                    ))}
+                  </motion.div>
+                )}
               </AnimatePresence>
             </section>
           )}

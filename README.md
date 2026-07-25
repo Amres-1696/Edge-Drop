@@ -285,19 +285,21 @@ sequenceDiagram
 - Type-safe merge rules: images only merge with images, files with files (text never groups)
 
 **UI / UX**
+- **What's New Release History View**: Integrated in-app release notes viewer (`v0.1.5` to `v0.1.0`) accessible via the Settings header button, featuring unread update badges and automatic main-settings navigation reset
+- **Lucide-React Vector Icon Suite**: Powered by official `lucide-react` vector icon library for crisp, high-precision SVG icons across headers, item cards, and settings
+- **Glassmorphic Pinned Deck**: Dedicated Pinned items deck container with custom icon header, smooth Framer Motion spring collapse/expand height physics, and clean text count
+- **Tactile Spring Toggles**: Settings toggle switches powered by Framer Motion spring physics (`stiffness: 600`, `damping: 35`) for tactile tactile feedback
+- **High-Contrast Typography & Anti-Pixelation**: Ultra-crisp font rendering with `vector-effect: non-scaling-stroke` and high-contrast color tokens eliminating subpixel blurriness on all display scale factors
 - **Dynamic Preview Flyout**: Responsive 100% full-width (`1fr`) layout for single files, 2-column grid for multi-file collections, with calibrated `ResizeObserver` hover boundary tracking (`insideY`)
-- **Customizable Copy Indicator Styles**: Select from 4 vector copy indicators (**Edge-Drop Logo**, **Tick**, **Copy**, and **Sparkle**) in a clean 2x2 grid flyout selector. All styles feature smooth organic floating, pendulum sway motion, and glowing backdrops.
+- **Customizable Copy Indicator Styles**: Select from 4 vector copy indicators (**Edge-Drop Logo**, **Tick**, **Copy**, and **Sparkle**) in a clean 2x2 grid flyout selector
 - **Universal Click-to-Paste**: Click any text snippet, image thumbnail, or file tile inside Preview Flyout to instantly paste into active desktop applications with shared double-click debounce protection (`tryPaste.ts`)
 - **Community & Feedback Integration**: Integrated **Feedback & Issues** button under **COMMUNITY & SUPPORT** in Settings, linking directly to zero-friction Markdown GitHub Issue templates (`issues/new/choose`)
-- **Animation Performance Controls**: Fine-grained settings under **Animations** for springy overshoot scale pop (`bounceAnimation`) and background filter blurring (`blurAnimation`)
 - **Staggered Panel & Preview Exit Timing**: Closing while a preview flyout is open dismisses the preview flyout first (`240ms` delay) before collapsing the main shelf to prevent layout collisions
 - **Unified Image Rendering**: Copied image files (`.png`, `.jpeg`, `.gif`, `.webp`) render as visual image cards with thumbnails on the shelf and display full visual image previews in flyouts
-- **High-Contrast Overlays**: Solid dark `rgba(0, 0, 0, 0.85)` copy button overlays with glassmorphic backdrop blur over images
-- Frosted-glass macOS aesthetic — deep black, `backdrop-filter: blur(20px)`, hairline borders
-- Framer Motion adaptive spring physics (`useAdaptiveSpring`) synchronized with screen refresh rates
+- **High-Contrast Overlays**: Solid dark `rgba(0, 0, 0, 0.85)` copy button overlays with crisp backdrop styling over images
+- Minimalist macOS aesthetic — deep black obsidian surface, hairline borders, and adaptive spring physics (`useAdaptiveSpring`)
 - Custom SVG connection flares that scale with the blade
 - Scroll gradient masks top & bottom to fade items into black
-- Monochrome pin / multiplier badges for maximum legibility
 - Reduce-motion setting for accessibility
 
 ---

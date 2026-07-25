@@ -49,6 +49,9 @@ interface AppState {
   open: boolean
   /** Settings sheet visibility. */
   settingsOpen: boolean
+  /** Active view mode within settings ('main' | 'changelog'). */
+  settingsSubView: 'main' | 'changelog'
+  setSettingsSubView: (subView: 'main' | 'changelog') => void
   /** True while an OS file drag is hovering the panel (prevents premature close). */
   dragActive: boolean
   /** True if the active drag originated from within the app itself. Stores the drag request (which item/sub-item). */
@@ -105,6 +108,8 @@ export const useStore = create<AppState>((set, get) => ({
   query: '',
   open: false,
   settingsOpen: false,
+  settingsSubView: 'main',
+  setSettingsSubView: (subView) => set({ settingsSubView: subView }),
   dragActive: false,
   internalDragReq: null,
   toasts: [],
@@ -189,7 +194,7 @@ export const useStore = create<AppState>((set, get) => ({
       edge.setPreviewMode(false)
     }
   },
-  setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
+  setSettingsOpen: (settingsOpen) => set({ settingsOpen, settingsSubView: 'main' }),
   setDragActive: (dragActive) => set({ dragActive }),
   setInternalDragReq: (internalDragReq) => {
     if (internalDragReq === null) {
