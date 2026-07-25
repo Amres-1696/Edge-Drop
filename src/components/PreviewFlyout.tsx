@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '../store/appStore'
 import { formatBytes } from '../lib/format'
 import { getFileKind } from '../lib/fileType'
-import { FileKindIcon, FolderOpenIcon, CopyIcon, CheckIcon } from './icons'
+import { FileKindIcon, FolderOpenIcon, CopyIcon, CheckIcon, ExternalLinkIcon } from './icons'
 import { createPortal } from 'react-dom'
 import { useAdaptiveSpring } from '../hooks/useAdaptiveSpring'
 import { useDragOut } from '../hooks/useDragOut'
@@ -265,6 +265,8 @@ function PreviewContent({ item }: { item: any }) {
       ? item.data.text.slice(0, 20000) + '\n\n… (content truncated)'
       : item.data.text
     const isCode = looksLikeCode(text)
+    const isUrl = item.data.isUrl
+
     return (
       <div
         onClick={(e) => {
@@ -276,7 +278,14 @@ function PreviewContent({ item }: { item: any }) {
         title="Click to paste"
         style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 10, cursor: 'pointer' }}
       >
-        <div style={{ display: 'flex', justifyContent: 'flex-end', position: 'sticky', top: 0, zIndex: 2 }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, position: 'sticky', top: 0, zIndex: 2 }}>
+          {isUrl && (
+            <QuickActionButton
+              title="Open Link"
+              icon={ExternalLinkIcon}
+              onClick={() => window.open(item.data.text, '_blank')}
+            />
+          )}
           <QuickActionButton
             title="Copy Text"
             icon={CopyIcon}
@@ -284,7 +293,7 @@ function PreviewContent({ item }: { item: any }) {
           />
         </div>
         <div style={{
-          color: 'rgba(255,255,255,0.88)',
+          color: isUrl ? '#60a5fa' : 'rgba(255,255,255,0.88)',
           whiteSpace: 'pre-wrap',
           wordBreak: 'break-word',
           fontSize: isCode ? 12 : 13.5,
@@ -292,8 +301,21 @@ function PreviewContent({ item }: { item: any }) {
           fontFamily: isCode ? CODE_FONT : SYS_FONT,
           fontWeight: 400,
           letterSpacing: isCode ? 0 : '0.01em',
+          textDecoration: isUrl ? 'underline' : 'none'
         }}>
-          {text}
+          {isUrl ? (
+            <span
+              onClick={(e) => {
+                e.stopPropagation()
+                window.open(item.data.text, '_blank')
+              }}
+              style={{ cursor: 'pointer' }}
+            >
+              {text}
+            </span>
+          ) : (
+            text
+          )}
         </div>
       </div>
     )

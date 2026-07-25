@@ -23,7 +23,7 @@ import { useStore } from '../store/appStore'
 import { useDragOut } from '../hooks/useDragOut'
 import { basename, formatBytes, previewText, relativeTime } from '../lib/format'
 import { getFileKind } from '../lib/fileType'
-import { CopyIcon, FileKindIcon, ImageIcon, LinkIcon, PinIcon, PinFillIcon, TrashIcon, MinusIcon, ChevronUpIcon, ExpandIcon, ContractIcon } from './icons'
+import { CopyIcon, FileKindIcon, ImageIcon, LinkIcon, PinIcon, PinFillIcon, TrashIcon, MinusIcon, ChevronUpIcon, ExpandIcon, ContractIcon, ExternalLinkIcon } from './icons'
 import '../styles/item.css'
 
 import { tryPaste } from '../lib/tryPaste'
@@ -201,6 +201,19 @@ function ClipboardItemBase({ item }: Props) {
           }}>
             <CopyIcon />
           </button>
+          {item.data.kind === 'text' && item.data.isUrl && (
+            <button
+              className="act"
+              title="Open link in default browser"
+              onClick={(e) => {
+                e.stopPropagation()
+                e.currentTarget.blur()
+                window.open((item.data as any).text, '_blank')
+              }}
+            >
+              <ExternalLinkIcon />
+            </button>
+          )}
           <button
             className={`act${isPreviewing ? ' preview-contract active' : ' preview-expand'}`}
             title={isPreviewing ? 'Close Preview' : 'Expand Preview'}

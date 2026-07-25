@@ -14,6 +14,15 @@ const base = (p: P): P => ({
   ...p
 })
 
+export const ExternalLinkIcon = (p: P) => (
+  <svg {...base(p)}>
+    <g fill="currentColor" fillRule="evenodd" clipRule="evenodd">
+      <path d="M14 4a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0V6.414l-8.293 8.293a1 1 0 0 1-1.414-1.414L17.586 5H15a1 1 0 0 1-1-1Z" />
+      <path d="M5 5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5a1 1 0 1 1 2 0v5a4 4 0 0 1-4 4H5a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h5a1 1 0 1 1 0 2H5Z" />
+    </g>
+  </svg>
+)
+
 export const SearchIcon = (p: P) => (
   <svg {...base(p)}>
     <g>		<g fill="currentColor" fillRule="evenodd" clipRule="evenodd">			<path d="M11 17a6 6 0 1 0 0-12a6 6 0 0 0 0 12m0 2a8 8 0 1 0 0-16a8 8 0 0 0 0 16" />			<path d="M15.32 15.29a1 1 0 0 1 1.414.005l3.975 4a1 1 0 0 1-1.418 1.41l-3.975-4a1 1 0 0 1 .004-1.414Z" />		</g>	</g>
