@@ -3,17 +3,30 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '../store/appStore'
 import type { DisplayInfo } from '../../shared/types'
 import { LiquidOctopusLoader } from './LiquidOctopusLoader'
-import { TickIndicatorIcon, CopyIndicatorIcon } from './CopyIndicatorCurve'
+import { TickIndicatorIcon, CopyIndicatorIcon, SparkleIndicatorIcon } from './CopyIndicatorCurve'
 import { ChevronRightIcon, CloseIcon } from './icons'
 import '../styles/settings.css'
 
-export function Settings() {
+export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: boolean }) {
   const settings = useStore((s) => s.settings)
   const patch = useStore((s) => s.patchSettings)
   const updateInfo = useStore((s) => s.updateInfo)
   const currentVersion = useStore((s) => s.currentVersion)
   const styleFlyoutOpen = useStore((s) => s.styleFlyoutOpen)
   const setStyleFlyoutOpen = useStore((s) => s.setStyleFlyoutOpen)
+
+  const [localInlineOpen, setLocalInlineOpen] = useState(false)
+  const isTutorial = inlineIndicatorStyle || (typeof window !== 'undefined' && window.location.hash.includes('onboarding'))
+
+  const isFlyoutActive = isTutorial ? localInlineOpen : styleFlyoutOpen
+
+  const handleToggleFlyout = () => {
+    if (isTutorial) {
+      setLocalInlineOpen(!localInlineOpen)
+    } else {
+      setStyleFlyoutOpen(!styleFlyoutOpen)
+    }
+  }
 
   const [displays, setDisplays] = useState<DisplayInfo[]>([])
   useEffect(() => {
@@ -305,13 +318,125 @@ export function Settings() {
             
             <button
               type="button"
-              className={`icon-btn style-preview-toggle-btn ${styleFlyoutOpen ? 'active' : ''}`}
-              title={styleFlyoutOpen ? 'Close Style Preview Panel' : 'Open Indicator Style Preview Panel'}
-              onClick={() => setStyleFlyoutOpen(!styleFlyoutOpen)}
+              className={`icon-btn style-preview-toggle-btn ${isFlyoutActive ? 'active' : ''}`}
+              title={isFlyoutActive ? 'Close Style Selector' : 'Open Indicator Style Selector'}
+              onClick={handleToggleFlyout}
             >
-              {styleFlyoutOpen ? <CloseIcon /> : <ChevronRightIcon />}
+              {isFlyoutActive ? <CloseIcon /> : <ChevronRightIcon />}
             </button>
           </div>
+
+          {isTutorial && localInlineOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.22, ease: 'easeOut' }}
+              style={{ overflow: 'hidden', marginTop: 12, marginBottom: 8 }}
+            >
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: 10,
+                padding: 12,
+                background: '#09090b',
+                borderRadius: 12,
+                border: '1px solid rgba(255, 255, 255, 0.08)'
+              }}>
+                {/* Logo Card */}
+                <div
+                  onClick={() => patch({ copyIndicatorStyle: 'logo' })}
+                  style={{
+                    background: (settings.copyIndicatorStyle || 'logo') === 'logo' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.04)',
+                    border: (settings.copyIndicatorStyle || 'logo') === 'logo' ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid rgba(255, 255, 255, 0.06)',
+                    borderRadius: 10,
+                    padding: '12px 8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    gap: 8,
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <div style={{ height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <LiquidOctopusLoader fillColor="#ffffff" glowColor="rgba(255, 255, 255, 0.85)" speed={1.2} />
+                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#ffffff' }}>Logo</div>
+                </div>
+
+                {/* Tick Card */}
+                <div
+                  onClick={() => patch({ copyIndicatorStyle: 'check' })}
+                  style={{
+                    background: settings.copyIndicatorStyle === 'check' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.04)',
+                    border: settings.copyIndicatorStyle === 'check' ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid rgba(255, 255, 255, 0.06)',
+                    borderRadius: 10,
+                    padding: '12px 8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    gap: 8,
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <div style={{ height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <TickIndicatorIcon fillColor="#ffffff" glowColor="rgba(255, 255, 255, 0.85)" size={30} />
+                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#ffffff' }}>Tick</div>
+                </div>
+
+                {/* Copy Card */}
+                <div
+                  onClick={() => patch({ copyIndicatorStyle: 'copy' })}
+                  style={{
+                    background: settings.copyIndicatorStyle === 'copy' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.04)',
+                    border: settings.copyIndicatorStyle === 'copy' ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid rgba(255, 255, 255, 0.06)',
+                    borderRadius: 10,
+                    padding: '12px 8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    gap: 8,
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <div style={{ height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <CopyIndicatorIcon fillColor="#ffffff" glowColor="rgba(255, 255, 255, 0.85)" size={30} />
+                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#ffffff' }}>Copy</div>
+                </div>
+
+                {/* Sparkle Card */}
+                <div
+                  onClick={() => patch({ copyIndicatorStyle: 'sparkle' })}
+                  style={{
+                    background: settings.copyIndicatorStyle === 'sparkle' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.04)',
+                    border: settings.copyIndicatorStyle === 'sparkle' ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid rgba(255, 255, 255, 0.06)',
+                    borderRadius: 10,
+                    padding: '12px 8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    gap: 8,
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <div style={{ height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <SparkleIndicatorIcon fillColor="#ffffff" glowColor="rgba(255, 255, 255, 0.85)" size={30} />
+                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#ffffff' }}>Sparkle</div>
+                </div>
+              </div>
+            </motion.div>
+          )}
         </>
       )}
 

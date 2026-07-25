@@ -47,6 +47,13 @@ const slides = [
     placeholderColor: 'linear-gradient(135deg, #667EEA 0%, #764BA2 100%)'
   },
   {
+    id: 'slide-preview',
+    title: 'Preview Flyout',
+    description: 'Click the preview button on any card to open a side flyout. Inspect high-resolution images, browse file collections, read long text snippets, or drag items directly from the preview.',
+    videoSrc: 'preview.webm',
+    placeholderColor: 'linear-gradient(135deg, #A855F7 0%, #EC4899 100%)'
+  },
+  {
     id: 'slide-6',
     title: 'Configure Your Clipboard',
     description: 'Customize how Edge-Drop works for you.',
@@ -182,7 +189,7 @@ export function Onboarding() {
           {/* Right Side: Settings */}
           <div style={{ flex: 1, background: '#1a1a1c', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)', boxShadow: '0 20px 40px rgba(0,0,0,0.4)', overflow: 'hidden', display: 'flex', minHeight: 0 }}>
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px', boxSizing: 'border-box' }}>
-              <Settings />
+              <Settings inlineIndicatorStyle={true} />
             </div>
           </div>
         </div>

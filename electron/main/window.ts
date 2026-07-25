@@ -395,14 +395,18 @@ export function getDisplayListOptions(): Array<{
     const name = isPrimary 
       ? (baseName.toLowerCase().includes('primary') ? baseName : `${baseName} (Primary)`)
       : baseName
+    const scale = d.scaleFactor || 1
+    const physW = Math.round(d.bounds.width * scale)
+    const physH = Math.round(d.bounds.height * scale)
+    const resolution = `${physW}×${physH}`
     return {
       id: d.id,
       bounds: { x: d.bounds.x, y: d.bounds.y, width: d.bounds.width, height: d.bounds.height },
       isPrimary,
       isCurrent: d.id === activeId,
-      label: `${name} ${d.bounds.width}×${d.bounds.height}`,
+      label: `${name} ${resolution}`,
       name,
-      resolution: `${d.bounds.width}×${d.bounds.height}`
+      resolution
     }
   })
 }
