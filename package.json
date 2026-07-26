@@ -1,6 +1,6 @@
 {
   "name": "edge-drop",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "Edge-Drop — a clipboard manager that lives on the left edge of your screen and expands on hover.",
   "author": "Edge-Drop",
   "license": "Apache-2.0",
@@ -32,6 +32,11 @@
       "resources/**/*",
       "package.json"
     ],
+    "publish": {
+      "provider": "github",
+      "owner": "Deepender25",
+      "repo": "Edge-Drop"
+    },
     "win": {
       "target": [
         {
@@ -55,7 +60,8 @@
       "allowToChangeInstallationDirectory": true,
       "shortcutName": "Edge-Drop",
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "artifactName": "Edge-Drop-Setup-${version}.${ext}"
     },
     "appx": {
       "identityName": "Deepender.EdgeDrop",
@@ -83,6 +89,7 @@
     "@radix-ui/react-scroll-area": "^1.2.13",
     "@radix-ui/react-separator": "^1.1.11",
     "@resvg/resvg-js": "^2.6.2",
+    "electron-updater": "^6.8.9",
     "framer-motion": "^11.0.24",
     "gsap": "^3.15.0",
     "koffi": "^3.1.2",

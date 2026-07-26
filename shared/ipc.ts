@@ -65,11 +65,23 @@ export interface InvokeMap {
   /** Minimize the window (used by Onboarding). */
   'window:minimize': { args: []; result: void }
 
-  /** Check for application updates on GitHub releases. */
-  'app:check-update': { args: []; result: { latestVersion: string; downloadUrl: string } | null }
+  /** Trigger a download of the already-available update and quit-and-install. */
+  'app:install-update': { args: []; result: void }
 
   /** Reveal a file in native File Explorer / Finder. */
   'file:reveal': { args: [path: string]; result: boolean }
+
+  /** Get full release notes history from GitHub API (or cached/static fallback). */
+  'app:get-releases': {
+    args: []
+    result: Array<{
+      version: string
+      date: string
+      isLatest: boolean
+      summary: string
+      highlights: Array<{ title: string; description: string }>
+    }>
+  }
 
   /** Get the list of connected displays. */
   'displays:list': { args: []; result: import('./types').DisplayInfo[] }
@@ -99,6 +111,10 @@ export interface EventMap {
    * shows it as a toast; `id` lets it dedupe/dismiss.
    */
   'ui:toast': [toast: { id: string; message: string; tone: 'info' | 'error' }]
+  /** Fired by electron-updater when a new update is available for GitHub builds. */
+  'app:update-available': [info: { version: string }]
+  /** Fired by electron-updater when the update has been fully downloaded and is ready to install. */
+  'app:update-downloaded': [info: { version: string }]
   /**
    * Main-process cursor poll signals: fired when the cursor enters/leaves
    * the screen-edge hot zone. The renderer uses this to open/close the panel

@@ -74,6 +74,12 @@ export default function App() {
     const offTutorialStep = edge.onTutorialStep((step) => {
       useStore.getState().setTutorialStep(step)
     })
+    const offUpdateAvailable = edge.onUpdateAvailable((info) => {
+      useStore.getState().setUpdateAvailable(info)
+    })
+    const offUpdateDownloaded = edge.onUpdateDownloaded((info) => {
+      useStore.getState().setUpdateDownloaded(info)
+    })
     return () => {
       offItems()
       offSettings()
@@ -81,6 +87,8 @@ export default function App() {
       offToggle()
       offOpenSettings()
       offTutorialStep()
+      offUpdateAvailable()
+      offUpdateDownloaded()
     }
   }, [hydrate, setItems, setSettings, pushToast])
 

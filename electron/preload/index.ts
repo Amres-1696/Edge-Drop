@@ -99,13 +99,14 @@ const api = {
   copySubitem: (req: import('../../shared/types').DragRequest) => invoke('item:copy-subitem', req),
   pasteItem: (id: string) => invoke('item:paste', id),
   pasteSubitem: (req: import('../../shared/types').DragRequest) => invoke('item:paste-subitem', req),
-  checkUpdate: () => invoke('app:check-update'),
+  installUpdate: () => invoke('app:install-update'),
   startDrag: (req: DragRequest) => send('item:start-drag', req),
   addFiles: (paths: string[]) => invoke('item:add-files', paths),
   removeSubitem: (req: import('../../shared/types').DragRequest) => invoke('item:remove-subitem', req),
   mergeItems: (sourceId: string, targetId: string) => invoke('item:merge', sourceId, targetId),
   splitItem: (req: import('../../shared/types').DragRequest) => invoke('item:split', req),
   getDisplays: () => invoke('displays:list'),
+  getReleases: () => invoke('app:get-releases'),
   updateSettings: (patch: Partial<InvokeResult<'settings:update'>>) =>
     invoke('settings:update', patch),
   setInteractive: (value: boolean) => invoke('window:set-interactive', value),
@@ -125,6 +126,8 @@ const api = {
   onCursorEdge: (cb: (data: EventArgs<'window:cursor-edge'>[0]) => void) => on('window:cursor-edge', cb),
   onToast: (cb: (toast: { id: string; message: string; tone: 'info' | 'error' }) => void) => on('ui:toast', cb),
   onTutorialStep: (cb: (step: number) => void) => on('tutorial:step', cb),
+  onUpdateAvailable: (cb: (info: { version: string }) => void) => on('app:update-available', cb),
+  onUpdateDownloaded: (cb: (info: { version: string }) => void) => on('app:update-downloaded', cb),
 
   /* Drag helpers */
   // (Handled natively by capturing drop event above)

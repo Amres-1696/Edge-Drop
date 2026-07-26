@@ -103,6 +103,14 @@ export const pushState = {
   openSettings(): void {
     console.log('[Main] Sending window:open-settings event to renderer')
     send('window:open-settings')
+  },
+  updateAvailable(info: { version: string }): void {
+    console.log('[Main] Sending app:update-available event to renderer:', info)
+    send('app:update-available', info)
+  },
+  updateDownloaded(info: { version: string }): void {
+    console.log('[Main] Sending app:update-downloaded event to renderer:', info)
+    send('app:update-downloaded', info)
   }
 }
 

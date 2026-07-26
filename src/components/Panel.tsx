@@ -28,7 +28,6 @@ export function Panel() {
   const settingsOpen = useStore((s) => s.settingsOpen)
   const setSettingsOpen = useStore((s) => s.setSettingsOpen)
   const setQuery = useStore((s) => s.setQuery)
-  const copyFlareActive = useStore((s) => s.copyFlareActive)
   const bounceAnimation = settings.bounceAnimation
 
   useEffect(() => {

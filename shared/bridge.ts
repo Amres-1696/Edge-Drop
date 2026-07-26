@@ -19,7 +19,7 @@ export interface EdgeApi {
   copySubitem: (req: DragRequest) => Promise<boolean>
   pasteItem: (id: string) => Promise<boolean>
   pasteSubitem: (req: DragRequest) => Promise<boolean>
-  checkUpdate: () => Promise<{ latestVersion: string; downloadUrl: string } | null>
+  installUpdate: () => Promise<void>
   /**
    * Begin a native OS drag-out. Fire-and-forget: must be called synchronously
    * from the DOM `dragstart` event, and main calls `event.sender.startDrag`.
@@ -34,6 +34,13 @@ export interface EdgeApi {
   revealFile: (path: string) => Promise<boolean>
   minimizeWindow: () => Promise<void>
   getDisplays: () => Promise<import('./types').DisplayInfo[]>
+  getReleases: () => Promise<Array<{
+    version: string
+    date: string
+    isLatest: boolean
+    summary: string
+    highlights: Array<{ title: string; description: string }>
+  }>>
   setInternalDrag: (active: boolean) => void
   broadcastTutorialStep: (step: number) => void
 
@@ -55,4 +62,6 @@ export interface EdgeApi {
   }) => void) => () => void
   onToast: (cb: (toast: { id: string; message: string; tone: 'info' | 'error' }) => void) => () => void
   onTutorialStep: (cb: (step: number) => void) => () => void
+  onUpdateAvailable: (cb: (info: { version: string }) => void) => () => void
+  onUpdateDownloaded: (cb: (info: { version: string }) => void) => () => void
 }

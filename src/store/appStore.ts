@@ -11,24 +11,6 @@ import { edge } from '../lib/edge'
 import type { ClipboardItemDto, Settings, DragRequest } from '../../shared/types'
 import { DEFAULT_SETTINGS } from '../../shared/types'
 
-function isVersionLower(current: string, latest: string): boolean {
-  const parse = (v: string) => {
-    return v
-      .replace(/^v/i, '')
-      .split('.')
-      .map((part) => parseInt(part, 10) || 0)
-  }
-  const currParts = parse(current)
-  const latParts = parse(latest)
-  for (let i = 0; i < Math.max(currParts.length, latParts.length); i++) {
-    const c = currParts[i] ?? 0
-    const l = latParts[i] ?? 0
-    if (l > c) return true
-    if (l < c) return false
-  }
-  return false
-}
-
 let flareTimer: ReturnType<typeof setTimeout> | null = null
 
 /** A transient user-facing notice shown as a toast. */
@@ -60,14 +42,16 @@ interface AppState {
   toasts: ToastMsg[]
   tutorialStep: number
   currentVersion: string
-  updateInfo: { hasUpdate: boolean; latestVersion: string; downloadUrl: string } | null
+  updateInfo: { hasUpdate: boolean; latestVersion: string; downloaded: boolean } | null
   /** Item ID currently being previewed in the flyout. */
   previewItemId: string | null
   previewItemRect: { y: number; height: number } | null
 
   /* hydration + sync */
   hydrate: () => Promise<void>
-  checkUpdate: () => Promise<void>
+  setUpdateAvailable: (info: { version: string }) => void
+  setUpdateDownloaded: (info: { version: string }) => void
+  installUpdate: () => Promise<void>
   setItems: (items: ClipboardItemDto[]) => void
   setSettings: (next: Settings) => void
 
@@ -141,27 +125,30 @@ export const useStore = create<AppState>((set, get) => ({
       currentVersion: version,
       hydrated: true
     })
-    get().checkUpdate().catch(console.error)
   },
 
-  async checkUpdate() {
-    const current = get().currentVersion
-    if (!current) return
-    try {
-      const res = await edge.checkUpdate()
-      if (res) {
-        const hasUpdate = isVersionLower(current, res.latestVersion)
-        set({
-          updateInfo: {
-            hasUpdate,
-            latestVersion: res.latestVersion,
-            downloadUrl: res.downloadUrl
-          }
-        })
+  setUpdateAvailable: (info) => {
+    set({
+      updateInfo: {
+        hasUpdate: true,
+        latestVersion: info.version,
+        downloaded: false
       }
-    } catch (e) {
-      console.error('Update check failed:', e)
-    }
+    })
+  },
+
+  setUpdateDownloaded: (info) => {
+    set({
+      updateInfo: {
+        hasUpdate: true,
+        latestVersion: info.version,
+        downloaded: true
+      }
+    })
+  },
+
+  async installUpdate() {
+    await edge.installUpdate()
   },
 
   setItems: (items) => {

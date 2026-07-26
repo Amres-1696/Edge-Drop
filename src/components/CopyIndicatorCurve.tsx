@@ -253,16 +253,8 @@ export function CopyIndicatorCurve() {
 
   const showCurve = (settings.showCopyIndicator !== false) && copyFlareActive && !open
 
-  let topOffset = '50%'
-  let yOffset = '-50%'
-
-  if (settings.bladePosition === 'top') {
-    topOffset = '0%'
-    yOffset = '0%'
-  } else if (settings.bladePosition === 'bottom') {
-    topOffset = '100%'
-    yOffset = '-100%'
-  }
+  const topOffset = '50%'
+  const yOffset = '-50%'
 
   return (
     <AnimatePresence mode="popLayout">
@@ -340,11 +332,11 @@ export function CopyIndicatorCurve() {
             }}
           >
             {indicatorStyle === 'check' ? (
-              <TickIndicatorIcon color="#ffffff" glowColor="rgba(255, 255, 255, 0.85)" />
+              <TickIndicatorIcon fillColor="#ffffff" glowColor="rgba(255, 255, 255, 0.85)" />
             ) : indicatorStyle === 'copy' ? (
-              <CopyIndicatorIcon color="#ffffff" glowColor="rgba(255, 255, 255, 0.85)" />
+              <CopyIndicatorIcon fillColor="#ffffff" glowColor="rgba(255, 255, 255, 0.85)" />
             ) : indicatorStyle === 'sparkle' ? (
-              <SparkleIndicatorIcon color="#ffffff" glowColor="rgba(255, 255, 255, 0.85)" />
+              <SparkleIndicatorIcon fillColor="#ffffff" glowColor="rgba(255, 255, 255, 0.85)" />
             ) : (
               <LiquidOctopusLoader fillColor="#ffffff" glowColor="rgba(255, 255, 255, 0.85)" speed={1.2} />
             )}

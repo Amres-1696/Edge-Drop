@@ -14,7 +14,7 @@ import { useStore } from '../store/appStore'
 import { useFilteredItems } from '../hooks/useFilteredItems'
 import { ClipboardItemCard } from './ClipboardItem'
 import { EmptyState } from './EmptyState'
-import { ChevronUpIcon, ChevronDownIcon, PinFillIcon } from './icons'
+import { ChevronDownIcon, PinFillIcon } from './icons'
 
 export function ItemList() {
   const { pinned, recent } = useFilteredItems()

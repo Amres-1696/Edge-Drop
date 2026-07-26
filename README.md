@@ -12,8 +12,8 @@
 <p align="center">
   <a href="#quick-start">Quick Start</a> ·
   <a href="#demos">Demos</a> ·
-  <a href="#how-it-works">How It Works</a> ·
-  <a href="#architecture">Architecture</a> ·
+  <a href="#features">Features</a> ·
+  <a href="#codebase-architecture">Codebase & Architecture</a> ·
   <a href="#security">Security</a> ·
   <a href="#roadmap">Roadmap</a> ·
   <a href="#contributing">Contributing</a>
@@ -65,6 +65,7 @@ It is built for the developer and creative workflow where you constantly juggle 
       <video src="https://github.com/user-attachments/assets/cee7d5f7-658b-433a-9fa0-6592a5a75fa4" width="100%" autoplay loop muted playsinline></video>
     </td>
   </tr>
+  <tr>
     <td width="50%" align="center"><b>7. Preview Flyout</b><br/><br/>
       <video src="https://github.com/user-attachments/assets/fe5a8b47-08c6-4d32-92b6-bb4e0446a82a" width="100%" autoplay loop muted playsinline></video>
     </td>
@@ -103,67 +104,19 @@ npm run build:store  # outputs an MSIX .appx for Microsoft Store submission
 
 ---
 
-## How It Works
-
-Edge-Drop is an Electron app split into three strictly isolated processes — **Main** (Node.js, OS access), **Preload** (typed sandbox bridge), and **Renderer** (React UI). They communicate over a fully typed IPC contract. No string channel names, no `any` payloads.
-
-### The invisible edge trigger
-
-The shelf stays hidden as a frameless, transparent, click-through `BrowserWindow` anchored at `x=0`. When collapsed, **all mouse events pass through to the apps beneath it** — your desktop is 100% usable. Detection happens in the Main process via a 16ms `screen.getCursorScreenPoint()` poll, because Windows transparent windows silently drop `pointermove` forwarding.
-
-A **dead-band hysteresis state machine** prevents the shelf from flickering open/closed when your cursor hovers near its boundary:
-
-| Threshold | Value | Meaning |
-|---|---|---|
-| Trigger Zone | `x ≤ 3px` | A 3-pixel strip on the left edge starts a 120ms dwell timer |
-| Keep-Open | `x ≤ 255px` | Cursor clearly inside the blade → cancel any close timer |
-| Dead Band | `255px < x ≤ 290px` | Micro-tremors here are ignored — no action |
-| Start-Close | `x > 290px` | Cursor clearly outside → 250ms grace timer begins |
-
-This is the kind of detail that separates a "looks nice" demo from a tool you can actually live with.
-
-### Multi-format clipboard engine
-
-The `ClipboardWatcher` polls the OS clipboard every 600ms. To detect *change* without re-encoding images on every tick, it computes a cheap content signature:
-
-- **Files** → joined path list
-- **Text** → the text itself
-- **Images** → an **FNV-1a hash over ~400 sampled bytes of the raw BGRA bitmap** (dimensions + hash)
-
-The previous naive approach of comparing `toPNG().length` was both expensive (re-encoded the whole image each tick) and broken (two different 1920×1080 screenshots of similar complexity produced identical byte counts → the second was silently dropped). The FNV-1a sampler is O(400) regardless of image size and has astronomically low collision probability.
-
-It also **respects privacy flags**. Clipboard formats from password managers and dictation tools — `ExcludeClipboardContentFromMonitorProcessing`, `ClipboardViewerIgnore`, `CanIncludeInClipboardHistory=0`, `KeePassClipFormat`, `com.bitwarden.concealed`, etc. — are matched case-insensitively and skipped entirely.
-
-### Native OS drag-out (OLE)
-
-Standard HTML5 drag events cannot hand file handles to external desktop software. Edge-Drop intercepts the renderer's `dragstart`, sends a fire-and-forget IPC (`item:start-drag`) to the Main process, which stages the item's content as a temp file and calls `webContents.startDrag({ file, icon })`. The OS then renders a native drag ghost and handles the drop into Photoshop, Word, Explorer, or any other app — exactly as if you had dragged the file from Explorer itself.
-
-Custom drag icons are generated on the fly: stacked card PNGs for file bundles (with a count badge), glassmorphic quote cards for text, real image thumbnails for images. Rendered via `@resvg/resvg-js`, cached, and pre-warmed on startup so the first drag is instant.
-
-### Smart deduplication, stacks, and merging
-
-When you re-copy existing content, Edge-Drop doesn't add a duplicate — it bumps the item to position 0, increments its `hitCount` badge, and refreshes its timestamp. Multi-file drag-ins and multi-image copies auto-group into expandable 3D card stacks (max 10 per stack). Drag any item card over another to merge them into a bundle; double-click to expand and drag a sub-item to the left edge to split it back out.
-
----
-
-## Architecture
-
-Edge-Drop is engineered with a strict process-isolated Electron architecture:
-- **Electron Main Process (Node.js)**: Runs high-frequency cursor polling, Windows DPAPI safeStorage clipboard history persistence, PowerShell Win32 HDROP multi-file parsing, and System Tray synchronization.
-- **Typed Preload Bridge (`contextBridge`)**: Exposes statically typed IPC channels (`window.edge`) with `contextIsolation: true` and zero `nodeIntegration`.
-- **React Renderer**: Powers the glassmorphic blade UI using Zustand state management, Framer Motion spring physics, and high-performance list virtualization.
-
----
-
 ## Features
 
 **Zero-click edge hover**
 - Frameless, transparent, always-on-top `BrowserWindow` anchored at `x=0`
 - 100% click-through when collapsed — desktop stays fully usable
 - Configurable hot-zone height (25% / 40% / 60% of screen) and blade height (40% – 100%)
-- **Multi-monitor support:** Pick exactly which display the panel sticks to, with options for Left or Right screen edges. Features a single source of truth multi-display engine (`getDisplayListOptions()`) with real-time System Tray menu synchronization, automatic OS topology recovery on monitor disconnect (`display-removed`), and brief 1.5s visual confirmation pop-ups (`popUpAndRetract`).
-- **Fullscreen Protection (Game Mode):** Native Windows `SHQueryUserNotificationState` OS detection (`fullscreen.ts`) automatically suppresses edge hover when Direct3D games, fullscreen videos, or presentations are active. Instantly auto-retracts open panels when entering fullscreen mode, with zero polling overhead (0ms latency) and full `Alt + C` hotkey support.
+- **Multi-monitor support:** Pick exactly which display the panel sticks to, with options for Left or Right screen edges. Features a single source of truth multi-display engine (`getDisplayListOptions()`) with real-time physical resolution calculation (3840×2160, 2560×1440, 1920×1080) across all High-DPI Windows display scaling factors.
+- **Fullscreen Protection (Game Mode):** Native Windows `SHQueryUserNotificationState` OS detection (`fullscreen.ts`) automatically suppresses edge hover when Direct3D games, fullscreen videos, or presentations are active.
 - **Ultra-lightweight:** Optimized memory footprint (~60% reduced RAM) using custom `edgelocal://` streaming protocols and compressed WebM assets.
+
+**Silent Background Auto-Updates**
+- **Zero-Friction Updates (`electron-updater`):** GitHub releases feature silent background downloading and a single-click "Restart to Update" button.
+- **Microsoft Store Isolation:** Isolated build pipelines ensure Microsoft Store (MSIX) builds remain 100% compliant with Store terms and conditions without integrated update mechanisms.
 
 **Multi-format clipboard engine**
 - Captures plain text, URLs, rich HTML, raw images, and multi-file selections
@@ -172,35 +125,46 @@ Edge-Drop is engineered with a strict process-isolated Electron architecture:
 - Smart deduplication — re-copies bump `hitCount` and move the item to the top
 - Incognito mode — one click suspends polling for sensitive data
 
+**Direct URL Detection & One-Click Launch**
+- **Quick Action Links:** Dedicated external link launcher (`ExternalLinkIcon`) on URL item cards and inside Preview Flyouts.
+- **Browser Launch:** Clicking the link button opens URLs directly in your default web browser without requiring manual copy/pasting.
+
 **Native OS drag & drop**
 - `webContents.startDrag()` hands real file handles to external apps
-- Custom drag icons: stacked card PNGs with count badges, glassmorphic text cards, real image thumbnails
+- Custom drag icons: stacked card PNGs with count badges, styled text cards, real image thumbnails
 - Drag-in: drop files onto the shelf to add them; drag-out: drop anywhere — Photoshop, Word, Explorer, Slack
-- Pre-warmed icon cache so the first drag is instant
 
 **Fluid collections & stacks**
 - Auto-group multi-file drag-ins and multi-image copies into 3D card stacks (max 10)
 - **Preview Flyout Drag-to-Stack**: Drag any shelf item directly onto an open Preview Flyout to stack and merge them seamlessly
 - Double-click to expand, drag a sub-item to the left edge to split it back out
-- Type-safe merge rules: images only merge with images, files with files (text never groups)
 
 **UI / UX**
-- **What's New Release History View**: Integrated in-app release notes viewer (`v0.1.5` to `v0.1.0`) accessible via the Settings header button, featuring unread update badges and automatic main-settings navigation reset
-- **Lucide-React Vector Icon Suite**: Powered by official `lucide-react` vector icon library for crisp, high-precision SVG icons across headers, item cards, and settings
-- **Glassmorphic Pinned Deck**: Dedicated Pinned items deck container with custom icon header, smooth Framer Motion spring collapse/expand height physics, and clean text count
-- **Tactile Spring Toggles**: Settings toggle switches powered by Framer Motion spring physics (`stiffness: 600`, `damping: 35`) for tactile tactile feedback
-- **High-Contrast Typography & Anti-Pixelation**: Ultra-crisp font rendering with `vector-effect: non-scaling-stroke` and high-contrast color tokens eliminating subpixel blurriness on all display scale factors
-- **Dynamic Preview Flyout**: Responsive 100% full-width (`1fr`) layout for single files, 2-column grid for multi-file collections, with calibrated `ResizeObserver` hover boundary tracking (`insideY`)
-- **Customizable Copy Indicator Styles**: Select from 4 vector copy indicators (**Edge-Drop Logo**, **Tick**, **Copy**, and **Sparkle**) in a clean 2x2 grid flyout selector
-- **Universal Click-to-Paste**: Click any text snippet, image thumbnail, or file tile inside Preview Flyout to instantly paste into active desktop applications with shared double-click debounce protection (`tryPaste.ts`)
-- **Community & Feedback Integration**: Integrated **Feedback & Issues** button under **COMMUNITY & SUPPORT** in Settings, linking directly to zero-friction Markdown GitHub Issue templates (`issues/new/choose`)
-- **Staggered Panel & Preview Exit Timing**: Closing while a preview flyout is open dismisses the preview flyout first (`240ms` delay) before collapsing the main shelf to prevent layout collisions
-- **Unified Image Rendering**: Copied image files (`.png`, `.jpeg`, `.gif`, `.webp`) render as visual image cards with thumbnails on the shelf and display full visual image previews in flyouts
-- **High-Contrast Overlays**: Solid dark `rgba(0, 0, 0, 0.85)` copy button overlays with crisp backdrop styling over images
-- Minimalist macOS aesthetic — deep black obsidian surface, hairline borders, and adaptive spring physics (`useAdaptiveSpring`)
-- Custom SVG connection flares that scale with the blade
-- Scroll gradient masks top & bottom to fade items into black
-- Reduce-motion setting for accessibility
+- **Pinned Deck**: Dedicated Pinned items deck container with custom icon header, smooth Framer Motion spring collapse/expand height physics, and clean text count.
+- **Tactile Framer Motion Switches**: Settings toggle switches powered by Framer Motion spring physics (`stiffness: 600`, `damping: 35`) with dark/light contrast styling.
+- **What's New Release History View**: Integrated in-app release notes timeline viewer (`ChangelogView.tsx`) connected to live GitHub Releases API with pure formatted text highlights and zero-lag offline fallbacks.
+- **Lucide-React Vector Icon Suite**: Powered by official `lucide-react` vector icons for crisp graphics across headers, item cards, and settings.
+- **Dynamic Preview Flyout**: Responsive layout for single files and multi-file collections with calibrated hover boundary tracking.
+- **Customizable Copy Indicator Styles**: Select from 4 vector copy indicators (**Edge-Drop Logo**, **Tick**, **Copy**, and **Sparkle**) in a 2x2 grid flyout selector.
+- **Universal Click-to-Paste**: Click any text snippet, image thumbnail, or file tile inside Preview Flyout to instantly paste into active desktop applications.
+- Minimalist macOS aesthetic — deep black obsidian surface, hairline borders, and adaptive spring physics (`useAdaptiveSpring`).
+
+---
+
+## Codebase & Architecture
+
+### Process Isolation & IPC Contract
+Edge-Drop is organized into three strictly isolated layers:
+
+1. **Main Process (`electron/main/`)**: Node.js runtime handling OS integrations, Win32 OLE drag pipelines, Windows DPAPI encryption (`safeStorage`), native `ClipboardWatcher` polling, and background auto-updates (`updater.ts`).
+2. **Preload Sandbox (`electron/preload/`)**: Context-isolated bridge (`contextBridge.exposeInMainWorld('edge', api)`). Consumes single-source-of-truth contracts in `shared/ipc.ts` (`InvokeMap`, `EventMap`, `SendMap`) and `shared/bridge.ts` (`EdgeApi`).
+3. **Renderer Process (`src/`)**: React 18 UI powered by Zustand state management (`appStore.ts`) and Framer Motion spring physics (`useAdaptiveSpring.ts`).
+
+### Key Engine Components
+- **`ClipboardWatcher.ts`**: Polls system clipboard every 600ms. Computes cheap FNV-1a hashes over BGRA bitmap bytes for zero-overhead image deduplication.
+- **`ItemStore.ts`**: Atomic JSON persistence with `safeStorage` DPAPI encryption, automatic duplicate bumping, and stack merging/splitting.
+- **`updater.ts`**: Singleton `autoUpdater` module handling background downloading and single-click restart installation for GitHub builds, gated behind `!isStoreBuild()`.
+- **`drag.ts`**: Server-side SVG → PNG icon rendering via `@resvg/resvg-js` for stacked drag ghosts.
 
 ---
 
@@ -234,6 +198,7 @@ Edge-Drop touches the OS clipboard, the filesystem, and the Win32 OLE drag pipel
 | Animation | **Framer Motion** | Adaptive spring physics (`useAdaptiveSpring`), layout transitions, gesture animations |
 | State | **Zustand** | Selector-optimized, zero cascading re-renders during drags |
 | Drag icons | **@resvg/resvg-js** | Server-side SVG → PNG rendering for custom drag ghosts |
+| Auto-Updates | **electron-updater** | Background downloading and single-click installation for GitHub builds |
 
 ---
 
@@ -243,23 +208,26 @@ Edge-Drop touches the OS clipboard, the filesystem, and the Win32 OLE drag pipel
 Edge-Drop/
 ├─ shared/                 Typed IPC contracts & domain models
 │  ├─ types.ts             ClipboardItem, Bundle, Settings, DragRequest DTOs
+│  ├─ bridge.ts            EdgeApi preload interface
 │  └─ ipc.ts               InvokeMap / EventMap / SendMap channel definitions
 ├─ electron/               Node.js backend & OS integrations
 │  ├─ main/
 │  │  ├─ index.ts          Single-instance lock, IPC registration, startup
 │  │  ├─ window.ts         Frameless window, setIgnoreMouseEvents, cursor poll
+│  │  ├─ updater.ts        Background auto-update engine (electron-updater)
 │  │  ├─ tray.ts           System tray icon & context menus
+│  │  ├─ fullscreen.ts     Windows SHQueryUserNotificationState game detection
 │  │  └─ drag.ts           OLE startDrag, temp-file staging, icon generation
 │  ├─ preload/             Sandbox bridge exposing window.edge
 │  ├─ clipboard/
 │  │  ├─ ClipboardWatcher.ts   600ms poll loop, transient-copy rejection
 │  │  └─ formats.ts        FNV-1a signatures, Win32 HDROP, privacy-flag detection
 │  └─ store/
-│     ├─ ItemStore.ts      Atomic JSON persistence, dedup, merge/split logic
+│     ├─ ItemStore.ts      Atomic JSON persistence, DPAPI encryption, dedup
 │     ├─ settings.ts       User config & startup registration
 │     └─ paths.ts          AppData + temp directory resolution
 ├─ src/                    React renderer
-│  ├─ components/          Panel, ItemList, ClipboardItem, SearchBar, Settings, Icons
+│  ├─ components/          Panel, ItemList, ClipboardItem, SearchBar, Settings, ChangelogView, Icons
 │  ├─ hooks/               useEdgeHover (hysteresis), useDragOut, useFilteredItems
 │  ├─ store/               Zustand appStore
 │  ├─ lib/                 Theme tokens, format helpers, file-type detection
@@ -275,12 +243,11 @@ Edge-Drop is in **public beta**. The following are planned, in rough priority or
 - [ ] **AI semantic self-organization** — embed text/URL/HTML items, auto-cluster into named groups, replace manual pinning
 - [ ] **AI summarization** — condense multi-file bundles and long HTML copies into one-line summaries + tags
 - [x] **Multi-monitor support** — anchor to any display edge, not just primary
+- [x] **Silent background auto-updates** — background download and 1-click update installation
 - [ ] **Linux port** — replace Win32-specific paths with cross-platform equivalents
 - [ ] **Plugin SDK** — let users write custom format readers and drag-out targets
 - [ ] **Cloud sync (opt-in, E2E encrypted)** — sync pinned items across machines
 - [ ] **Search across full history** — currently capped at `historyLimit` (default 500)
-
-The AI features are the headline roadmap items and the reason this project is applying to OpenAI's **Codex for Open Source** program.
 
 ---
 

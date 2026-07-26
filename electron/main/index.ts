@@ -16,6 +16,7 @@ import { createTray, registerIncognitoApplier } from './tray'
 import { registerIpc, registerSendListeners } from './ipc'
 import { prewarmDragIcons } from './drag'
 import { initState, getWatcher, loadSettings, pushState, stopStateTimers } from './state'
+import { initAutoUpdater } from './updater'
 import { createOnboardingWindow } from './onboardingWindow'
 import { startFullscreenMonitor, stopFullscreenMonitor, triggerFullscreenCheck } from './fullscreen'
 import { join, resolve } from 'node:path'
@@ -128,6 +129,7 @@ app.whenReady().then(() => {
   registerIncognitoApplier((v) => getWatcher().setPaused(v))
   getWatcher().setPaused(settings.incognito)
   pushState.settings(settings)
+  initAutoUpdater()
 
   // Keep the tray checkmarks in sync after settings change from the UI.
   // (Tray menu is rebuilt on each open, so no extra wiring is needed here.)

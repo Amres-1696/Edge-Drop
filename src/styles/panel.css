@@ -212,25 +212,13 @@
   margin-top: 4px;
 }
 
-/* Pinned Section Deck */
+/* Clean Pinned Section */
 .pinned-section {
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 18px;
-  padding: 6px;
-  margin: 8px 0 16px;
-  transition: all 0.2s ease;
-}
-
-.pinned-section .item {
-  margin-bottom: 0;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.pinned-section .item:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.18);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 8px 0 12px;
 }
 
 /* Interactive Pinned Section Header */
@@ -239,9 +227,9 @@
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
-  padding: 6px 10px;
-  margin: 0;
-  border-radius: 12px;
+  padding: 6px 6px;
+  margin: 0 0 2px 0;
+  border-radius: 8px;
   background: transparent;
   transition: background 0.15s ease;
   user-select: none;
@@ -252,18 +240,18 @@
 .pinned-header-left {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  font-weight: 700;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #ffffff;
+  color: rgba(255, 255, 255, 0.85);
 }
 .pinned-count-badge {
   background: transparent;
-  color: #ffffff;
-  font-size: 11px;
-  font-weight: 700;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 11.5px;
+  font-weight: 600;
   padding: 0;
   border-radius: 0;
   letter-spacing: 0;

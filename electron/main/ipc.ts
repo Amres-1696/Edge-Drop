@@ -5,7 +5,7 @@
  * renderer calls them through the typed preload bridge, so a signature mismatch
  * is a compile-time error rather than a runtime one.
  */
-import { app, ipcMain, clipboard, nativeImage, screen, shell } from 'electron'
+import { app, ipcMain, clipboard, nativeImage, shell } from 'electron'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { execFile } from 'node:child_process'
@@ -14,12 +14,13 @@ import { filterValidPaths, isValidFilePath, isExistingFilePath } from './pathVal
 import { type InvokeMap, type InvokeChannel, type SendMap, type SendChannel } from '../../shared/ipc'
 import { getStore, loadSettings, saveSettings, pushState, addFiles, getWatcher } from './state'
 import { getMainWindow } from './window'
-import { setInteractive, setHeartbeatPaused, setHotZoneWidth, repositionWindow, currentStickDisplayId, getDisplayListOptions, popUpAndRetract } from './window'
+import { setInteractive, setHeartbeatPaused, setHotZoneWidth, repositionWindow, getDisplayListOptions, popUpAndRetract } from './window'
 import { getOnboardingWindow } from './onboardingWindow'
 import { rebuildTrayMenu } from './tray'
 import { startDragOut, resolveDragData } from './drag'
 import { clipboardSignature } from '../clipboard/formats'
 import type { ItemData, MergeResult } from '../../shared/types'
+import { quitAndInstallUpdate } from './updater'
 
 /**
  * Returns true if the current system clipboard content matches the given item data.
@@ -154,7 +155,7 @@ function handle<C extends InvokeChannel>(
 }
 
 /** Detects whether the app is packaged and running as a Microsoft Store (MSIX) build. */
-function isStoreBuild(): boolean {
+export function isStoreBuild(): boolean {
   if (process.windowsStore || process.env.APP_BUILD_TARGET === 'store') {
     return true
   }
@@ -183,35 +184,46 @@ export function registerIpc(): void {
     }
   })
 
-  handle('app:check-update', async () => {
-    if (isStoreBuild()) {
-      return null
-    }
+  handle('app:install-update', () => {
+    if (isStoreBuild()) return
+    console.log('[IPC] app:install-update requested by renderer — calling quitAndInstallUpdate')
+    quitAndInstallUpdate()
+  })
+
+  handle('app:get-releases', async () => {
     try {
-      const response = await fetch('https://api.github.com/repos/Deepender25/Edge-Drop/releases/latest', {
-        headers: {
-          'User-Agent': 'Edge-Drop-App'
-        },
-        signal: AbortSignal.timeout(5000)
+      const response = await fetch('https://api.github.com/repos/Deepender25/Edge-Drop/releases', {
+        headers: { 'User-Agent': 'Edge-Drop-App' },
+        signal: AbortSignal.timeout(12000)
       })
       if (!response.ok) {
-        console.warn('[IPC] app:check-update GitHub API status:', response.status)
-        return null
+        return STATIC_CHANGELOG_FALLBACK
       }
-      const data = await response.json() as any
-      const latestVersion = data.tag_name || ''
-      const assets = data.assets || []
-      const exeAsset = assets.find((a: any) => a.name && a.name.endsWith('.exe'))
-      const apkAsset = assets.find((a: any) => a.name && a.name.endsWith('.apk'))
-      const downloadUrl = exeAsset?.browser_download_url || apkAsset?.browser_download_url || data.html_url || ''
-      return {
-        latestVersion,
-        downloadUrl
+      const data = (await response.json()) as any[]
+      if (!Array.isArray(data) || data.length === 0) {
+        return STATIC_CHANGELOG_FALLBACK
       }
+
+      return data.slice(0, 10).map((rel, index) => {
+        const tag = rel.tag_name || rel.name || `v0.1.${index}`
+        const dateStr = rel.published_at
+          ? new Date(rel.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+          : ''
+
+        const rawBody = rel.body || ''
+        const { summary, highlights } = parseReleaseBodyToCleanText(rawBody)
+
+        return {
+          version: tag.startsWith('v') ? tag : `v${tag}`,
+          date: dateStr,
+          isLatest: index === 0,
+          summary: summary || `Release ${tag}`,
+          highlights
+        }
+      })
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      console.log(`[IPC] app:check-update skipped (${msg})`)
-      return null
+      console.warn('[IPC] app:get-releases fetch failed, returning static fallback:', err)
+      return STATIC_CHANGELOG_FALLBACK
     }
   })
 
@@ -649,3 +661,105 @@ export async function writeItemToClipboard(data: ItemData): Promise<void> {
       break
   }
 }
+
+/** Parses raw GitHub markdown release notes into clean plain text highlights (stripping image/video/HTML tags). */
+function parseReleaseBodyToCleanText(body: string): { summary: string; highlights: Array<{ title: string; description: string }> } {
+  // 1. Strip images, videos, and raw HTML tags completely (pure plain text)
+  const clean = body
+    .replace(/!\[.*?\]\(.*?\)/g, '') // Strip markdown images ![alt](url)
+    .replace(/<img[^>]*>/gi, '')     // Strip HTML img tags
+    .replace(/<video[^>]*>.*?<\/video>/gi, '') // Strip HTML video tags
+    .replace(/<[^>]+>/g, '')         // Strip any remaining HTML tags
+
+  const lines = clean.split(/\r?\n/).map(l => l.trim()).filter(Boolean)
+  let summary = ''
+  const highlights: Array<{ title: string; description: string }> = []
+
+  for (const line of lines) {
+    if (line.startsWith('#') || line.startsWith('>')) {
+      const text = line.replace(/^[#>\s]+/, '').trim()
+      if (!summary && text && !text.toLowerCase().includes('what\'s changed') && !text.toLowerCase().includes('full changelog')) {
+        summary = text
+      }
+      continue
+    }
+
+    if (line.startsWith('-') || line.startsWith('*') || line.startsWith('•') || /^\d+\./.test(line)) {
+      const content = line.replace(/^[-*•\d.\s]+/, '').trim()
+      if (!content) continue
+
+      const boldMatch = content.match(/^\*\*(.*?)\*\*[\s:-]*(.*)/)
+      if (boldMatch) {
+        const title = boldMatch[1].trim()
+        const description = boldMatch[2].trim()
+        if (title) {
+          highlights.push({ title, description: description || title })
+          continue
+        }
+      }
+
+      const colonIdx = content.indexOf(':')
+      if (colonIdx > 0 && colonIdx < 45) {
+        const title = content.substring(0, colonIdx).trim()
+        const description = content.substring(colonIdx + 1).trim()
+        if (title) {
+          highlights.push({ title, description: description || title })
+          continue
+        }
+      }
+
+      highlights.push({ title: content, description: '' })
+    } else if (!summary && line.length > 10) {
+      summary = line
+    }
+  }
+
+  return {
+    summary: summary || 'Latest updates and fixes.',
+    highlights: highlights.length > 0 ? highlights : [{ title: 'Bug Fixes & Performance Enhancements', description: 'Includes minor bug fixes and stability improvements.' }]
+  }
+}
+
+const STATIC_CHANGELOG_FALLBACK = [
+  {
+    version: 'v0.2.0',
+    date: 'Jul 26, 2026',
+    isLatest: true,
+    summary: 'Silent background auto-updater, GitHub Releases changelog synchronization, and glassmorphic pinned deck.',
+    highlights: [
+      {
+        title: 'Silent Background Auto-Updater',
+        description: 'GitHub releases feature silent background downloading and a single-click Restart to Update installation button.'
+      },
+      {
+        title: 'Microsoft Store Build Isolation',
+        description: 'Isolated build pipelines ensure Microsoft Store (MSIX) builds remain 100% compliant with Store policies.'
+      },
+      {
+        title: 'Direct URL Launcher',
+        description: 'Added quick action buttons to launch links in your default web browser directly from item cards and preview flyouts.'
+      },
+      {
+        title: 'Pinned Items Deck Container',
+        description: 'Encapsulated pinned items inside a dedicated deck container with smooth spring height animations.'
+      }
+    ]
+  },
+  {
+    version: 'v0.1.5',
+    date: 'Jul 24, 2026',
+    isLatest: false,
+    summary: 'Customizable Copy Indicator styles with a 2x2 grid selector flyout alongside panel hover stability fixes.',
+    highlights: [
+      {
+        title: 'Four Vector Indicator Options',
+        description: 'Added support for 4 customizable copy indicator styles including Logo, Tick, Copy, and Sparkle.'
+      },
+      {
+        title: 'Balanced 2x2 Grid Flyout Selector',
+        description: 'Integrated a 2x2 grid selector flyout inside Settings under Indicator Style for quick previews.'
+      }
+    ]
+  }
+]
+

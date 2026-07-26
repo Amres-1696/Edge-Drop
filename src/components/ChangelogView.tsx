@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useStore } from '../store/appStore'
 
 interface HighlightItem {
@@ -170,6 +171,19 @@ const CHANGELOG_DATA: ChangelogRelease[] = [
 
 export function ChangelogView() {
   const currentVersion = useStore((s) => s.currentVersion)
+  const [releases, setReleases] = useState<ChangelogRelease[]>(CHANGELOG_DATA)
+
+  useEffect(() => {
+    window.edge.getReleases()
+      .then((fetched) => {
+        if (Array.isArray(fetched) && fetched.length > 0) {
+          setReleases(fetched)
+        }
+      })
+      .catch((err) => {
+        console.warn('Failed to load live GitHub releases:', err)
+      })
+  }, [])
 
   return (
     <div style={{
@@ -182,7 +196,7 @@ export function ChangelogView() {
       fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       color: '#ffffff'
     }}>
-      {CHANGELOG_DATA.map((rel, index) => {
+      {releases.map((rel, index) => {
         const isCurrent = currentVersion ? `v${currentVersion}` === rel.version || currentVersion === rel.version : rel.isLatest
 
         return (

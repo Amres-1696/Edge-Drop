@@ -1,7 +1,7 @@
 /** Panel header: title + settings toggle. */
 import { motion } from 'framer-motion'
 import { useStore } from '../store/appStore'
-import { GearIcon, CloseIcon, SparklesIcon, InfoIcon } from './icons'
+import { GearIcon, CloseIcon, InfoIcon } from './icons'
 
 export function Header() {
   const setSettingsOpen = useStore((s) => s.setSettingsOpen)

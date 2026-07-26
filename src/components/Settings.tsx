@@ -12,6 +12,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
   const settings = useStore((s) => s.settings)
   const patch = useStore((s) => s.patchSettings)
   const updateInfo = useStore((s) => s.updateInfo)
+  const installUpdate = useStore((s) => s.installUpdate)
   const currentVersion = useStore((s) => s.currentVersion)
   const styleFlyoutOpen = useStore((s) => s.styleFlyoutOpen)
   const setStyleFlyoutOpen = useStore((s) => s.setStyleFlyoutOpen)
@@ -64,13 +65,16 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
         <>
           <div className="update-prompt">
             <div className="update-text">
-              There is a new version available for this application and you can download it.
+              {updateInfo.downloaded
+                ? `Update ${updateInfo.latestVersion} is ready to install.`
+                : `Downloading update ${updateInfo.latestVersion} in the background...`}
             </div>
             <button
               className="update-btn"
-              onClick={() => window.open(updateInfo.downloadUrl, '_blank')}
+              disabled={!updateInfo.downloaded}
+              onClick={() => void installUpdate()}
             >
-              Download {updateInfo.latestVersion}
+              {updateInfo.downloaded ? `Restart to Update` : `Downloading...`}
             </button>
           </div>
           <div className="setting-divider" />
