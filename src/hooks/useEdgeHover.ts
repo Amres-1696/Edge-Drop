@@ -84,12 +84,19 @@ export function useEdgeHover(): void {
     const recompute = () => {
       const h = window.innerHeight
       const s = useStore.getState().settings
+      const pFrac = s.panelHeight || 0.6
+      const panelH = h * pFrac
+      const minY = panelH / 2
+      const maxY = h - panelH / 2
+      const vOffset = s.verticalOffset ?? 0.5
+      const midY = minY + vOffset * (maxY - minY)
+
       const half = (h * (s.hotZoneHeight || 0.25)) / 2
-      const panelHalfH = (h * (s.panelHeight || 0.6)) / 2 + 24
+      const panelHalfH = panelH / 2 + 24
       zone.current = { 
-        top: h / 2 - half, 
-        bottom: h / 2 + half,
-        midY: h / 2,
+        top: midY - half, 
+        bottom: midY + half,
+        midY,
         panelHalfH
       }
     }
@@ -98,7 +105,8 @@ export function useEdgeHover(): void {
     const unsubStore = useStore.subscribe((state, prevState) => {
       if (
         state.settings.panelHeight !== prevState.settings.panelHeight ||
-        state.settings.hotZoneHeight !== prevState.settings.hotZoneHeight
+        state.settings.hotZoneHeight !== prevState.settings.hotZoneHeight ||
+        state.settings.verticalOffset !== prevState.settings.verticalOffset
       ) {
         recompute()
       }

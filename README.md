@@ -110,6 +110,7 @@ npm run build:store  # outputs an MSIX .appx for Microsoft Store submission
 - Frameless, transparent, always-on-top `BrowserWindow` anchored at `x=0`
 - 100% click-through when collapsed — desktop stays fully usable
 - Configurable hot-zone height (25% / 40% / 60% of screen) and blade height (40% – 100%)
+- **Vertical Position Presets:** Customize screen edge placement with **Top**, **Center** (default), or **Bottom** vertical alignment presets, featuring exact dynamic boundary clamping (zero clipping/out-of-bounds).
 - **Multi-monitor support:** Pick exactly which display the panel sticks to, with options for Left or Right screen edges. Features a single source of truth multi-display engine (`getDisplayListOptions()`) with real-time physical resolution calculation (3840×2160, 2560×1440, 1920×1080) across all High-DPI Windows display scaling factors.
 - **Fullscreen Protection (Game Mode):** Native Windows `SHQueryUserNotificationState` OS detection (`fullscreen.ts`) automatically suppresses edge hover when Direct3D games, fullscreen videos, or presentations are active.
 - **Ultra-lightweight:** Optimized memory footprint (~60% reduced RAM) using custom `edgelocal://` streaming protocols and compressed WebM assets.
@@ -140,6 +141,8 @@ npm run build:store  # outputs an MSIX .appx for Microsoft Store submission
 - Double-click to expand, drag a sub-item to the left edge to split it back out
 
 **UI / UX**
+- **Ergonomic Card Action Bar & Safety Guard**: Re-ordered card actions (`Pin`, `Expand`, `Copy`, `Open Link`, `Divider`, `Delete`) with a physical safety hairline divider and 100% layout consistency across normal hover and preview mode.
+- **Ultra-Minimal Header**: Sleek, unbranded top header maximizing usable vertical space for clipboard items and sub-views.
 - **Pinned Deck**: Dedicated Pinned items deck container with custom icon header, smooth Framer Motion spring collapse/expand height physics, and clean text count.
 - **Tactile Framer Motion Switches**: Settings toggle switches powered by Framer Motion spring physics (`stiffness: 600`, `damping: 35`) with dark/light contrast styling.
 - **What's New Release History View**: Integrated in-app release notes timeline viewer (`ChangelogView.tsx`) connected to live GitHub Releases API with pure formatted text highlights and zero-lag offline fallbacks.

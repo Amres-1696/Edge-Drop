@@ -17,6 +17,7 @@ function merge(base: Settings, patch: Partial<Settings>): Settings {
   out.hotZoneHeight = Math.min(0.6, Math.max(0.2, out.hotZoneHeight))
   out.historyLimit = Math.min(2000, Math.max(50, Math.round(out.historyLimit)))
   out.autoDeleteHours = Math.max(0, Number(out.autoDeleteHours) || 0)
+  out.verticalOffset = Math.min(1.0, Math.max(0.0, typeof out.verticalOffset === 'number' ? out.verticalOffset : 0.5))
   if (out.uiStyle !== 'modern' && out.uiStyle !== 'compact') {
     out.uiStyle = 'modern'
   }

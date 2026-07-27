@@ -37,7 +37,14 @@ export function Panel() {
     }
   }, [open, setSettingsOpen, setQuery])
 
-  const topOffset = '50%'
+  const screenH = typeof window !== 'undefined' ? window.innerHeight : 800
+  const pFrac = settings.panelHeight || 0.6
+  const panelH = screenH * pFrac
+  const minY = panelH / 2
+  const maxY = screenH - panelH / 2
+  const vOffset = settings.verticalOffset ?? 0.5
+  const midY = minY + vOffset * (maxY - minY)
+  const topOffset = `${midY}px`
 
   // The actual pixel height of the trigger zone on the left edge
   const triggerHeightPx = window.innerHeight * settings.hotZoneHeight

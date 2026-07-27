@@ -195,6 +195,19 @@ function ClipboardItemBase({ item }: Props) {
           >
             {item.pinned ? <PinFillIcon /> : <PinIcon />}
           </button>
+          <button
+            className={`act${isPreviewing ? ' preview-contract active' : ' preview-expand'}`}
+            title={isPreviewing ? 'Close Preview' : 'Expand Preview'}
+            onClick={(e) => {
+              e.stopPropagation()
+              e.currentTarget.blur()
+              const rect = e.currentTarget.closest('.item-main')?.getBoundingClientRect()
+              const rectData = rect ? { y: rect.y, height: rect.height } : undefined
+              useStore.getState().setPreviewItemId(isPreviewing ? null : item.id, rectData)
+            }}
+          >
+            {isPreviewing ? <ContractIcon /> : <ExpandIcon />}
+          </button>
           <button className="act" title="Copy" onClick={(e) => {
             e.currentTarget.blur()
             onCopy(e)
@@ -214,19 +227,7 @@ function ClipboardItemBase({ item }: Props) {
               <ExternalLinkIcon />
             </button>
           )}
-          <button
-            className={`act${isPreviewing ? ' preview-contract active' : ' preview-expand'}`}
-            title={isPreviewing ? 'Close Preview' : 'Expand Preview'}
-            onClick={(e) => {
-              e.stopPropagation()
-              e.currentTarget.blur()
-              const rect = e.currentTarget.closest('.item-main')?.getBoundingClientRect()
-              const rectData = rect ? { y: rect.y, height: rect.height } : undefined
-              useStore.getState().setPreviewItemId(isPreviewing ? null : item.id, rectData)
-            }}
-          >
-            {isPreviewing ? <ContractIcon /> : <ExpandIcon />}
-          </button>
+          <div className="act-divider" />
           <button
             className="act danger"
             title="Delete"

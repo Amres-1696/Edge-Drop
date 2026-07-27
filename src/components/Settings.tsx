@@ -45,7 +45,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -12 }}
           transition={{ type: 'spring', stiffness: 400, damping: 36, mass: 0.6 }}
-          style={{ width: '100%', height: '100%', overflowY: 'auto' }}
+          style={{ width: '100%', height: '100%', overflowY: 'auto', overflowX: 'hidden' }}
         >
           <ChangelogView />
         </motion.div>
@@ -56,7 +56,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 12 }}
           transition={{ type: 'spring', stiffness: 400, damping: 36, mass: 0.6 }}
-          style={{ width: '100%', height: '100%', overflowY: 'auto' }}
+          style={{ width: '100%', height: '100%', overflowY: 'auto', overflowX: 'hidden' }}
         >
           <div className="settings-list">
 
@@ -202,6 +202,31 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
               key={opt.label}
               className={`pill ${settings.stickPosition === opt.val ? 'active' : ''}`}
               onClick={() => patch({ stickPosition: opt.val })}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="setting-divider" />
+
+      {/* Vertical Position Presets */}
+      <div className="setting-row vertical">
+        <div className="setting-info">
+          <div className="setting-title">Vertical position</div>
+          <div className="setting-desc">Vertical alignment of the shelf along the screen edge</div>
+        </div>
+        <div className="setting-pills">
+          {[
+            { label: 'Top', val: 0 },
+            { label: 'Center', val: 0.5 },
+            { label: 'Bottom', val: 1.0 }
+          ].map((opt) => (
+            <button
+              key={opt.label}
+              className={`pill ${Math.abs((settings.verticalOffset ?? 0.5) - opt.val) < 0.05 ? 'active' : ''}`}
+              onClick={() => patch({ verticalOffset: opt.val })}
             >
               {opt.label}
             </button>

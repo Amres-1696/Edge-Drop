@@ -137,6 +137,8 @@ export interface Settings {
   showCopyIndicator: boolean
   /** Style variant of the copy indicator icon ('logo' | 'check' | 'copy' | 'sparkle'). Default: 'logo'. */
   copyIndicatorStyle: 'logo' | 'check' | 'copy' | 'sparkle'
+  /** Vertical offset fraction along screen edge (0 = top, 0.5 = center, 1 = bottom). Default: 0.5. */
+  verticalOffset: number
   /** Last version for which the user opened/viewed the What's New changelog panel. */
   lastSeenChangelogVersion?: string
 }
@@ -159,6 +161,7 @@ export const DEFAULT_SETTINGS: Settings = {
   suppressInFullscreen: true,
   showCopyIndicator: true,
   copyIndicatorStyle: 'logo',
+  verticalOffset: 0.5,
   lastSeenChangelogVersion: undefined
 }
 

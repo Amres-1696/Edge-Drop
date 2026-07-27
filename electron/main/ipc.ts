@@ -191,40 +191,12 @@ export function registerIpc(): void {
   })
 
   handle('app:get-releases', async () => {
-    try {
-      const response = await fetch('https://api.github.com/repos/Deepender25/Edge-Drop/releases', {
-        headers: { 'User-Agent': 'Edge-Drop-App' },
-        signal: AbortSignal.timeout(12000)
-      })
-      if (!response.ok) {
-        return STATIC_CHANGELOG_FALLBACK
-      }
-      const data = (await response.json()) as any[]
-      if (!Array.isArray(data) || data.length === 0) {
-        return STATIC_CHANGELOG_FALLBACK
-      }
-
-      return data.slice(0, 10).map((rel, index) => {
-        const tag = rel.tag_name || rel.name || `v0.1.${index}`
-        const dateStr = rel.published_at
-          ? new Date(rel.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-          : ''
-
-        const rawBody = rel.body || ''
-        const { summary, highlights } = parseReleaseBodyToCleanText(rawBody)
-
-        return {
-          version: tag.startsWith('v') ? tag : `v${tag}`,
-          date: dateStr,
-          isLatest: index === 0,
-          summary: summary || `Release ${tag}`,
-          highlights
-        }
-      })
-    } catch (err) {
-      console.warn('[IPC] app:get-releases fetch failed, returning static fallback:', err)
-      return STATIC_CHANGELOG_FALLBACK
+    if (_releasesCache) {
+      // Re-validate in background asynchronously without blocking UI render
+      fetchAndCacheReleases().catch(() => {})
+      return _releasesCache
     }
+    return fetchAndCacheReleases()
   })
 
   handle('file:reveal', (filePath) => {
@@ -762,4 +734,58 @@ const STATIC_CHANGELOG_FALLBACK = [
     ]
   }
 ]
+
+let _releasesCache: Array<{
+  version: string
+  date: string
+  isLatest: boolean
+  summary: string
+  highlights: Array<{ title: string; description: string }>
+}> | null = null
+
+async function fetchAndCacheReleases() {
+  try {
+    const response = await fetch('https://api.github.com/repos/Deepender25/Edge-Drop/releases', {
+      headers: { 'User-Agent': 'Edge-Drop-App' },
+      signal: AbortSignal.timeout(12000)
+    })
+    if (!response.ok) {
+      return _releasesCache || STATIC_CHANGELOG_FALLBACK
+    }
+    const data = (await response.json()) as any[]
+    if (!Array.isArray(data) || data.length === 0) {
+      return _releasesCache || STATIC_CHANGELOG_FALLBACK
+    }
+
+    const parsed = data.slice(0, 10).map((rel, index) => {
+      const tag = rel.tag_name || rel.name || `v0.1.${index}`
+      const dateStr = rel.published_at
+        ? new Date(rel.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        : ''
+
+      const rawBody = rel.body || ''
+      const { summary, highlights } = parseReleaseBodyToCleanText(rawBody)
+
+      return {
+        version: tag.startsWith('v') ? tag : `v${tag}`,
+        date: dateStr,
+        isLatest: index === 0,
+        summary: summary || `Release ${tag}`,
+        highlights
+      }
+    })
+
+    _releasesCache = parsed
+    return parsed
+  } catch {
+    console.log('[IPC] GitHub releases fetch offline or timed out; using static fallback.')
+    return _releasesCache || STATIC_CHANGELOG_FALLBACK
+  }
+}
+
+// Background pre-fetch 3 seconds after startup so releases are cached in memory before user opens Settings
+setTimeout(() => {
+  fetchAndCacheReleases().catch(() => {})
+}, 3000)
+
 

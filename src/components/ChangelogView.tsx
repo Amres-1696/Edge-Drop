@@ -16,9 +16,33 @@ interface ChangelogRelease {
 
 const CHANGELOG_DATA: ChangelogRelease[] = [
   {
+    version: 'v0.2.0',
+    date: 'Jul 26, 2026',
+    isLatest: true,
+    summary: 'Silent background auto-updater, direct web link launcher, dedicated Pinned items deck, and interactive controls.',
+    highlights: [
+      {
+        title: 'Silent Background Auto-Updates',
+        description: 'New updates download silently in the background with a single-click Restart to Update button.'
+      },
+      {
+        title: 'Direct One-Click Web Link Launcher',
+        description: 'Copied links feature a dedicated launch button opening directly in your default browser.'
+      },
+      {
+        title: 'Dedicated Pinned Items Deck',
+        description: 'Encapsulated pinned items inside a dedicated deck container at the top of the shelf.'
+      },
+      {
+        title: 'Live What\'s New Sync',
+        description: 'Release history connects live to GitHub Releases with automatic offline safeguards.'
+      }
+    ]
+  },
+  {
     version: 'v0.1.5',
     date: 'Jul 24, 2026',
-    isLatest: true,
+    isLatest: false,
     summary: 'Customizable Copy Indicator styles with a 2x2 grid selector flyout alongside panel hover stability fixes for medium and large panel heights.',
     highlights: [
       {
@@ -193,6 +217,8 @@ export function ChangelogView() {
       padding: '16px',
       boxSizing: 'border-box',
       width: '100%',
+      maxWidth: '100%',
+      overflowX: 'hidden',
       fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       color: '#ffffff'
     }}>
@@ -206,13 +232,15 @@ export function ChangelogView() {
               display: 'flex',
               flexDirection: 'column',
               gap: '12px',
+              maxWidth: '100%',
+              overflowX: 'hidden',
               paddingBottom: index < CHANGELOG_DATA.length - 1 ? '24px' : '0',
               borderBottom: index < CHANGELOG_DATA.length - 1 ? '1px solid rgba(255, 255, 255, 0.08)' : 'none'
             }}
           >
             {/* Version Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
                 <span style={{
                   fontSize: '15px',
                   fontWeight: 700,
@@ -232,13 +260,14 @@ export function ChangelogView() {
                     padding: '2px 6px',
                     borderRadius: '4px',
                     letterSpacing: '0.04em',
-                    textTransform: 'uppercase'
+                    textTransform: 'uppercase',
+                    flexShrink: 0
                   }}>
                     LATEST
                   </span>
                 )}
               </div>
-              <span style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.45)', fontWeight: 400 }}>
+              <span style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.45)', fontWeight: 400, flexShrink: 0 }}>
                 {rel.date}
               </span>
             </div>
@@ -249,7 +278,9 @@ export function ChangelogView() {
               lineHeight: '1.6',
               color: 'rgba(255, 255, 255, 0.75)',
               margin: 0,
-              fontWeight: 400
+              fontWeight: 400,
+              overflowWrap: 'break-word',
+              wordBreak: 'break-word'
             }}>
               {rel.summary}
             </p>
@@ -264,24 +295,28 @@ export function ChangelogView() {
                     alignItems: 'flex-start',
                     gap: '10px',
                     fontSize: '13px',
-                    lineHeight: '1.55'
+                    lineHeight: '1.55',
+                    minWidth: 0
                   }}
                 >
                   <span style={{
                     color: 'rgba(255, 255, 255, 0.35)',
                     fontSize: '14px',
                     lineHeight: '1.5',
-                    userSelect: 'none'
+                    userSelect: 'none',
+                    flexShrink: 0
                   }}>
                     •
                   </span>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                    <span style={{ fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1, minWidth: 0 }}>
+                    <span style={{ fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
                       {item.title}
                     </span>
-                    <span style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '12.5px', lineHeight: '1.5' }}>
-                      {item.description}
-                    </span>
+                    {item.description && (
+                      <span style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '12.5px', lineHeight: '1.5', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+                        {item.description}
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}
