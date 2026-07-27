@@ -364,7 +364,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                   ? 'Active: Copy Icon'
                   : settings.copyIndicatorStyle === 'sparkle'
                   ? 'Active: Sparkle'
-                  : 'Active: Liquid Octopus'}
+                  : 'Active: Edge-Drop Logo'}
               </div>
             </div>
             

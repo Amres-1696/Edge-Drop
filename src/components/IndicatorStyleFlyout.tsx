@@ -142,7 +142,7 @@ export function IndicatorStyleFlyout({ isRight }: { isRight: boolean }) {
                   useStore.getState().triggerCopyFlare()
                 }}
                 preview={<LiquidOctopusLoader fillColor="#ffffff" glowColor="rgba(255, 255, 255, 0.85)" speed={1.2} />}
-                title="Logo"
+                title="Edge-Drop Logo"
               />
 
               {/* Card 2: Tick */}

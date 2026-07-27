@@ -107,10 +107,12 @@ function ClipboardItemBase({ item }: Props) {
   return (
     <motion.div
       layout
+      layoutId={`card-${item.id}`}
       initial={open ? { opacity: 0, y: 6, scale: 0.97 } : false}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.1, ease: 'easeIn' } }}
       transition={{
+        layout: { type: 'spring', stiffness: 500, damping: 32 },
         type: 'spring',
         stiffness: 500,
         damping: 38,
@@ -120,6 +122,22 @@ function ClipboardItemBase({ item }: Props) {
       }}
       className={`item${item.pinned ? ' pinned' : ''}${isBundle ? ' bundle' : ''}`}
     >
+      {copied && (
+        <motion.div
+          key="copy-ripple"
+          initial={{ opacity: 0.75, scale: 0.2 }}
+          animate={{ opacity: 0, scale: 1.6 }}
+          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            borderRadius: 16,
+            background: 'radial-gradient(circle at center, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.08) 45%, transparent 75%)',
+            pointerEvents: 'none',
+            zIndex: 15
+          }}
+        />
+      )}
       <div
         className={`item-main${isPreviewing ? ' force-actions previewing' : ''}`}
         data-id={item.id}

@@ -141,6 +141,8 @@ npm run build:store  # outputs an MSIX .appx for Microsoft Store submission
 - Double-click to expand, drag a sub-item to the left edge to split it back out
 
 **UI / UX**
+- **Tactile Micro-Interactions & Spring Motion**: Card hover 2px lift with ambient backlight glow, micro radial copy ripple effect, and smooth Framer Motion `layoutId` spring list reflow (`stiffness: 500`, `damping: 32`).
+- **Refined Obsidian Aesthetics & Multi-Layer Depth**: Dual-layer 3D glass hairline highlights (`inset 0 1px 0 rgba(255, 255, 255, 0.12)`) and dual typography hierarchy (monospaced *JetBrains Mono* metadata + *Inter/SF Pro* system title font stack).
 - **Ergonomic Card Action Bar & Safety Guard**: Re-ordered card actions (`Pin`, `Expand`, `Copy`, `Open Link`, `Divider`, `Delete`) with a physical safety hairline divider and 100% layout consistency across normal hover and preview mode.
 - **Ultra-Minimal Header**: Sleek, unbranded top header maximizing usable vertical space for clipboard items and sub-views.
 - **Pinned Deck**: Dedicated Pinned items deck container with custom icon header, smooth Framer Motion spring collapse/expand height physics, and clean text count.
