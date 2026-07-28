@@ -20,6 +20,8 @@ export type ItemData =
 
 export type ItemKind = ItemData['kind']
 
+export type TypeFilter = 'all' | 'text' | 'links' | 'images' | 'files'
+
 /**
  * A single clipboard entry. `id` is stable across the lifetime of the entry;
  * it is used as the React key and the storage key for pinned/persisted items.

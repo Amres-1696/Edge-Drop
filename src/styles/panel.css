@@ -31,6 +31,10 @@
   box-shadow: none;
   overflow: hidden;
   border: none;
+  -webkit-background-clip: padding-box;
+  background-clip: padding-box;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 .blade-container.blade-right .blade {
   border-top-right-radius: 0;
@@ -417,6 +421,18 @@
 
 .toast:hover {
   filter: brightness(1.1);
+}
+
+/* Quick Type Segmented Control */
+.filter-segmented-track {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.filter-chip {
+  outline: none;
+}
+.filter-chip:not(.active):hover {
+  color: rgba(255, 255, 255, 0.95) !important;
 }
 
 /* Copy Indicator Sine Curve Morph Styles */

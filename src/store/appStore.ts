@@ -27,6 +27,8 @@ interface AppState {
   hydrated: boolean
   /** Free-text search filter (UI-only state). */
   query: string
+  typeFilter: import('../../shared/types').TypeFilter
+  setTypeFilter: (filter: import('../../shared/types').TypeFilter) => void
   /** Whether the panel blade is expanded. */
   open: boolean
   /** Settings sheet visibility. */
@@ -90,6 +92,8 @@ export const useStore = create<AppState>((set, get) => ({
   settings: { ...DEFAULT_SETTINGS },
   hydrated: false,
   query: '',
+  typeFilter: 'all',
+  setTypeFilter: (typeFilter) => set({ typeFilter }),
   open: false,
   settingsOpen: false,
   settingsSubView: 'main',

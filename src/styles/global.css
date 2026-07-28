@@ -48,12 +48,12 @@ body {
    dragstart on every element, which breaks our draggable item tiles and
    file sub-rows. Scope it to img/a only, and let .item-main / .file-row
    re-enable dragging explicitly. */
+/* High-Definition Vector & Image Anti-Aliasing */
 img,
 svg,
 canvas,
 video {
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
+  image-rendering: smooth;
   shape-rendering: geometricPrecision;
   text-rendering: optimizeLegibility;
 }
@@ -70,6 +70,32 @@ svg polyline,
 svg rect,
 svg polygon {
   vector-effect: non-scaling-stroke;
+}
+
+/* HD Anti-Aliased Curved Edges & Micro Surfaces */
+.blade,
+.item,
+.item-main,
+.filter-segmented-track,
+.filter-chip,
+.act,
+.icon-btn,
+.preview-flyout,
+.indicator-flyout,
+.settings-sheet,
+.pinned-count-badge,
+.thumb-wrap,
+.thumb,
+.kind-badge,
+.changelog-pill,
+.copy-curve-container,
+.bundle-stack-card,
+.style-card {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-background-clip: padding-box;
+  background-clip: padding-box;
 }
 
 img,
