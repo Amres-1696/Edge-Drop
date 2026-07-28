@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/Logo.gif" alt="Edge-Drop Logo" width="500" height="500" />
+  <img src="public/Logo.gif" alt="Edge-Drop Logo" width="220" style="max-width: 100%; height: auto;" />
 </p>
 
 <h1 align="center">Edge-Drop</h1>

@@ -709,9 +709,33 @@ function parseReleaseBodyToCleanText(body: string): { summary: string; highlight
 
 const STATIC_CHANGELOG_FALLBACK = [
   {
+    version: 'v0.2.1',
+    date: 'Jul 28, 2026',
+    isLatest: true,
+    summary: 'Cross-reboot multi-monitor display persistence, 5-category macOS segmented filter control, unified image classification, and HD anti-aliased curved edges.',
+    highlights: [
+      {
+        title: 'Cross-Reboot Display Persistence',
+        description: '4-tier display resolution pipeline (geometry fuzzy-matching) remembers your chosen monitor across device restarts with an automatic primary display fallback.'
+      },
+      {
+        title: '5-Category Segmented Filter Bar',
+        description: 'Integrated All, Text, Links, Images, and Files quick filter chips with a persistent sliding spring pill and zero shape distortion.'
+      },
+      {
+        title: 'Unified Image Entity Classification',
+        description: 'Native screenshots (Win+Shift+S) and copied image files (.png, .jpg, .webp, .svg) are unified under the Images filter tab.'
+      },
+      {
+        title: 'HD Anti-Aliased Curved Edges',
+        description: 'GPU layer promotion (transform: translateZ(0)) and padding-box clipping deliver crisp, vector-smooth curved borders across all display scales.'
+      }
+    ]
+  },
+  {
     version: 'v0.2.0',
     date: 'Jul 26, 2026',
-    isLatest: true,
+    isLatest: false,
     summary: 'Silent background auto-updater, GitHub Releases changelog synchronization, and glassmorphic pinned deck.',
     highlights: [
       {
