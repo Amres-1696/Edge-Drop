@@ -205,34 +205,79 @@ function getStickGeometry(): { x: number; y: number; width: number; height: numb
   const allDisplays = screen.getAllDisplays().map(d => ({
     id: d.id,
     workArea: { ...d.workArea },
+    scaleFactor: d.scaleFactor,
     isPrimary: d.id === primaryDisplay.id
   }))
 
-  // Auto-heal: If configured stickDisplayId is disconnected, immediately reset to undefined
-  // so the panel instantly falls back to the Primary Display and stays fully usable.
-  if (settings.stickDisplayId !== undefined && !allDisplays.some(d => d.id === settings.stickDisplayId)) {
-    console.log(`[Main] Configured stickDisplayId (${settings.stickDisplayId}) disconnected. Falling back immediately to Primary Display (${primaryDisplay.id}).`)
-    settings = saveSettings({ stickDisplayId: undefined })
-    if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed()) {
-      mainWindow.webContents.send('state:settings', settings)
-    }
-    popUpAndRetract(1500)
-  }
-
-  const primaryHeight = primaryDisplay.workArea.height
-  const windowHeight = primaryHeight
   const currentWindowWidth = previewActive ? 820 : PANEL_WIDTH
 
   const result = computeStickBounds({
     position: settings.stickPosition,
     displays: allDisplays,
     displayId: settings.stickDisplayId,
+    savedWorkArea: settings.stickDisplayWorkArea,
+    savedScaleFactor: settings.stickDisplayScaleFactor,
     windowWidth: currentWindowWidth,
-    windowHeight,
+    windowHeight: primaryDisplay.workArea.height, // initial hint; result uses resolvedDisplay.workArea.height
     currentBounds: getMainWindow()?.getBounds()
   })
 
-  currentStickDisplayId = result.displayId
+  const resolved = result.resolvedDisplay
+
+  // ── Self-heal: persist fresh geometry whenever the resolved display differs ──
+  // This covers two scenarios:
+  //   A) Cross-reboot: OS re-assigned a new numeric ID to the same physical monitor.
+  //      We matched via Tier-2 fuzzy bounds — now save the new ID so future same-
+  //      session lookups hit Tier-1 instantly.
+  //   B) Display disconnected: Tier-4 fell back to primary — clear stale persisted
+  //      display so the app stays fully usable and the UI shows primary as active.
+  const idChanged = settings.stickDisplayId !== undefined && settings.stickDisplayId !== resolved.id
+  const idWasStale = settings.stickDisplayId !== undefined && !allDisplays.some(d => d.id === settings.stickDisplayId)
+
+  if (idWasStale) {
+    // The old ID no longer exists in this session (disconnected or reboot rename).
+    // Check whether we recovered via Tier-2 or fell all the way to primary.
+    const recoveredViaBounds = settings.stickDisplayWorkArea !== undefined && resolved.id !== primaryDisplay.id
+    if (recoveredViaBounds) {
+      console.log(`[Main] Display ${settings.stickDisplayId} re-matched via geometry to display ${resolved.id} — updating persisted ID.`)
+    } else {
+      console.log(`[Main] Display ${settings.stickDisplayId} disconnected or unrecognised. Falling back to display ${resolved.id}.`)
+    }
+    settings = saveSettings({
+      stickDisplayId: recoveredViaBounds ? resolved.id : undefined,
+      stickDisplayWorkArea: recoveredViaBounds ? resolved.workArea : undefined,
+      stickDisplayScaleFactor: recoveredViaBounds ? resolved.scaleFactor : undefined
+    })
+    if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed()) {
+      mainWindow.webContents.send('state:settings', settings)
+    }
+    if (!recoveredViaBounds) {
+      // Genuinely fell back — briefly show panel on new location.
+      popUpAndRetract(1500)
+    }
+  } else if (idChanged) {
+    // Shouldn't happen if Tier-1 matched, but guard it anyway.
+    settings = saveSettings({
+      stickDisplayId: resolved.id,
+      stickDisplayWorkArea: resolved.workArea,
+      stickDisplayScaleFactor: resolved.scaleFactor
+    })
+    if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed()) {
+      mainWindow.webContents.send('state:settings', settings)
+    }
+  } else if (settings.stickDisplayId !== undefined && (
+    settings.stickDisplayWorkArea === undefined ||
+    settings.stickDisplayScaleFactor === undefined
+  )) {
+    // Upgrade: user had a stickDisplayId saved before this feature was added;
+    // backfill geometry silently so the next reboot can fuzzy-match.
+    saveSettings({
+      stickDisplayWorkArea: resolved.workArea,
+      stickDisplayScaleFactor: resolved.scaleFactor
+    })
+  }
+
+  currentStickDisplayId = resolved.id
   return { x: result.x, y: result.y, width: result.width, height: result.height }
 }
 
@@ -365,18 +410,45 @@ export function registerWindowRepositionListener(fn: () => void): void {
 export function getActiveDisplayId(allDisplays?: Electron.Display[]): number {
   const displays = allDisplays ?? screen.getAllDisplays()
   const settings = loadSettings()
+  const primary = screen.getPrimaryDisplay()
+
+  // Tier 1: exact session-local ID match.
   if (settings.stickDisplayId !== undefined && displays.some(d => d.id === settings.stickDisplayId)) {
     return settings.stickDisplayId
   }
+
+  // Tier 2: fuzzy workArea match (cross-reboot).
+  if (settings.stickDisplayWorkArea !== undefined) {
+    const TOLERANCE = 8
+    const sa = settings.stickDisplayWorkArea
+    const candidates = displays.filter(d =>
+      Math.abs(d.workArea.x - sa.x) <= TOLERANCE &&
+      Math.abs(d.workArea.y - sa.y) <= TOLERANCE &&
+      Math.abs(d.workArea.width - sa.width) <= TOLERANCE &&
+      Math.abs(d.workArea.height - sa.height) <= TOLERANCE
+    )
+    if (candidates.length === 1) return candidates[0].id
+    if (candidates.length > 1 && settings.stickDisplayScaleFactor !== undefined) {
+      const byScale = candidates.find(d => d.scaleFactor === settings.stickDisplayScaleFactor)
+      if (byScale) return byScale.id
+      return candidates[0].id
+    }
+    if (candidates.length > 1) return candidates[0].id
+  }
+
+  // Tier 3: in-memory ID set this session by getStickGeometry.
   if (currentStickDisplayId !== undefined && displays.some(d => d.id === currentStickDisplayId)) {
     return currentStickDisplayId
   }
-  return screen.getPrimaryDisplay().id
+
+  // Tier 4: primary fallback.
+  return primary.id
 }
 
 export function getDisplayListOptions(): Array<{
   id: number
   bounds: { x: number; y: number; width: number; height: number }
+  scaleFactor: number
   isPrimary: boolean
   isCurrent: boolean
   label: string
@@ -392,7 +464,7 @@ export function getDisplayListOptions(): Array<{
     const rawName = (d as any).label || (d as any).name || ''
     const fallbackName = isPrimary ? 'Primary Monitor' : `Display ${index + 1}`
     const baseName = rawName.trim() ? rawName.trim() : fallbackName
-    const name = isPrimary 
+    const name = isPrimary
       ? (baseName.toLowerCase().includes('primary') ? baseName : `${baseName} (Primary)`)
       : baseName
     const scale = d.scaleFactor || 1
@@ -402,6 +474,7 @@ export function getDisplayListOptions(): Array<{
     return {
       id: d.id,
       bounds: { x: d.bounds.x, y: d.bounds.y, width: d.bounds.width, height: d.bounds.height },
+      scaleFactor: scale,
       isPrimary,
       isCurrent: d.id === activeId,
       label: `${name} ${resolution}`,

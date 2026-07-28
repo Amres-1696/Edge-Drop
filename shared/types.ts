@@ -126,6 +126,17 @@ export interface Settings {
   stickPosition: StickPosition
   stickDisplayId?: number
   /**
+   * Persisted workArea geometry of the display chosen by the user.
+   * Used as a cross-reboot fuzzy-match fingerprint when the OS re-assigns
+   * numeric display IDs after a restart (Windows behaviour).
+   */
+  stickDisplayWorkArea?: { x: number; y: number; width: number; height: number }
+  /**
+   * DPI scale factor of the chosen display — used as a secondary discriminator
+   * when two displays share identical workArea geometry (e.g. dual same-res).
+   */
+  stickDisplayScaleFactor?: number
+  /**
    * When true, restores the bouncy overshoot panel-open animation.
    * Off by default because it requires extra GPU compositing work.
    */
@@ -159,6 +170,8 @@ export const DEFAULT_SETTINGS: Settings = {
   tutorialCompleted: false,
   stickPosition: 'left',
   stickDisplayId: undefined,
+  stickDisplayWorkArea: undefined,
+  stickDisplayScaleFactor: undefined,
   bounceAnimation: false,
   suppressInFullscreen: true,
   showCopyIndicator: true,

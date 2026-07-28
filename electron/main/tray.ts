@@ -64,7 +64,12 @@ export function createTray(): Tray {
       type: 'radio' as const,
       checked: d.isCurrent,
       click: () => {
-        const next = saveSettings({ stickDisplayId: d.id })
+        // Persist ID + geometry so the next reboot can fuzzy-match via workArea.
+        const next = saveSettings({
+          stickDisplayId: d.id,
+          stickDisplayWorkArea: d.bounds,
+          stickDisplayScaleFactor: d.scaleFactor
+        })
         pushState.settings(next)
         repositionWindow()
         popUpAndRetract(1500)

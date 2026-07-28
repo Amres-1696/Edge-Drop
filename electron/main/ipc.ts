@@ -453,7 +453,22 @@ export function registerIpc(): void {
   })
 
   handle('settings:update', (patch) => {
-    const next = saveSettings(patch)
+    // When the user explicitly picks a display, also persist its geometry so
+    // the next reboot can re-identify the monitor via fuzzy bounds matching
+    // even after Windows re-assigns numeric display IDs.
+    let enrichedPatch = { ...patch }
+    if (patch.stickDisplayId !== undefined) {
+      const displays = getDisplayListOptions()
+      const chosen = displays.find(d => d.id === patch.stickDisplayId)
+      if (chosen) {
+        enrichedPatch = {
+          ...enrichedPatch,
+          stickDisplayWorkArea: chosen.bounds,
+          stickDisplayScaleFactor: chosen.scaleFactor
+        }
+      }
+    }
+    const next = saveSettings(enrichedPatch)
     if (patch.launchAtLogin !== undefined && app.isPackaged) {
       try {
         app.setLoginItemSettings({
