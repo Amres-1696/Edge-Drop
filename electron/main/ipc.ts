@@ -716,9 +716,33 @@ function parseReleaseBodyToCleanText(body: string): { summary: string; highlight
 
 const STATIC_CHANGELOG_FALLBACK = [
   {
+    version: 'v0.2.2',
+    date: 'Jul 29, 2026',
+    isLatest: true,
+    summary: 'Stationary 3-category Settings navigation, Web Audio API haptic sound suite, edge trigger alignment presets, and magnetic 5% tick slider.',
+    highlights: [
+      {
+        title: 'Stationary 3-Category Settings Navigation',
+        description: 'Organized Settings into three clean tabs (Behaviour, Position, Appearance) with a stationary header and independent scroll position memory per section.'
+      },
+      {
+        title: 'Synthesized Web Audio Haptic Suite',
+        description: 'Zero-asset Web Audio API sound engine providing tactile audio feedback for dial ticks, button clicks, toggle pops, and mechanical delete thuds.'
+      },
+      {
+        title: 'Independent Edge Trigger Alignment & Proximity Beacon',
+        description: 'Choose Top, Center, or Bottom trigger strip placement with dynamic clipPath alignment, alongside an edge location hint hairline pulse.'
+      },
+      {
+        title: '5% Magnetic Tick Slider & Quit Action',
+        description: 'Continuous 0.002 1-to-1 real-time drag tracking with magnetic 5% snapping on release, plus an integrated Quit Edge-Drop button.'
+      }
+    ]
+  },
+  {
     version: 'v0.2.1',
     date: 'Jul 28, 2026',
-    isLatest: true,
+    isLatest: false,
     summary: 'Cross-reboot multi-monitor display persistence, 5-category macOS segmented filter control, unified image classification, and HD anti-aliased curved edges.',
     highlights: [
       {
