@@ -154,6 +154,10 @@ export interface Settings {
   verticalOffset: number
   /** Vertical alignment of the hover trigger strip relative to shelf ('top' | 'center' | 'bottom'). Default: 'center'. */
   triggerAlignment?: 'top' | 'center' | 'bottom'
+  /** When true, subtly illuminates a beacon hint on the screen edge when touching the edge at a different position. Default: true. */
+  showEdgeLocationHint?: boolean
+  /** When true, plays tactile audio sound effects for sliders, buttons, and switches. Default: true. */
+  soundEffects?: boolean
   /** Last version for which the user opened/viewed the What's New changelog panel. */
   lastSeenChangelogVersion?: string
 }
@@ -180,6 +184,8 @@ export const DEFAULT_SETTINGS: Settings = {
   copyIndicatorStyle: 'logo',
   verticalOffset: 0.5,
   triggerAlignment: 'center',
+  showEdgeLocationHint: true,
+  soundEffects: true,
   lastSeenChangelogVersion: undefined
 }
 

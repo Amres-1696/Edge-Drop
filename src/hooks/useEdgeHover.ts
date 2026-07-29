@@ -277,6 +277,21 @@ export function useEdgeHover(): void {
       cancelClose()
     }
 
+    let edgeHintTimer: number | undefined
+    let edgeHintFired = false
+
+    const triggerEdgeHint = () => {
+      if (edgeHintFired) return
+      edgeHintFired = true
+      const s = useStore.getState()
+      s.setEdgeHintActive(true)
+      if (edgeHintTimer !== undefined) window.clearTimeout(edgeHintTimer)
+      edgeHintTimer = window.setTimeout(() => {
+        edgeHintTimer = undefined
+        useStore.getState().setEdgeHintActive(false)
+      }, 300)
+    }
+
     // ── main-process cursor poll (replaces broken pointermove forwarding) ──
     // The main process polls screen.getCursorScreenPoint() every 16ms and
     // sends window:cursor-edge with raw x/y coords. We check the hot zone
@@ -293,10 +308,19 @@ export function useEdgeHover(): void {
       switch (stickPosition) {
         case 'right': {
           const distFromRight = displayWidth - data.x
-          const inEdge = distFromRight >= -BUFFER_PX && distFromRight <= TRIGGER_PX
+          const inEdgeNear = distFromRight >= -BUFFER_PX && distFromRight <= (TRIGGER_PX + 25)
           const inZone = data.y >= top && data.y <= bottom
 
-          if (inEdge && inZone && !state.open) {
+          if (!inEdgeNear) {
+            edgeHintFired = false
+          }
+
+          if (inEdgeNear && !inZone && !state.open && (state.settings.showEdgeLocationHint ?? true)) {
+            triggerEdgeHint()
+          }
+
+          if (distFromRight >= -BUFFER_PX && distFromRight <= TRIGGER_PX && inZone && !state.open) {
+            if (state.edgeHintActive) state.setEdgeHintActive(false)
             cancelClose()
             if (dwellTimer === undefined) {
               dwellTimer = window.setTimeout(() => {
@@ -313,6 +337,8 @@ export function useEdgeHover(): void {
           }
 
           if (!state.open) return
+
+          if (state.edgeHintActive) state.setEdgeHintActive(false)
 
           const now = Date.now()
           if (now - lastSetInteractiveRef.current > 2000) {
@@ -342,10 +368,19 @@ export function useEdgeHover(): void {
 
         // left
         default: {
-          const inEdge = data.x >= -BUFFER_PX && data.x <= TRIGGER_PX
+          const inEdgeNear = data.x >= -BUFFER_PX && data.x <= (TRIGGER_PX + 25)
           const inZone = data.y >= top && data.y <= bottom
 
-          if (inEdge && inZone && !state.open) {
+          if (!inEdgeNear) {
+            edgeHintFired = false
+          }
+
+          if (inEdgeNear && !inZone && !state.open && (state.settings.showEdgeLocationHint ?? true)) {
+            triggerEdgeHint()
+          }
+
+          if (data.x >= -BUFFER_PX && data.x <= TRIGGER_PX && inZone && !state.open) {
+            if (state.edgeHintActive) state.setEdgeHintActive(false)
             cancelClose()
             if (dwellTimer === undefined) {
               dwellTimer = window.setTimeout(() => {
@@ -362,6 +397,8 @@ export function useEdgeHover(): void {
           }
 
           if (!state.open) return
+
+          if (state.edgeHintActive) state.setEdgeHintActive(false)
 
           const now = Date.now()
           if (now - lastSetInteractiveRef.current > 2000) {

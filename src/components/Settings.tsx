@@ -341,6 +341,19 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
       {/* ══ GROUP: Trigger zone ═════════════════════════════════════════ */}
       <div className="setting-group-label" style={{ marginTop: 20 }}>Trigger Zone</div>
 
+      <div className="setting-row">
+        <div className="setting-info">
+          <div className="setting-title">Edge location hint</div>
+          <div className="setting-desc">Subtly illuminate beacon on screen edge when touching edge at wrong position</div>
+        </div>
+        <Toggle
+          checked={settings.showEdgeLocationHint ?? true}
+          onChange={(v) => patch({ showEdgeLocationHint: v })}
+        />
+      </div>
+
+      <div className="setting-divider" />
+
       <div className="setting-row vertical">
         <div className="setting-info">
           <div className="setting-title">Edge trigger position</div>
@@ -618,6 +631,23 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
           )}
         </>
       )}
+
+      {/* ══ GROUP: AUDIO & FEEDBACK ═════════════════════════════════════ */}
+      <div className="setting-group-label" style={{ marginTop: 20 }}>AUDIO & FEEDBACK</div>
+
+      <div className="setting-row">
+        <div className="setting-info">
+          <div className="setting-title">Sound effects</div>
+          <div className="setting-desc">Tactile audio feedback for sliders, buttons, and switches</div>
+        </div>
+        <Toggle
+          checked={settings.soundEffects ?? true}
+          onChange={(v) => {
+            if (v) playToggleSound(true)
+            patch({ soundEffects: v })
+          }}
+        />
+      </div>
 
       {/* ══ GROUP: ANIMATIONS ═══════════════════════════════════════════ */}
       <div className="setting-group-label" style={{ marginTop: 20 }}>ANIMATIONS</div>

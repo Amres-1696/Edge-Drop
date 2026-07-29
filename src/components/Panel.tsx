@@ -29,6 +29,7 @@ export function Panel() {
   const setSettingsOpen = useStore((s) => s.setSettingsOpen)
   const setQuery = useStore((s) => s.setQuery)
   const bounceAnimation = settings.bounceAnimation
+  const edgeHintActive = useStore((s) => s.edgeHintActive)
 
   useEffect(() => {
     if (!open) {
@@ -259,6 +260,31 @@ export function Panel() {
           opacity: { duration: open ? 0.12 : 0.08, ease: 'easeOut' }
         }}
       >
+        {/* Edge Location Hint Beacon (Ultra-subtle fast hairline pulse when touching edge at wrong position) */}
+        <AnimatePresence>
+          {!open && edgeHintActive && (settings.showEdgeLocationHint ?? true) && (
+            <motion.div
+              key="edge-location-beacon"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.28 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15, ease: 'easeInOut' }}
+              style={{
+                position: 'absolute',
+                top: insetTop,
+                bottom: insetBottom,
+                [isRight ? 'right' : 'left']: 0,
+                width: 1.5,
+                boxSizing: 'border-box',
+                background: 'linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.45) 35%, rgba(255, 255, 255, 0.45) 65%, transparent)',
+                boxShadow: '0 0 4px rgba(255, 255, 255, 0.2)',
+                borderRadius: isRight ? '999px 0 0 999px' : '0 999px 999px 0',
+                pointerEvents: 'none',
+                zIndex: 99
+              }}
+            />
+          )}
+        </AnimatePresence>
         {isRight ? (
           <>
             <div className="flare-top flare-right">

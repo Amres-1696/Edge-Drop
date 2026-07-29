@@ -54,6 +54,8 @@ interface AppState {
   setSliderActive: (active: boolean) => void
   notifyPositionChanged: () => void
   resetPositionChangedTime: () => void
+  edgeHintActive: boolean
+  setEdgeHintActive: (active: boolean) => void
 
   /* hydration + sync */
   hydrate: () => Promise<void>
@@ -120,6 +122,8 @@ export const useStore = create<AppState>((set, get) => ({
   }),
   notifyPositionChanged: () => set({ sliderReleasedTime: Date.now() }),
   resetPositionChangedTime: () => set({ sliderReleasedTime: 0 }),
+  edgeHintActive: false,
+  setEdgeHintActive: (active) => set({ edgeHintActive: active }),
   styleFlyoutOpen: false,
   setStyleFlyoutOpen: (open) => {
     set({ styleFlyoutOpen: open, ...(open ? {} : { previewFlyoutRect: null }) })
