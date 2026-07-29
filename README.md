@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>A zero-click, hover-activated clipboard shelf and native OS file-transfer hub for the desktop.</strong><br/>
-  Lives invisibly on the left edge of your screen. Approach it, and it opens. Drag anything out — into Photoshop, Word, Slack, Explorer, anywhere.
+  Lives invisibly on the screen edge. Approach it, and it opens. Drag anything out — into Photoshop, Word, Slack, Explorer, anywhere.
 </p>
 
 <p align="center">
@@ -30,7 +30,7 @@
 
 Every clipboard manager on the market breaks your flow. You copy something, switch apps, paste, then hunt through `Win+V` history with arrow keys or dig into a tray menu. Multi-step. Modal. Slow.
 
-**Edge-Drop removes the friction.** It anchors to the leftmost pixel of your monitor as a transparent, always-on-top, click-through surface. When your cursor approaches the edge, the shelf springs open. Drag images, file stacks, rich text, and HTML bundles *out* of it — directly into whatever desktop app you're already using. No shortcuts. No window switching. No modal dialogs.
+**Edge-Drop removes the friction.** It anchors to the screen edge of your monitor as a transparent, always-on-top, click-through surface. When your cursor approaches the edge, the shelf springs open. Drag images, file stacks, rich text, and HTML bundles *out* of it — directly into whatever desktop app you're already using. No shortcuts. No window switching. No modal dialogs.
 
 It is built for the developer and creative workflow where you constantly juggle screenshots, code snippets, file paths, design assets, and reference links between many windows at once.
 
@@ -107,18 +107,36 @@ npm run build:store  # outputs an MSIX .appx for Microsoft Store submission
 ## Features
 
 **Zero-click edge hover**
-- Frameless, transparent, always-on-top `BrowserWindow` anchored at `x=0`
+- Frameless, transparent, always-on-top `BrowserWindow` anchored at `x=0` or right screen edge
 - 100% click-through when collapsed — desktop stays fully usable
-- Configurable hot-zone height (25% / 40% / 60% of screen) and blade height (40% – 100%)
-- **Vertical Position Presets:** Customize screen edge placement with **Top**, **Center** (default), or **Bottom** vertical alignment presets, featuring exact dynamic boundary clamping (zero clipping/out-of-bounds).
+- Configurable hot-zone height (25% / 40% / 60% of screen) and blade height (50% – 80%)
+- **Independent Edge Trigger Placement:** Choose exact trigger strip alignment (**Top**, **Center**, or **Bottom**) relative to the shelf, with dynamic CSS `clipPath` calculation matching the exact sensor region.
+- **Edge Location Hint (Proximity Beacon):** Subtle 1.5px hairline gradient pulse (300ms duration, 0.28 opacity) that flashes once on the screen edge when cursor touches the edge at a misaligned vertical position, guiding users to the shelf.
 - **Multi-monitor support:** Pick exactly which display the panel sticks to, with options for Left or Right screen edges. Features a single source of truth multi-display engine (`getDisplayListOptions()`) with real-time physical resolution calculation (3840×2160, 2560×1440, 1920×1080) across all High-DPI Windows display scaling factors.
 - **Cross-Reboot Display Persistence:** Edge-Drop remembers your chosen monitor across device restarts. A 4-tier resolution pipeline (exact session ID → fuzzy workArea geometry match within 8px tolerance → nearest by position → primary fallback) silently re-identifies the correct physical monitor after Windows re-assigns numeric display IDs on reboot. If the monitor is genuinely unplugged, the panel seamlessly falls back to the Primary Display without any user action.
 - **Fullscreen Protection (Game Mode):** Native Windows `SHQueryUserNotificationState` OS detection (`fullscreen.ts`) automatically suppresses edge hover when Direct3D games, fullscreen videos, or presentations are active.
 - **Ultra-lightweight:** Optimized memory footprint (~60% reduced RAM) using custom `edgelocal://` streaming protocols and compressed WebM assets.
 
+**Synthesized Web Audio Haptic Suite**
+- **Zero-Asset Audio Engine (`soundEffects.ts`):** Real-time synthesized Web Audio API sound suite providing tactile audio feedback for UI micro-interactions without audio file assets.
+- **Mechanical Dial Ticks:** High-frequency 1800Hz → 900Hz micro-ticks (`playDialTickSound`) when sliding position controls.
+- **Mechanical Delete Haptic:** Dual-stage downward pitch sweep (1400Hz → 250Hz in 14ms + 150Hz → 40Hz thud) when deleting items (`playDeleteSound`).
+- **Tactile Switches & Buttons:** Resonant pops for toggle switches (`playToggleSound`) and crisp clicks for buttons (`playButtonClickSound`).
+- **Global Audio Control:** Global `Sound effects` toggle switch in Settings (ON by default) with `isSoundEnabled()` guard across all synthesis routines. Eager `AudioContext` auto-unlock on initial interaction (`pointerdown`/`mouseenter`/`keydown`).
+
+**Segmented Settings Architecture**
+- **Stationary 3-Category Navigation Bar:** Organized into three clean, emoji-free tabs: **`Behaviour`** (1st), **`Position`** (2nd), and **`Appearance`** (3rd).
+- **Stationary Header & Independent Scroll Area:** Fixed top tab bar (`.settings-fixed-header`) stays 100% stationary while settings controls scroll independently underneath it.
+- **Independent Scroll Position Memory:** Each category section maintains its own separate `scrollTop` state across tab switches (`tabScrollPositions`).
+- **Pure CSS Selection Synchronization:** Native CSS active tab styling (`.settings-tab-btn.active`) eliminating layout projection glitches during panel position adjustments.
+- **5% Magnetic Tick Slider:** Smooth `0.002` real-time 1-to-1 continuous tracking during drag with 60fps/120fps precision, featuring 21 visual tick dashes, live percentage badge (`50%`), percentage quick-jump buttons (`0%`, `50%`, `100%`), and magnetic 5% snapping on pointer release.
+- **Position & Display Switch Preview:** 1.75s temporary interactive preview window when changing `Stick position` (`Left` / `Right`) or `Display` monitor in settings.
+- **Quit Edge-Drop Application Action:** Integrated `Quit Edge-Drop` button under Application settings with IPC integration (`window.edge.quitApp()`) to cleanly terminate electron main and background processes.
+
 **Silent Background Auto-Updates**
-- **Zero-Friction Updates (`electron-updater`):** GitHub releases feature silent background downloading and a single-click "Restart to Update" button.
-- **Microsoft Store Isolation:** Isolated build pipelines ensure Microsoft Store (MSIX) builds remain 100% compliant with Store terms and conditions without integrated update mechanisms.
+- **Zero-Friction Updates (`electron-updater`):** GitHub releases feature background downloading and a single-click "Restart to Update" button.
+- **Monochrome Glassmorphic Banner:** Prominently positioned at the top of the scrollable content area across all category tabs. Styled with a dark-mode glassmorphic 4% white card fill (`rgba(255, 255, 255, 0.04)`), 12% white border, and high-contrast white button.
+- **Microsoft Store Isolation:** Isolated build pipelines ensure Microsoft Store (MSIX) builds remain 100% compliant with Store terms and conditions without integrated update mechanisms (`isStoreBuild()`).
 
 **Multi-format clipboard engine**
 - Captures plain text, URLs, rich HTML, raw images, and multi-file selections
@@ -126,6 +144,7 @@ npm run build:store  # outputs an MSIX .appx for Microsoft Store submission
 - Respects password-manager and dictation-tool privacy flags (case-insensitive matching)
 - Smart deduplication — re-copies bump `hitCount` and move the item to the top
 - Incognito mode — one click suspends polling for sensitive data
+- Auto-delete timer options (Never / 1h / 6h / 24h / 7d) and clear unpinned on restart
 
 **Direct URL Detection & One-Click Launch**
 - **Quick Action Links:** Dedicated external link launcher (`ExternalLinkIcon`) on URL item cards and inside Preview Flyouts.
@@ -139,19 +158,16 @@ npm run build:store  # outputs an MSIX .appx for Microsoft Store submission
 **Fluid collections & stacks**
 - Auto-group multi-file drag-ins and multi-image copies into 3D card stacks (max 10)
 - **Preview Flyout Drag-to-Stack**: Drag any shelf item directly onto an open Preview Flyout to stack and merge them seamlessly
-- Double-click to expand, drag a sub-item to the left edge to split it back out
+- Double-click to expand, drag a sub-item to the left/right edge to split it back out
 
 **UI / UX**
 - **macOS Segmented Control 5-Category Filter Suite**: Integrated 5-type filter bar (**`All`**, **`Text`**, **`Links`**, **`Images`**, **`Files`**) with a single persistent sliding spring indicator pill (`stiffness: 500`, `damping: 35`) and zero shape distortion.
+- **Independent Pinned Section State per Filter**: Each filter category tab maintains its own independent pinned section collapse/expand state (`collapsedMap`), persisted across sessions in `localStorage`.
 - **Unified Image Entity Classification**: Native screenshots (`Win + Shift + S`) and copied image files (`.png`, `.jpg`, `.webp`, `.svg`) are unified under the **`Images`** filter tab with visual thumbnail cards.
 - **HD Anti-Aliased Curved Edges**: GPU layer promotion (`transform: translateZ(0)`), `-webkit-background-clip: padding-box`, and smooth vector rasterization delivering 100% HD anti-aliased curved borders across all display scales.
-- **Cross-Reboot Display Persistence**: 4-tier display resolution pipeline persists `stickDisplayWorkArea` + `stickDisplayScaleFactor` to `settings.json`. On reboot, fuzzy geometry matching (8px tolerance) re-identifies the correct monitor even after Windows re-assigns numeric display IDs — with a safe primary display fallback if the monitor is genuinely disconnected.
 - **Tactile Micro-Interactions & Spring Motion**: Card hover 2px lift with ambient backlight glow, micro radial copy ripple effect, and smooth Framer Motion `layoutId` spring list reflow (`stiffness: 500`, `damping: 32`).
 - **Refined Obsidian Aesthetics & Multi-Layer Depth**: Dual-layer 3D glass hairline highlights (`inset 0 1px 0 rgba(255, 255, 255, 0.12)`) and dual typography hierarchy (monospaced *JetBrains Mono* metadata + *Inter/SF Pro* system title font stack).
 - **Ergonomic Card Action Bar & Safety Guard**: Re-ordered card actions (`Pin`, `Expand`, `Copy`, `Open Link`, `Divider`, `Delete`) with a physical safety hairline divider and 100% layout consistency across normal hover and preview mode.
-- **Ultra-Minimal Header**: Sleek, unbranded top header maximizing usable vertical space for clipboard items and sub-views.
-- **Pinned Deck**: Dedicated Pinned items deck container with custom icon header, smooth Framer Motion spring collapse/expand height physics, and clean text count.
-- **Tactile Framer Motion Switches**: Settings toggle switches powered by Framer Motion spring physics (`stiffness: 600`, `damping: 35`) with dark/light contrast styling.
 - **What's New Release History View**: Integrated in-app release notes timeline viewer (`ChangelogView.tsx`) connected to live GitHub Releases API with pure formatted text highlights and zero-lag offline fallbacks.
 - **Lucide-React Vector Icon Suite**: Powered by official `lucide-react` vector icons for crisp graphics across headers, item cards, and settings.
 - **Dynamic Preview Flyout**: Responsive layout for single files and multi-file collections with calibrated hover boundary tracking.
@@ -168,11 +184,12 @@ Edge-Drop is organized into three strictly isolated layers:
 
 1. **Main Process (`electron/main/`)**: Node.js runtime handling OS integrations, Win32 OLE drag pipelines, Windows DPAPI encryption (`safeStorage`), native `ClipboardWatcher` polling, and background auto-updates (`updater.ts`).
 2. **Preload Sandbox (`electron/preload/`)**: Context-isolated bridge (`contextBridge.exposeInMainWorld('edge', api)`). Consumes single-source-of-truth contracts in `shared/ipc.ts` (`InvokeMap`, `EventMap`, `SendMap`) and `shared/bridge.ts` (`EdgeApi`).
-3. **Renderer Process (`src/`)**: React 18 UI powered by Zustand state management (`appStore.ts`) and Framer Motion spring physics (`useAdaptiveSpring.ts`).
+3. **Renderer Process (`src/`)**: React 18 UI powered by Zustand state management (`appStore.ts`), Web Audio synthesis (`soundEffects.ts`), and Framer Motion spring physics (`useAdaptiveSpring.ts`).
 
 ### Key Engine Components
 - **`ClipboardWatcher.ts`**: Polls system clipboard every 600ms. Computes cheap FNV-1a hashes over BGRA bitmap bytes for zero-overhead image deduplication.
 - **`ItemStore.ts`**: Atomic JSON persistence with `safeStorage` DPAPI encryption, automatic duplicate bumping, and stack merging/splitting.
+- **`soundEffects.ts`**: Synthesized Web Audio API sound suite (dial ticks, button clicks, toggle pops, delete thuds) with global toggle controls.
 - **`updater.ts`**: Singleton `autoUpdater` module handling background downloading and single-click restart installation for GitHub builds, gated behind `!isStoreBuild()`.
 - **`drag.ts`**: Server-side SVG → PNG icon rendering via `@resvg/resvg-js` for stacked drag ghosts.
 
@@ -189,7 +206,7 @@ Edge-Drop touches the OS clipboard, the filesystem, and the Win32 OLE drag pipel
 | Process Isolation | `contextIsolation: true` · `nodeIntegration: false` · `sandbox: true` on all browser windows |
 | PowerShell Hardening | Absolute executable path `${SystemRoot}\System32\WindowsPowerShell\v1.0\powershell.exe`, non-blocking `execFile`, strict path validation (`pathValidation.ts`), and queue deadlock protection |
 | Protocol Confinement | `edgelocal://` canonical path resolution (`path.resolve()`) strictly confined within `%APPDATA%/Edge-Drop/images/` and SHA-256 ETag revalidation |
-| CSP & Teardown | Detector window loads static `resources/detector.html` (zero `data:` URL inline scripts) with explicit `closed` lifecycle memory dereferencing |
+| Detector Teardown | Static `resources/detector.html` (zero `data:` URL inline scripts) with explicit `closed` lifecycle memory dereferencing |
 | Typed IPC | `shared/ipc.ts` defines `InvokeMap`, `EventMap`, `SendMap` — channel names and payload types are statically checked on both sides |
 | Privacy-Aware Clipboard | Honors `ExcludeClipboardContentFromMonitorProcessing`, `ClipboardViewerIgnore`, `CanIncludeInClipboardHistory`, `CanUploadToCloudClipboard`, plus 1Password / Bitwarden / KeePass concealed formats |
 | Atomic Persistence | JSON index written via temp-file + rename; image bytes stored as per-id PNG files |
@@ -205,6 +222,7 @@ Edge-Drop touches the OS clipboard, the filesystem, and the Win32 OLE drag pipel
 | Desktop runtime | **Electron 34+** | Only way to access Win32 OLE drag pipelines and native clipboard formats from JS |
 | Build tooling | **electron-vite** | Separate Main / Preload / Renderer builds with Vite HMR |
 | UI | **React 18 + TypeScript** | Strongly typed component hierarchy |
+| Audio | **Web Audio API** | Synthesized haptic audio feedback (ticks, clicks, pops, thuds) with 0 audio asset overhead |
 | Animation | **Framer Motion** | Adaptive spring physics (`useAdaptiveSpring`), layout transitions, gesture animations |
 | State | **Zustand** | Selector-optimized, zero cascading re-renders during drags |
 | Drag icons | **@resvg/resvg-js** | Server-side SVG → PNG rendering for custom drag ghosts |
@@ -239,8 +257,8 @@ Edge-Drop/
 ├─ src/                    React renderer
 │  ├─ components/          Panel, ItemList, ClipboardItem, SearchBar, Settings, ChangelogView, Icons
 │  ├─ hooks/               useEdgeHover (hysteresis), useDragOut, useFilteredItems
+│  ├─ lib/                 soundEffects (Web Audio API), theme tokens, format helpers
 │  ├─ store/               Zustand appStore
-│  ├─ lib/                 Theme tokens, format helpers, file-type detection
 │  └─ styles/              tokens.css, panel.css, settings.css, item.css, global.css
 ```
 
@@ -254,6 +272,8 @@ Edge-Drop is in **public beta**. The following are planned, in rough priority or
 - [ ] **AI summarization** — condense multi-file bundles and long HTML copies into one-line summaries + tags
 - [x] **Multi-monitor support** — anchor to any display edge, not just primary
 - [x] **Silent background auto-updates** — background download and 1-click update installation
+- [x] **Synthesized Web Audio Haptic Suite** — real-time sound effects for ticks, toggles, clicks, and deletes
+- [x] **Segmented Settings Architecture** — 3 stationary category tabs with independent scroll positions
 - [ ] **Linux port** — replace Win32-specific paths with cross-platform equivalents
 - [ ] **Plugin SDK** — let users write custom format readers and drag-out targets
 - [ ] **Cloud sync (opt-in, E2E encrypted)** — sync pinned items across machines
