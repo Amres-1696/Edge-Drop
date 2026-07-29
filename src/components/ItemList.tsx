@@ -26,15 +26,24 @@ export function ItemList() {
   const isDraggingAny = useStore((s) => !!s.dragActive || !!s.internalDragReq)
   const open = useStore((s) => s.open)
   
+  const typeFilter = useStore((s) => s.typeFilter) || 'all'
   const [showScrollTop, setShowScrollTop] = useState(false)
-  const [pinnedCollapsed, setPinnedCollapsedState] = useState(() => {
-    const saved = localStorage.getItem('edge_drop_pinned_collapsed')
-    return saved !== null ? saved === 'true' : true // Compressed by default
+  const [collapsedMap, setCollapsedMap] = useState<Record<string, boolean>>(() => {
+    try {
+      const saved = localStorage.getItem('edge_drop_pinned_collapsed_map')
+      if (saved) return JSON.parse(saved)
+    } catch {}
+    return { all: true, text: true, image: true, file: true, link: true }
   })
 
+  const pinnedCollapsed = collapsedMap[typeFilter] ?? true
+
   const setPinnedCollapsed = (val: boolean) => {
-    setPinnedCollapsedState(val)
-    localStorage.setItem('edge_drop_pinned_collapsed', String(val))
+    setCollapsedMap((prev) => {
+      const next = { ...prev, [typeFilter]: val }
+      localStorage.setItem('edge_drop_pinned_collapsed_map', JSON.stringify(next))
+      return next
+    })
   }
   
   const topRecentId = recent[0]?.id
