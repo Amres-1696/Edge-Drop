@@ -212,6 +212,18 @@ export function Panel() {
 
 
 
+  const alignment = settings.triggerAlignment || 'center'
+  let insetTop = `calc(50% - ${halfTrigger}px)`
+  let insetBottom = `calc(50% - ${halfTrigger}px)`
+
+  if (alignment === 'top') {
+    insetTop = '0px'
+    insetBottom = `calc(100% - ${triggerHeightPx}px)`
+  } else if (alignment === 'bottom') {
+    insetTop = `calc(100% - ${triggerHeightPx}px)`
+    insetBottom = '0px'
+  }
+
   // Set clipPath via style (not animate) to avoid Framer Motion's broken
   // calc() interpolation — CSS transitions handle it correctly.
   let clipPath: string
@@ -219,11 +231,11 @@ export function Panel() {
   if (isRight) {
     clipPath = open
       ? 'inset(calc(0% - 100px) 0px calc(0% - 100px) calc(0% - 800px) round 24px 0px 0px 24px)'
-      : `inset(calc(50% - ${halfTrigger}px) 0px calc(50% - ${halfTrigger}px) calc(100% - ${hotWidth}px) round 24px 0px 0px 24px)`
+      : `inset(${insetTop} 0px ${insetBottom} calc(100% - ${hotWidth}px) round 24px 0px 0px 24px)`
   } else {
     clipPath = open
       ? 'inset(calc(0% - 100px) calc(0% - 800px) calc(0% - 100px) 0px round 0px 24px 24px 0px)'
-      : `inset(calc(50% - ${halfTrigger}px) calc(100% - ${hotWidth}px) calc(50% - ${halfTrigger}px) 0px round 0px 24px 24px 0px)`
+      : `inset(${insetTop} calc(100% - ${hotWidth}px) ${insetBottom} 0px round 0px 24px 24px 0px)`
   }
   containerStyle.clipPath = clipPath
 

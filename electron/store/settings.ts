@@ -21,6 +21,9 @@ function merge(base: Settings, patch: Partial<Settings>): Settings {
   if (out.uiStyle !== 'modern' && out.uiStyle !== 'compact') {
     out.uiStyle = 'modern'
   }
+  if (out.triggerAlignment !== 'top' && out.triggerAlignment !== 'center' && out.triggerAlignment !== 'bottom') {
+    out.triggerAlignment = 'center'
+  }
   return out
 }
 

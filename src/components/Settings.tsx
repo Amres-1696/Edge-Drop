@@ -343,6 +343,34 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
 
       <div className="setting-row vertical">
         <div className="setting-info">
+          <div className="setting-title">Edge trigger position</div>
+          <div className="setting-desc">Placement of hover trigger strip relative to shelf</div>
+        </div>
+        <div className="setting-pills">
+          {[
+            { label: 'Top', val: 'top' as const },
+            { label: 'Center', val: 'center' as const },
+            { label: 'Bottom', val: 'bottom' as const }
+          ].map((opt) => (
+            <button
+              key={opt.label}
+              className={`pill ${(settings.triggerAlignment || 'center') === opt.val ? 'active' : ''}`}
+              onClick={() => {
+                playButtonClickSound()
+                patch({ triggerAlignment: opt.val })
+                useStore.getState().notifyPositionChanged()
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="setting-divider" />
+
+      <div className="setting-row vertical">
+        <div className="setting-info">
           <div className="setting-title">Edge trigger height</div>
           <div className="setting-desc">Hover area size on the screen edge</div>
         </div>

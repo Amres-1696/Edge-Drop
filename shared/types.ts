@@ -152,6 +152,8 @@ export interface Settings {
   copyIndicatorStyle: 'logo' | 'check' | 'copy' | 'sparkle'
   /** Vertical offset fraction along screen edge (0 = top, 0.5 = center, 1 = bottom). Default: 0.5. */
   verticalOffset: number
+  /** Vertical alignment of the hover trigger strip relative to shelf ('top' | 'center' | 'bottom'). Default: 'center'. */
+  triggerAlignment?: 'top' | 'center' | 'bottom'
   /** Last version for which the user opened/viewed the What's New changelog panel. */
   lastSeenChangelogVersion?: string
 }
@@ -177,6 +179,7 @@ export const DEFAULT_SETTINGS: Settings = {
   showCopyIndicator: true,
   copyIndicatorStyle: 'logo',
   verticalOffset: 0.5,
+  triggerAlignment: 'center',
   lastSeenChangelogVersion: undefined
 }
 

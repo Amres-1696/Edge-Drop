@@ -91,11 +91,26 @@ export function useEdgeHover(): void {
       const vOffset = s.verticalOffset ?? 0.5
       const midY = minY + vOffset * (maxY - minY)
 
-      const half = (h * (s.hotZoneHeight || 0.25)) / 2
+      const alignment = s.triggerAlignment || 'center'
+      const panelTop = midY - panelH / 2
+      const panelBottom = midY + panelH / 2
+      const triggerH = Math.min(panelH, h * (s.hotZoneHeight || 0.25))
+
+      let top = midY - triggerH / 2
+      let bottom = midY + triggerH / 2
+
+      if (alignment === 'top') {
+        top = panelTop
+        bottom = panelTop + triggerH
+      } else if (alignment === 'bottom') {
+        top = panelBottom - triggerH
+        bottom = panelBottom
+      }
+
       const panelHalfH = panelH / 2 + 24
       zone.current = { 
-        top: midY - half, 
-        bottom: midY + half,
+        top, 
+        bottom,
         midY,
         panelHalfH
       }
@@ -106,7 +121,8 @@ export function useEdgeHover(): void {
       if (
         state.settings.panelHeight !== prevState.settings.panelHeight ||
         state.settings.hotZoneHeight !== prevState.settings.hotZoneHeight ||
-        state.settings.verticalOffset !== prevState.settings.verticalOffset
+        state.settings.verticalOffset !== prevState.settings.verticalOffset ||
+        state.settings.triggerAlignment !== prevState.settings.triggerAlignment
       ) {
         recompute()
       }
