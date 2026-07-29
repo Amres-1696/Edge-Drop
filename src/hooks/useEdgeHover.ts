@@ -162,12 +162,12 @@ export function useEdgeHover(): void {
       if (state.dragActive && !state.internalDragReq) return
       if (graceTimer !== undefined) return // already closing
 
-      // If the user recently released the slider (< 1.5s ago), wait out the remaining 1.5s window
-      const timeSinceSliderRelease = state.sliderReleasedTime > 0 ? Date.now() - state.sliderReleasedTime : Infinity
+      // If position/display/slider was recently changed (< 1.75s ago), wait out remaining preview stay window
+      const timeSincePositionChange = state.sliderReleasedTime > 0 ? Date.now() - state.sliderReleasedTime : Infinity
       let effectiveDelay = delay
 
-      if (timeSinceSliderRelease < 1500) {
-        effectiveDelay = Math.max(delay, 1500 - timeSinceSliderRelease)
+      if (timeSincePositionChange < 1750) {
+        effectiveDelay = Math.max(delay, 1750 - timeSincePositionChange)
       } else if (_previewClosedByUser) {
         effectiveDelay = PREVIEW_CLOSE_STAY_MS
       }
@@ -184,9 +184,9 @@ export function useEdgeHover(): void {
         window.clearTimeout(interactiveTimer)
         interactiveTimer = undefined
       }
-      // User re-entered the clipboard — clear the grace period flag so the
-      // next time they leave, the panel retracts at normal speed instead of
-      // waiting the full 2.5s safety net.
+      // User re-entered the clipboard — clear the preview grace period flags so the
+      // next time they leave, the panel retracts at normal speed (250ms)
+      useStore.getState().resetPositionChangedTime()
       if (_previewClosedByUser) {
         _previewClosedByUser = false
         if (_previewClosedTimer !== undefined) {
@@ -219,8 +219,8 @@ export function useEdgeHover(): void {
     const isInsideBlade = () => {
       const state = useStore.getState()
       if (state.sliderActive) return true
-      const timeSinceSliderRelease = state.sliderReleasedTime > 0 ? Date.now() - state.sliderReleasedTime : Infinity
-      if (timeSinceSliderRelease < 1500) return true
+      const timeSincePositionChange = state.sliderReleasedTime > 0 ? Date.now() - state.sliderReleasedTime : Infinity
+      if (timeSincePositionChange < 1750) return true
 
       const { x, y } = lastClient.current
       if (x < -BUFFER_PX || y < 0) return true // unknown — be conservative, don't close

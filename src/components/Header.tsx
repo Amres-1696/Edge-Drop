@@ -2,6 +2,7 @@
 import { motion } from 'framer-motion'
 import { useStore } from '../store/appStore'
 import { GearIcon, CloseIcon, InfoIcon } from './icons'
+import { playButtonClickSound } from '../lib/soundEffects'
 
 export function Header() {
   const setSettingsOpen = useStore((s) => s.setSettingsOpen)
@@ -92,7 +93,10 @@ export function Header() {
                   key={f.id}
                   type="button"
                   className={`filter-chip${active ? ' active' : ''}`}
-                  onClick={() => setTypeFilter(f.id)}
+                  onClick={() => {
+                    playButtonClickSound()
+                    setTypeFilter(f.id)
+                  }}
                   style={{
                     position: 'relative',
                     display: 'inline-flex',
@@ -127,7 +131,10 @@ export function Header() {
             type="button"
             className={`icon-btn${settingsSubView === 'changelog' ? ' active' : ''}`}
             title={settingsSubView === 'changelog' ? "Back to Settings" : "What's New"}
-            onClick={handleOpenChangelog}
+            onClick={() => {
+              playButtonClickSound()
+              handleOpenChangelog()
+            }}
             style={{
               color: settingsSubView === 'changelog' ? '#ffffff' : 'rgba(255, 255, 255, 0.75)',
               background: settingsSubView === 'changelog' ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
@@ -169,6 +176,7 @@ export function Header() {
           className={`icon-btn${settingsOpen ? ' active' : ''}`}
           title={settingsOpen ? 'Close Settings' : 'Settings'}
           onClick={() => {
+            playButtonClickSound()
             setSettingsOpen(!settingsOpen)
             if (settingsOpen) {
               setSettingsSubView('main')

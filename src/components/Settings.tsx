@@ -6,7 +6,7 @@ import { LiquidOctopusLoader } from './LiquidOctopusLoader'
 import { TickIndicatorIcon, CopyIndicatorIcon, SparkleIndicatorIcon } from './CopyIndicatorCurve'
 import { ChevronRightIcon, CloseIcon, LogOutIcon } from './icons'
 import { ChangelogView } from './ChangelogView'
-import { playDialTickSound } from '../lib/soundEffects'
+import { playDialTickSound, playToggleSound, playButtonClickSound } from '../lib/soundEffects'
 import '../styles/settings.css'
 
 export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: boolean }) {
@@ -165,7 +165,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
             <button
               key={opt.val}
               className={`pill ${settings.autoDeleteHours === opt.val ? 'active' : ''}`}
-              onClick={() => patch({ autoDeleteHours: opt.val })}
+              onClick={() => { playButtonClickSound(); patch({ autoDeleteHours: opt.val }) }}
             >
               {opt.label}
             </button>
@@ -190,7 +190,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
             <button
               key={opt.val}
               className={`pill ${settings.historyLimit === opt.val ? 'active' : ''}`}
-              onClick={() => patch({ historyLimit: opt.val })}
+              onClick={() => { playButtonClickSound(); patch({ historyLimit: opt.val }) }}
             >
               {opt.label}
             </button>
@@ -214,7 +214,11 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
             <button
               key={opt.label}
               className={`pill ${settings.stickPosition === opt.val ? 'active' : ''}`}
-              onClick={() => patch({ stickPosition: opt.val })}
+              onClick={() => {
+                playButtonClickSound()
+                patch({ stickPosition: opt.val })
+                useStore.getState().notifyPositionChanged()
+              }}
             >
               {opt.label}
             </button>
@@ -320,7 +324,11 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
               <button
                 key={d.id}
                 className={`pill display-pill ${isActive ? 'active' : ''}`}
-                onClick={() => patch({ stickDisplayId: d.id })}
+                onClick={() => {
+                  playButtonClickSound()
+                  patch({ stickDisplayId: d.id })
+                  useStore.getState().notifyPositionChanged()
+                }}
               >
                 <div className="pill-name">{d.name}</div>
                 <div className="pill-res">{d.resolution}</div>
@@ -347,7 +355,10 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
             <button
               key={opt.label}
               className={`pill ${Math.abs(settings.hotZoneHeight - opt.val) < 0.08 ? 'active' : ''}`}
-              onClick={() => patch({ hotZoneHeight: opt.val })}
+              onClick={() => {
+                playButtonClickSound()
+                patch({ hotZoneHeight: opt.val })
+              }}
             >
               {opt.label}
             </button>
@@ -371,7 +382,10 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
             <button
               key={opt.label}
               className={`pill ${settings.hotZoneWidth === opt.val ? 'active' : ''}`}
-              onClick={() => patch({ hotZoneWidth: opt.val })}
+              onClick={() => {
+                playButtonClickSound()
+                patch({ hotZoneWidth: opt.val })
+              }}
             >
               {opt.label}
             </button>
@@ -395,7 +409,10 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
             <button
               key={opt.label}
               className={`pill ${Math.abs((settings.panelHeight || 0.6) - opt.val) < 0.08 ? 'active' : ''}`}
-              onClick={() => patch({ panelHeight: opt.val })}
+              onClick={() => {
+                playButtonClickSound()
+                patch({ panelHeight: opt.val })
+              }}
             >
               {opt.label}
             </button>
@@ -439,7 +456,10 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
               type="button"
               className={`icon-btn style-preview-toggle-btn ${isFlyoutActive ? 'active' : ''}`}
               title={isFlyoutActive ? 'Close Style Selector' : 'Open Indicator Style Selector'}
-              onClick={handleToggleFlyout}
+              onClick={() => {
+                playButtonClickSound()
+                handleToggleFlyout()
+              }}
             >
               {isFlyoutActive ? <CloseIcon /> : <ChevronRightIcon />}
             </button>
@@ -464,7 +484,10 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
               }}>
                 {/* Logo Card */}
                 <div
-                  onClick={() => patch({ copyIndicatorStyle: 'logo' })}
+                  onClick={() => {
+                    playButtonClickSound()
+                    patch({ copyIndicatorStyle: 'logo' })
+                  }}
                   style={{
                     background: (settings.copyIndicatorStyle || 'logo') === 'logo' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.04)',
                     border: (settings.copyIndicatorStyle || 'logo') === 'logo' ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid rgba(255, 255, 255, 0.06)',
@@ -487,7 +510,10 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
 
                 {/* Tick Card */}
                 <div
-                  onClick={() => patch({ copyIndicatorStyle: 'check' })}
+                  onClick={() => {
+                    playButtonClickSound()
+                    patch({ copyIndicatorStyle: 'check' })
+                  }}
                   style={{
                     background: settings.copyIndicatorStyle === 'check' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.04)',
                     border: settings.copyIndicatorStyle === 'check' ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid rgba(255, 255, 255, 0.06)',
@@ -510,7 +536,10 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
 
                 {/* Copy Card */}
                 <div
-                  onClick={() => patch({ copyIndicatorStyle: 'copy' })}
+                  onClick={() => {
+                    playButtonClickSound()
+                    patch({ copyIndicatorStyle: 'copy' })
+                  }}
                   style={{
                     background: settings.copyIndicatorStyle === 'copy' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.04)',
                     border: settings.copyIndicatorStyle === 'copy' ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid rgba(255, 255, 255, 0.06)',
@@ -533,7 +562,10 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
 
                 {/* Sparkle Card */}
                 <div
-                  onClick={() => patch({ copyIndicatorStyle: 'sparkle' })}
+                  onClick={() => {
+                    playButtonClickSound()
+                    patch({ copyIndicatorStyle: 'sparkle' })
+                  }}
                   style={{
                     background: settings.copyIndicatorStyle === 'sparkle' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.04)',
                     border: settings.copyIndicatorStyle === 'sparkle' ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid rgba(255, 255, 255, 0.06)',
@@ -585,7 +617,10 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
         <button
           className="pill display-pill"
           style={{ width: '100%', justifyContent: 'center', padding: '7px 14px', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: '12.5px' }}
-          onClick={() => window.open('https://github.com/Deepender25/Edge-Drop/issues/new/choose', '_blank')}
+          onClick={() => {
+            playButtonClickSound()
+            window.open('https://github.com/Deepender25/Edge-Drop/issues/new/choose', '_blank')
+          }}
         >
           Submit Feedback ↗
         </button>
@@ -601,7 +636,10 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
         </div>
         <button
           className="quit-app-btn"
-          onClick={() => void window.edge.quitApp()}
+          onClick={() => {
+            playButtonClickSound()
+            void window.edge.quitApp()
+          }}
         >
           <LogOutIcon width={14} height={14} />
           Quit Edge-Drop
@@ -617,7 +655,10 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
         </div>
         <button
           className="github-promo-btn"
-          onClick={() => window.open('https://github.com/Deepender25/Edge-Drop', '_blank')}
+          onClick={() => {
+            playButtonClickSound()
+            window.open('https://github.com/Deepender25/Edge-Drop', '_blank')
+          }}
         >
           <svg
             className="star-icon"
@@ -655,7 +696,10 @@ function Toggle({
       className={`setting-toggle${checked ? ' checked' : ''}`}
       role="switch"
       aria-checked={checked}
-      onClick={() => onChange(!checked)}
+      onClick={() => {
+        playToggleSound(!checked)
+        onChange(!checked)
+      }}
       style={{
         flexShrink: 0,
         width: 38,

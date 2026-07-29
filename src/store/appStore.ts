@@ -52,6 +52,8 @@ interface AppState {
   sliderActive: boolean
   sliderReleasedTime: number
   setSliderActive: (active: boolean) => void
+  notifyPositionChanged: () => void
+  resetPositionChangedTime: () => void
 
   /* hydration + sync */
   hydrate: () => Promise<void>
@@ -116,6 +118,8 @@ export const useStore = create<AppState>((set, get) => ({
     sliderActive: active,
     sliderReleasedTime: active ? 0 : Date.now()
   }),
+  notifyPositionChanged: () => set({ sliderReleasedTime: Date.now() }),
+  resetPositionChangedTime: () => set({ sliderReleasedTime: 0 }),
   styleFlyoutOpen: false,
   setStyleFlyoutOpen: (open) => {
     set({ styleFlyoutOpen: open, ...(open ? {} : { previewFlyoutRect: null }) })

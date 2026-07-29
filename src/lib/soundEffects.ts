@@ -1,6 +1,6 @@
 /**
  * Web Audio API Haptic Sound Synthesizer for Edge-Drop.
- * Provides zero-latency, crisp mechanical rotary dial tick sounds.
+ * Provides zero-latency, tactile mechanical audio effects for sliders, toggles, and buttons.
  */
 
 let audioCtx: AudioContext | null = null
@@ -21,7 +21,7 @@ function getAudioContext(): AudioContext | null {
 
 /**
  * Plays a satisfying mechanical rotary dial tick sound.
- * Designed to emulate a high-end camera dial / Apple Watch digital crown detent click.
+ * Emulates a camera dial / Apple Watch Digital Crown detent click.
  */
 export function playDialTickSound(): void {
   try {
@@ -64,6 +64,89 @@ export function playDialTickSound(): void {
     bodyOsc.start(now)
     bodyOsc.stop(now + 0.012)
   } catch {
-    /* ignore Web Audio API restrictions/errors */
+    /* ignore Web Audio API restrictions */
+  }
+}
+
+/**
+ * Plays a mechanical toggle switch sound (ON / OFF).
+ * Emulates a tactile hardware toggle switch snap.
+ */
+export function playToggleSound(enabled: boolean): void {
+  try {
+    const ctx = getAudioContext()
+    if (!ctx) return
+
+    const now = ctx.currentTime
+
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+
+    const startFreq = enabled ? 2200 : 1300
+    const endFreq = enabled ? 950 : 450
+    const vol = enabled ? 0.15 : 0.11
+
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(startFreq, now)
+    osc.frequency.exponentialRampToValueAtTime(endFreq, now + 0.014)
+
+    gain.gain.setValueAtTime(vol, now)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.014)
+
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+
+    osc.start(now)
+    osc.stop(now + 0.014)
+
+    // Mechanical click thud
+    const bodyOsc = ctx.createOscillator()
+    const bodyGain = ctx.createGain()
+
+    bodyOsc.type = 'triangle'
+    bodyOsc.frequency.setValueAtTime(enabled ? 220 : 150, now)
+    bodyOsc.frequency.exponentialRampToValueAtTime(enabled ? 70 : 40, now + 0.016)
+
+    bodyGain.gain.setValueAtTime(0.10, now)
+    bodyGain.gain.exponentialRampToValueAtTime(0.001, now + 0.016)
+
+    bodyOsc.connect(bodyGain)
+    bodyGain.connect(ctx.destination)
+
+    bodyOsc.start(now)
+    bodyOsc.stop(now + 0.016)
+  } catch {
+    /* ignore Web Audio API restrictions */
+  }
+}
+
+/**
+ * Plays a subtle, tactile keycap button click sound.
+ * Ideal for filter chips, action buttons, pills, and icons.
+ */
+export function playButtonClickSound(): void {
+  try {
+    const ctx = getAudioContext()
+    if (!ctx) return
+
+    const now = ctx.currentTime
+
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(2100, now)
+    osc.frequency.exponentialRampToValueAtTime(900, now + 0.009)
+
+    gain.gain.setValueAtTime(0.10, now)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.009)
+
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+
+    osc.start(now)
+    osc.stop(now + 0.009)
+  } catch {
+    /* ignore Web Audio API restrictions */
   }
 }

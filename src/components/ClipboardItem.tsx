@@ -23,6 +23,7 @@ import { useStore } from '../store/appStore'
 import { useDragOut } from '../hooks/useDragOut'
 import { basename, formatBytes, previewText, relativeTime } from '../lib/format'
 import { getFileKind } from '../lib/fileType'
+import { playButtonClickSound, playToggleSound } from '../lib/soundEffects'
 import { CopyIcon, FileKindIcon, ImageIcon, LinkIcon, PinIcon, PinFillIcon, TrashIcon, MinusIcon, ChevronUpIcon, ExpandIcon, ContractIcon, ExternalLinkIcon } from './icons'
 import '../styles/item.css'
 
@@ -61,6 +62,7 @@ function ClipboardItemBase({ item }: Props) {
 
   const onCopy = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
+    playButtonClickSound()
     copy(item.id)
     setCopied(true)
     window.setTimeout(() => setCopied(false), 900)
@@ -208,6 +210,7 @@ function ClipboardItemBase({ item }: Props) {
             title={item.pinned ? 'Unpin' : 'Pin'}
             onClick={(e) => {
               e.currentTarget.blur()
+              playToggleSound(!item.pinned)
               togglePin(item.id, !item.pinned)
             }}
           >
@@ -219,6 +222,7 @@ function ClipboardItemBase({ item }: Props) {
             onClick={(e) => {
               e.stopPropagation()
               e.currentTarget.blur()
+              playButtonClickSound()
               const rect = e.currentTarget.closest('.item-main')?.getBoundingClientRect()
               const rectData = rect ? { y: rect.y, height: rect.height } : undefined
               useStore.getState().setPreviewItemId(isPreviewing ? null : item.id, rectData)
@@ -239,6 +243,7 @@ function ClipboardItemBase({ item }: Props) {
               onClick={(e) => {
                 e.stopPropagation()
                 e.currentTarget.blur()
+                playButtonClickSound()
                 window.open((item.data as any).text, '_blank')
               }}
             >
@@ -251,6 +256,7 @@ function ClipboardItemBase({ item }: Props) {
             title="Delete"
             onClick={(e) => {
               e.currentTarget.blur()
+              playButtonClickSound()
               remove(item.id)
             }}
           >

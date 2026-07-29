@@ -12,6 +12,7 @@ import { useStore } from '../store/appStore'
 import { LiquidOctopusLoader } from './LiquidOctopusLoader'
 import { TickIndicatorIcon, CopyIndicatorIcon, SparkleIndicatorIcon } from './CopyIndicatorCurve'
 import { CloseIcon } from './icons'
+import { playButtonClickSound } from '../lib/soundEffects'
 import { createPortal } from 'react-dom'
 import { useAdaptiveSpring } from '../hooks/useAdaptiveSpring'
 
@@ -125,7 +126,10 @@ export function IndicatorStyleFlyout({ isRight }: { isRight: boolean }) {
                   flexShrink: 0,
                   transition: 'background 0.15s ease, color 0.15s ease'
                 }}
-                onClick={() => setStyleFlyoutOpen(false)}
+                onClick={() => {
+                  playButtonClickSound()
+                  setStyleFlyoutOpen(false)
+                }}
                 title="Close Style Panel"
               >
                 <CloseIcon width={12} height={12} />
@@ -138,6 +142,7 @@ export function IndicatorStyleFlyout({ isRight }: { isRight: boolean }) {
               <StyleCard
                 active={(settings.copyIndicatorStyle || 'logo') === 'logo'}
                 onClick={() => {
+                  playButtonClickSound()
                   patch({ copyIndicatorStyle: 'logo' })
                   useStore.getState().triggerCopyFlare()
                 }}
@@ -149,6 +154,7 @@ export function IndicatorStyleFlyout({ isRight }: { isRight: boolean }) {
               <StyleCard
                 active={(settings.copyIndicatorStyle || 'logo') === 'check'}
                 onClick={() => {
+                  playButtonClickSound()
                   patch({ copyIndicatorStyle: 'check' })
                   useStore.getState().triggerCopyFlare()
                 }}
@@ -160,6 +166,7 @@ export function IndicatorStyleFlyout({ isRight }: { isRight: boolean }) {
               <StyleCard
                 active={(settings.copyIndicatorStyle || 'logo') === 'copy'}
                 onClick={() => {
+                  playButtonClickSound()
                   patch({ copyIndicatorStyle: 'copy' })
                   useStore.getState().triggerCopyFlare()
                 }}
@@ -171,6 +178,7 @@ export function IndicatorStyleFlyout({ isRight }: { isRight: boolean }) {
               <StyleCard
                 active={(settings.copyIndicatorStyle || 'logo') === 'sparkle'}
                 onClick={() => {
+                  playButtonClickSound()
                   patch({ copyIndicatorStyle: 'sparkle' })
                   useStore.getState().triggerCopyFlare()
                 }}
