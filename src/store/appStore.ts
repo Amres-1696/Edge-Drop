@@ -49,6 +49,10 @@ interface AppState {
   previewItemId: string | null
   previewItemRect: { y: number; height: number } | null
 
+  sliderActive: boolean
+  sliderReleasedTime: number
+  setSliderActive: (active: boolean) => void
+
   /* hydration + sync */
   hydrate: () => Promise<void>
   setUpdateAvailable: (info: { version: string }) => void
@@ -106,6 +110,12 @@ export const useStore = create<AppState>((set, get) => ({
   updateInfo: null,
   previewItemId: null,
   previewItemRect: null,
+  sliderActive: false,
+  sliderReleasedTime: 0,
+  setSliderActive: (active) => set({
+    sliderActive: active,
+    sliderReleasedTime: active ? 0 : Date.now()
+  }),
   styleFlyoutOpen: false,
   setStyleFlyoutOpen: (open) => {
     set({ styleFlyoutOpen: open, ...(open ? {} : { previewFlyoutRect: null }) })

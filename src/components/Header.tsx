@@ -164,9 +164,8 @@ export function Header() {
           </button>
         )}
 
-        <motion.button
+        <button
           type="button"
-          layout
           className={`icon-btn${settingsOpen ? ' active' : ''}`}
           title={settingsOpen ? 'Close Settings' : 'Settings'}
           onClick={() => {
@@ -205,7 +204,7 @@ export function Header() {
               }}
             />
           )}
-        </motion.button>
+        </button>
       </div>
     </div>
   )

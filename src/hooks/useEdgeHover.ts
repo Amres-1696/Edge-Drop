@@ -126,6 +126,7 @@ export function useEdgeHover(): void {
     const closePanelNow = () => {
       const s = useStore.getState()
       if (s.styleFlyoutOpen) s.setStyleFlyoutOpen(false)
+      if (s.settingsOpen) s.setSettingsOpen(false)
       s.setOpen(false)
       if (interactiveTimer !== undefined) window.clearTimeout(interactiveTimer)
       interactiveTimer = window.setTimeout(() => {
@@ -137,6 +138,7 @@ export function useEdgeHover(): void {
     const closePanel = () => {
       const state = useStore.getState()
       if (!state.open) return
+      if (state.sliderActive) return
       if (state.dragActive && !state.internalDragReq) return
 
       // If the indicator style flyout is open, let it play its exit spring first.
@@ -156,11 +158,20 @@ export function useEdgeHover(): void {
 
     const scheduleClose = (delay = GRACE_MS) => {
       const state = useStore.getState()
+      if (state.sliderActive) return
       if (state.dragActive && !state.internalDragReq) return
       if (graceTimer !== undefined) return // already closing
-      // If the user just closed the preview via X, give them extra time before
-      // the clipboard collapses so they can keep using it.
-      const effectiveDelay = _previewClosedByUser ? PREVIEW_CLOSE_STAY_MS : delay
+
+      // If the user recently released the slider (< 1.5s ago), wait out the remaining 1.5s window
+      const timeSinceSliderRelease = state.sliderReleasedTime > 0 ? Date.now() - state.sliderReleasedTime : Infinity
+      let effectiveDelay = delay
+
+      if (timeSinceSliderRelease < 1500) {
+        effectiveDelay = Math.max(delay, 1500 - timeSinceSliderRelease)
+      } else if (_previewClosedByUser) {
+        effectiveDelay = PREVIEW_CLOSE_STAY_MS
+      }
+
       graceTimer = window.setTimeout(closePanel, effectiveDelay)
     }
 
@@ -206,9 +217,13 @@ export function useEdgeHover(): void {
     // expand). So we treat `panel:leave` as a *hint* and only actually close
     // if the last known pointer position is genuinely outside the blade.
     const isInsideBlade = () => {
+      const state = useStore.getState()
+      if (state.sliderActive) return true
+      const timeSinceSliderRelease = state.sliderReleasedTime > 0 ? Date.now() - state.sliderReleasedTime : Infinity
+      if (timeSinceSliderRelease < 1500) return true
+
       const { x, y } = lastClient.current
       if (x < -BUFFER_PX || y < 0) return true // unknown — be conservative, don't close
-      const state = useStore.getState()
       const s = state.settings
       const hasFlyout = !!(state.previewItemId || state.styleFlyoutOpen)
       const currentPanelWide = hasFlyout ? PREVIEW_WIDE : PANEL_WIDE

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '../store/appStore'
 import type { DisplayInfo } from '../../shared/types'
@@ -6,6 +6,7 @@ import { LiquidOctopusLoader } from './LiquidOctopusLoader'
 import { TickIndicatorIcon, CopyIndicatorIcon, SparkleIndicatorIcon } from './CopyIndicatorCurve'
 import { ChevronRightIcon, CloseIcon, LogOutIcon } from './icons'
 import { ChangelogView } from './ChangelogView'
+import { playDialTickSound } from '../lib/soundEffects'
 import '../styles/settings.css'
 
 export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: boolean }) {
@@ -17,6 +18,18 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
   const styleFlyoutOpen = useStore((s) => s.styleFlyoutOpen)
   const setStyleFlyoutOpen = useStore((s) => s.setStyleFlyoutOpen)
   const settingsSubView = useStore((s) => s.settingsSubView)
+  const setSliderActive = useStore((s) => s.setSliderActive)
+
+  const lastTickVal = useRef<number>(settings.verticalOffset ?? 0.5)
+
+  const handleSliderChange = (newVal: number) => {
+    const clamped = Math.min(1.0, Math.max(0.0, newVal))
+    if (Math.abs(clamped - lastTickVal.current) >= 0.04) {
+      lastTickVal.current = clamped
+      playDialTickSound()
+    }
+    patch({ verticalOffset: clamped })
+  }
 
   const [localInlineOpen, setLocalInlineOpen] = useState(false)
   const isTutorial = inlineIndicatorStyle || (typeof window !== 'undefined' && window.location.hash.includes('onboarding'))
@@ -211,26 +224,80 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
 
       <div className="setting-divider" />
 
-      {/* Vertical Position Presets */}
-      <div className="setting-row vertical">
-        <div className="setting-info">
-          <div className="setting-title">Vertical position</div>
-          <div className="setting-desc">Vertical alignment of the shelf along the screen edge</div>
+      {/* Vertical Position Range Slider with 5% Tick Grid */}
+      <div className="setting-row vertical" style={{ gap: 10 }}>
+        <div className="setting-slider-header">
+          <div className="setting-info">
+            <div className="setting-title">Vertical position</div>
+            <div className="setting-desc">Vertical alignment of the shelf along the screen edge</div>
+          </div>
+          <div className="setting-slider-val">
+            {`${Math.round((settings.verticalOffset ?? 0.5) * 100)}%`}
+          </div>
         </div>
-        <div className="setting-pills">
-          {[
-            { label: 'Top', val: 0 },
-            { label: 'Center', val: 0.5 },
-            { label: 'Bottom', val: 1.0 }
-          ].map((opt) => (
-            <button
-              key={opt.label}
-              className={`pill ${Math.abs((settings.verticalOffset ?? 0.5) - opt.val) < 0.05 ? 'active' : ''}`}
-              onClick={() => patch({ verticalOffset: opt.val })}
-            >
-              {opt.label}
-            </button>
-          ))}
+
+        <div className="setting-slider-wrap">
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            className="setting-range-input"
+            value={settings.verticalOffset ?? 0.5}
+            style={{
+              background: `linear-gradient(to right, #ffffff 0%, #ffffff ${(settings.verticalOffset ?? 0.5) * 100}%, rgba(255, 255, 255, 0.12) ${(settings.verticalOffset ?? 0.5) * 100}%, rgba(255, 255, 255, 0.12) 100%)`
+            }}
+            onPointerDown={() => {
+              void window.edge.setInteractive(true)
+              setSliderActive(true)
+            }}
+            onPointerUp={() => setSliderActive(false)}
+            onPointerCancel={() => setSliderActive(false)}
+            onLostPointerCapture={() => setSliderActive(false)}
+            onChange={(e) => {
+              const raw = parseFloat(e.target.value)
+              const snapped = Math.round(raw / 0.05) * 0.05
+              handleSliderChange(snapped)
+            }}
+          />
+
+          {/* 21 Predefined Tick Mark Dashes (0%, 5%, 10%, ... 100%) */}
+          <div className="setting-slider-ticks">
+            {Array.from({ length: 21 }, (_, i) => {
+              const tickVal = i * 0.05
+              const currentVal = settings.verticalOffset ?? 0.5
+              const isMajor = i === 0 || i === 10 || i === 20
+              const isActive = Math.abs(currentVal - tickVal) < 0.025
+              return (
+                <span
+                  key={i}
+                  className={`slider-tick${isMajor ? ' major' : ''}${isActive ? ' active' : ''}`}
+                />
+              )
+            })}
+          </div>
+
+          {/* 3 Main Percentage Labels (0%, 50%, 100%) */}
+          <div className="setting-slider-labels">
+            {[
+              { label: '0%', val: 0 },
+              { label: '50%', val: 0.5 },
+              { label: '100%', val: 1.0 }
+            ].map((pos) => {
+              const currentVal = settings.verticalOffset ?? 0.5
+              const active = Math.abs(currentVal - pos.val) < 0.04
+              return (
+                <button
+                  key={pos.val}
+                  type="button"
+                  className={`slider-label-btn${active ? ' active' : ''}`}
+                  onClick={() => handleSliderChange(pos.val)}
+                >
+                  {pos.label}
+                </button>
+              )
+            })}
+          </div>
         </div>
       </div>
 

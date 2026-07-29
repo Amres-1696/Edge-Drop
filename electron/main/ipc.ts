@@ -485,9 +485,11 @@ export function registerIpc(): void {
     if (patch.hotZoneWidth !== undefined) {
       setHotZoneWidth(patch.hotZoneWidth)
     }
-    if (patch.stickPosition !== undefined || patch.stickDisplayId !== undefined) {
+    if (patch.stickPosition !== undefined || patch.stickDisplayId !== undefined || patch.verticalOffset !== undefined) {
       repositionWindow()
-      popUpAndRetract(1500)
+      if (patch.stickPosition !== undefined || patch.stickDisplayId !== undefined) {
+        popUpAndRetract(1500)
+      }
     }
     pushState.settings(next)
     rebuildTrayMenu()
