@@ -158,7 +158,7 @@ npm run build:store  # outputs an MSIX .appx for Microsoft Store submission
 **Fluid collections & stacks**
 - Auto-group multi-file drag-ins and multi-image copies into 3D card stacks (max 10)
 - **Preview Flyout Drag-to-Stack**: Drag any shelf item directly onto an open Preview Flyout to stack and merge them seamlessly
-- Double-click to expand, drag a sub-item to the left/right edge to split it back out
+- Expand stacks with a single click on the Expand action button or Preview Flyout; drag a sub-item to the screen edge to split it back out
 
 **UI / UX**
 - **macOS Segmented Control 5-Category Filter Suite**: Integrated 5-type filter bar (**`All`**, **`Text`**, **`Links`**, **`Images`**, **`Files`**) with a single persistent sliding spring indicator pill (`stiffness: 500`, `damping: 35`) and zero shape distortion.
