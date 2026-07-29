@@ -100,6 +100,7 @@ const api = {
   pasteItem: (id: string) => invoke('item:paste', id),
   pasteSubitem: (req: import('../../shared/types').DragRequest) => invoke('item:paste-subitem', req),
   installUpdate: () => invoke('app:install-update'),
+  quitApp: () => invoke('app:quit'),
   startDrag: (req: DragRequest) => send('item:start-drag', req),
   addFiles: (paths: string[]) => invoke('item:add-files', paths),
   removeSubitem: (req: import('../../shared/types').DragRequest) => invoke('item:remove-subitem', req),

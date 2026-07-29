@@ -20,6 +20,7 @@ export interface EdgeApi {
   pasteItem: (id: string) => Promise<boolean>
   pasteSubitem: (req: DragRequest) => Promise<boolean>
   installUpdate: () => Promise<void>
+  quitApp: () => Promise<void>
   /**
    * Begin a native OS drag-out. Fire-and-forget: must be called synchronously
    * from the DOM `dragstart` event, and main calls `event.sender.startDrag`.

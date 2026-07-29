@@ -4,7 +4,7 @@ import { useStore } from '../store/appStore'
 import type { DisplayInfo } from '../../shared/types'
 import { LiquidOctopusLoader } from './LiquidOctopusLoader'
 import { TickIndicatorIcon, CopyIndicatorIcon, SparkleIndicatorIcon } from './CopyIndicatorCurve'
-import { ChevronRightIcon, CloseIcon } from './icons'
+import { ChevronRightIcon, CloseIcon, LogOutIcon } from './icons'
 import { ChangelogView } from './ChangelogView'
 import '../styles/settings.css'
 
@@ -510,17 +510,34 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
       {/* ══ GROUP: Community & Support ════════════════════════════════════ */}
       <div className="setting-group-label" style={{ marginTop: 20 }}>COMMUNITY & SUPPORT</div>
 
-      <div className="setting-row">
+      <div className="setting-row vertical" style={{ gap: 10 }}>
         <div className="setting-info">
           <div className="setting-title">Feedback & Issues</div>
           <div className="setting-desc">Report bugs or suggest features on GitHub</div>
         </div>
         <button
           className="pill display-pill"
-          style={{ width: 'auto', padding: '6px 14px', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: '13px' }}
+          style={{ width: '100%', justifyContent: 'center', padding: '7px 14px', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: '12.5px' }}
           onClick={() => window.open('https://github.com/Deepender25/Edge-Drop/issues/new/choose', '_blank')}
         >
-          Submit ↗
+          Submit Feedback ↗
+        </button>
+      </div>
+
+      {/* ══ GROUP: Application ═══════════════════════════════════════════ */}
+      <div className="setting-group-label" style={{ marginTop: 20 }}>APPLICATION</div>
+
+      <div className="setting-row vertical" style={{ gap: 10 }}>
+        <div className="setting-info">
+          <div className="setting-title">Quit Edge-Drop</div>
+          <div className="setting-desc">Close application and stop background process</div>
+        </div>
+        <button
+          className="quit-app-btn"
+          onClick={() => void window.edge.quitApp()}
+        >
+          <LogOutIcon width={14} height={14} />
+          Quit Edge-Drop
         </button>
       </div>
 

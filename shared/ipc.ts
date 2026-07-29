@@ -68,6 +68,9 @@ export interface InvokeMap {
   /** Trigger a download of the already-available update and quit-and-install. */
   'app:install-update': { args: []; result: void }
 
+  /** Quit the application process. */
+  'app:quit': { args: []; result: void }
+
   /** Reveal a file in native File Explorer / Finder. */
   'file:reveal': { args: [path: string]; result: boolean }
 

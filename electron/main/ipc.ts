@@ -190,6 +190,11 @@ export function registerIpc(): void {
     quitAndInstallUpdate()
   })
 
+  handle('app:quit', () => {
+    console.log('[IPC] app:quit requested by renderer — quitting application')
+    app.quit()
+  })
+
   handle('app:get-releases', async () => {
     if (_releasesCache) {
       // Re-validate in background asynchronously without blocking UI render

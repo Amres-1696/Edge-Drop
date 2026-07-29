@@ -34,12 +34,14 @@ import {
   FileSpreadsheet,
   Music,
   Video,
-  Presentation
+  Presentation,
+  LogOut
 } from 'lucide-react'
 import { getFileKindByExt } from '../lib/fileType'
 
 type P = SVGProps<SVGSVGElement>
 
+export const LogOutIcon = (p: P) => <LogOut size={p.width ?? 16} {...(p as any)} />
 export const InfoIcon = (p: P) => <Info size={p.width ?? 16} strokeWidth={2} {...(p as any)} />
 export const SparklesIcon = (p: P) => <Sparkles size={p.width ?? 16} {...(p as any)} />
 export const WhatsNewIcon = InfoIcon
