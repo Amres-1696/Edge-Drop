@@ -3,11 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '../store/appStore'
 import { formatBytes } from '../lib/format'
 import { getFileKind } from '../lib/fileType'
-import { FileKindIcon, FolderOpenIcon, CopyIcon, CheckIcon, ExternalLinkIcon } from './icons'
+import { FileKindIcon, FolderOpenIcon, CopyIcon, CheckIcon, ExternalLinkIcon, CloseIcon } from './icons'
 import { createPortal } from 'react-dom'
 import { useAdaptiveSpring } from '../hooks/useAdaptiveSpring'
 import { useDragOut } from '../hooks/useDragOut'
 import { tryPaste } from '../lib/tryPaste'
+import { playButtonClickSound, playToggleSound } from '../lib/soundEffects'
 
 export function PreviewFlyout({ isRight }: { isRight: boolean }) {
   const previewItemId = useStore((s) => s.previewItemId)
@@ -84,6 +85,69 @@ export function PreviewFlyout({ isRight }: { isRight: boolean }) {
     if (item && activeDrag && activeDrag.id !== item.id) {
       await window.edge.mergeItems(activeDrag.id, item.id)
       useStore.getState().setInternalDragReq(null)
+    }
+  }
+
+  // ── Multi-selection state (Option 1: Tap-to-toggle) ────────────────────────
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set())
+
+  // Reset selection whenever preview item changes or closes
+  useEffect(() => {
+    setSelectedKeys(new Set())
+  }, [item?.id])
+
+  const toggleSelectKey = (key: string, e?: React.MouseEvent) => {
+    e?.stopPropagation()
+    playToggleSound(true)
+    setSelectedKeys((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) {
+        next.delete(key)
+      } else {
+        next.add(key)
+      }
+      return next
+    })
+  }
+
+  const allItemKeys = getItemKeys(item)
+
+  const handleSelectAllToggle = () => {
+    playButtonClickSound()
+    if (selectedKeys.size === allItemKeys.length) {
+      setSelectedKeys(new Set())
+    } else {
+      setSelectedKeys(new Set(allItemKeys))
+    }
+  }
+
+  const handleBatchCopy = () => {
+    if (!item || selectedKeys.size === 0) return
+    playButtonClickSound()
+    const keys = Array.from(selectedKeys)
+    if (item.data.kind === 'files') {
+      window.edge.copySubitem({ id: item.id, paths: keys })
+    } else if (item.data.kind === 'image-collection') {
+      if (keys.length === 1) {
+        window.edge.copySubitem({ id: item.id, imageId: keys[0] })
+      } else {
+        window.edge.copyItem(item.id)
+      }
+    }
+  }
+
+  const handleBatchPaste = () => {
+    if (!item || selectedKeys.size === 0) return
+    playButtonClickSound()
+    const keys = Array.from(selectedKeys)
+    if (item.data.kind === 'files') {
+      tryPaste(() => window.edge.pasteSubitem({ id: item.id, paths: keys }))
+    } else if (item.data.kind === 'image-collection') {
+      if (keys.length === 1) {
+        tryPaste(() => window.edge.pasteSubitem({ id: item.id, imageId: keys[0] }))
+      } else {
+        tryPaste(() => useStore.getState().paste(item.id))
+      }
     }
   }
 
@@ -165,15 +229,182 @@ export function PreviewFlyout({ isRight }: { isRight: boolean }) {
             </div>
           )}
           {/* Content — even bezels, no header chrome */}
-          <div style={{ padding: '20px', overflowY: 'auto', flex: 1, minHeight: 0 }}>
-            <PreviewContent item={item} />
+          <div style={{ padding: selectedKeys.size > 0 ? '20px 20px 68px 20px' : '20px', overflowY: 'auto', flex: 1, minHeight: 0 }}>
+            <PreviewContent
+              item={item}
+              selectedKeys={selectedKeys}
+              onToggleSelectKey={toggleSelectKey}
+            />
           </div>
+
+          {/* Floating Multi-Selection Batch Action Bar */}
+          <AnimatePresence>
+            {selectedKeys.size > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 14, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 14, scale: 0.95 }}
+                transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                style={{
+                  position: 'absolute',
+                  bottom: 12,
+                  left: 12,
+                  right: 12,
+                  background: 'rgba(16, 16, 20, 0.92)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 12px 32px rgba(0, 0, 0, 0.75)',
+                  borderRadius: 12,
+                  padding: '7px 10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  backdropFilter: 'blur(20px)',
+                  zIndex: 20
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid rgba(255, 255, 255, 0.16)',
+                    color: '#ffffff',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    padding: '3px 10px',
+                    borderRadius: 999,
+                    fontFamily: CODE_FONT,
+                    letterSpacing: '0.02em',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {selectedKeys.size} Selected
+                  </div>
+                  <button
+                    onClick={handleSelectAllToggle}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'rgba(255, 255, 255, 0.65)',
+                      fontSize: 12,
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      padding: '2px 4px',
+                      fontFamily: SYS_FONT,
+                      transition: 'color 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = '#ffffff')}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(255, 255, 255, 0.65)')}
+                  >
+                    {selectedKeys.size === allItemKeys.length ? 'Deselect All' : 'Select All'}
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <button
+                    title="Copy Selected"
+                    onClick={handleBatchCopy}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 5,
+                      height: 28,
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      color: 'rgba(255, 255, 255, 0.85)',
+                      borderRadius: 8,
+                      padding: '0 10px',
+                      fontSize: 12,
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      fontFamily: SYS_FONT,
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.16)'
+                      e.currentTarget.style.color = '#ffffff'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'
+                      e.currentTarget.style.color = 'rgba(255, 255, 255, 0.85)'
+                    }}
+                  >
+                    <CopyIcon width={13} height={13} />
+                    <span>Copy</span>
+                  </button>
+
+                  <button
+                    title="Paste Selected"
+                    onClick={handleBatchPaste}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      height: 28,
+                      background: '#ffffff',
+                      border: 'none',
+                      color: '#000000',
+                      borderRadius: 8,
+                      padding: '0 12px',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      fontFamily: SYS_FONT,
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <span>Paste</span>
+                  </button>
+
+                  <button
+                    title="Clear Selection"
+                    onClick={() => {
+                      playButtonClickSound()
+                      setSelectedKeys(new Set())
+                    }}
+                    style={{
+                      width: 28,
+                      height: 28,
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      color: 'rgba(255, 255, 255, 0.7)',
+                      borderRadius: 8,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.16)'
+                      e.currentTarget.style.color = '#ffffff'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'
+                      e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)'
+                    }}
+                  >
+                    <CloseIcon width={14} height={14} />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
         </div>
       )}
     </AnimatePresence>,
     document.body
   )
+}
+
+function getItemKeys(item: any): string[] {
+  if (!item) return []
+  if (item.data.kind === 'files') {
+    return item.data.paths || []
+  }
+  if (item.data.kind === 'image-collection') {
+    return (item.data.images || []).map((img: any) => img.imageId)
+  }
+  return []
 }
 
 function QuickActionButton({
@@ -257,7 +488,63 @@ function looksLikeCode(text: string): boolean {
 const SYS_FONT = "'Segoe UI', -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif"
 const CODE_FONT = "'Cascadia Code', 'Cascadia Mono', Consolas, 'Fira Code', 'Courier New', monospace"
 
-function PreviewContent({ item }: { item: any }) {
+function SelectionBadge({
+  isSelected,
+  onToggle
+}: {
+  isSelected: boolean
+  onToggle: (e: React.MouseEvent) => void
+}) {
+  return (
+    <div
+      onClick={(e) => {
+        e.stopPropagation()
+        onToggle(e)
+      }}
+      title={isSelected ? 'Deselect item' : 'Select item'}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 4,
+        margin: -4,
+        cursor: 'pointer',
+        zIndex: 6,
+        flexShrink: 0
+      }}
+    >
+      <div
+        style={{
+          width: 22,
+          height: 22,
+          borderRadius: 5,
+          background: isSelected ? '#ffffff' : 'rgba(0, 0, 0, 0.75)',
+          border: isSelected ? '2px solid #ffffff' : '2px solid rgba(255, 255, 255, 0.5)',
+          color: isSelected ? '#000000' : 'transparent',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: isSelected ? '0 2px 8px rgba(0, 0, 0, 0.6)' : '0 2px 6px rgba(0, 0, 0, 0.4)',
+          transition: 'background 0.15s ease, border-color 0.15s ease, color 0.15s ease'
+        }}
+      >
+        {isSelected && (
+          <CheckIcon width={14} height={14} strokeWidth={3} style={{ shapeRendering: 'geometricPrecision' }} />
+        )}
+      </div>
+    </div>
+  )
+}
+
+function PreviewContent({
+  item,
+  selectedKeys,
+  onToggleSelectKey
+}: {
+  item: any
+  selectedKeys?: Set<string>
+  onToggleSelectKey?: (key: string, e?: React.MouseEvent) => void
+}) {
   const startDrag = useDragOut()
 
   if (item.data.kind === 'text') {
@@ -360,38 +647,67 @@ function PreviewContent({ item }: { item: any }) {
   if (item.data.kind === 'image-collection') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {item.data.images.map((img: any, idx: number) => (
-          <div
-            key={img.imageId}
-            draggable={true}
-            onDragStart={(e) => {
-              e.preventDefault()
-              const req = { id: item.id, imageId: img.imageId }
-              useStore.getState().setInternalDragReq(req)
-              startDrag(req)
-            }}
-            onDragEnd={() => useStore.getState().setInternalDragReq(null)}
-            onClick={(e) => {
-              e.stopPropagation()
-              tryPaste(() => window.edge.pasteSubitem({ id: item.id, imageId: img.imageId }))
-            }}
-            title="Click to paste image · Drag to move"
-            style={{ display: 'flex', flexDirection: 'column', gap: 8, position: 'relative', cursor: 'grab' }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, position: 'absolute', top: 8, right: 8, zIndex: 2 }}>
-              <QuickActionButton
-                title="Copy Image"
-                icon={CopyIcon}
-                onClick={() => window.edge.copySubitem({ id: item.id, imageId: img.imageId })}
-                solidDark={true}
-              />
+        {item.data.images.map((img: any, idx: number) => {
+          const isSelected = selectedKeys?.has(img.imageId) ?? false
+          return (
+            <div
+              key={img.imageId}
+              draggable={true}
+              onDragStart={(e) => {
+                e.preventDefault()
+                const sel = selectedKeys ? Array.from(selectedKeys) : []
+                const req = (sel.length > 0 && isSelected)
+                  ? { id: item.id }
+                  : { id: item.id, imageId: img.imageId }
+                useStore.getState().setInternalDragReq(req)
+                startDrag(req)
+              }}
+              onDragEnd={() => useStore.getState().setInternalDragReq(null)}
+              onClick={(e) => {
+                e.stopPropagation()
+                if (selectedKeys && selectedKeys.size > 0 && onToggleSelectKey) {
+                  onToggleSelectKey(img.imageId, e)
+                } else {
+                  tryPaste(() => window.edge.pasteSubitem({ id: item.id, imageId: img.imageId }))
+                }
+              }}
+              title={selectedKeys && selectedKeys.size > 0 ? (isSelected ? 'Click to deselect' : 'Click to select') : 'Click to paste image · Drag to move'}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+                position: 'relative',
+                cursor: 'grab',
+                padding: 4,
+                borderRadius: 10,
+                border: isSelected ? '2px solid #ffffff' : '2px solid transparent',
+                background: isSelected ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
+                boxShadow: isSelected ? '0 0 16px rgba(255, 255, 255, 0.2)' : 'none',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 3 }}>
+                <SelectionBadge
+                  isSelected={isSelected}
+                  onToggle={(e) => onToggleSelectKey?.(img.imageId, e)}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, position: 'absolute', top: 12, right: 12, zIndex: 2 }}>
+                <QuickActionButton
+                  title="Copy Image"
+                  icon={CopyIcon}
+                  onClick={() => window.edge.copySubitem({ id: item.id, imageId: img.imageId })}
+                  solidDark={true}
+                />
+              </div>
+              <img src={`edgelocal://${img.imageId}`} alt="" style={{ width: '100%', borderRadius: 8 }} draggable={false} />
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textAlign: 'center', fontFamily: SYS_FONT, letterSpacing: '0.02em' }}>
+                {idx + 1} of {item.data.images.length} · {img.width} × {img.height} · {formatBytes(img.bytes)}
+              </div>
             </div>
-            <img src={`edgelocal://${img.imageId}`} alt="" style={{ width: '100%', borderRadius: 8 }} draggable={false} />
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textAlign: 'center', fontFamily: SYS_FONT, letterSpacing: '0.02em' }}>
-              {idx + 1} of {item.data.images.length} · {img.width} × {img.height} · {formatBytes(img.bytes)}
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     )
   }
@@ -476,44 +792,61 @@ function PreviewContent({ item }: { item: any }) {
           const entry = item.data.entries?.[i]
           const info = getFileKind(p)
           const fileName = entry?.name || p.split(/[\\\/]/).pop() || p
+          const isSelected = selectedKeys?.has(p) ?? false
+
           return (
             <div
               key={i}
               draggable={true}
               onDragStart={(e) => {
                 e.preventDefault()
-                const req = { id: item.id, paths: [p] }
+                const sel = selectedKeys ? Array.from(selectedKeys) : []
+                const req = (sel.length > 0 && isSelected)
+                  ? { id: item.id, paths: sel }
+                  : { id: item.id, paths: [p] }
                 useStore.getState().setInternalDragReq(req)
                 startDrag(req)
               }}
               onDragEnd={() => useStore.getState().setInternalDragReq(null)}
               onClick={(e) => {
                 e.stopPropagation()
-                tryPaste(() => window.edge.pasteSubitem({ id: item.id, paths: [p] }))
+                if (selectedKeys && selectedKeys.size > 0 && onToggleSelectKey) {
+                  onToggleSelectKey(p, e)
+                } else {
+                  tryPaste(() => window.edge.pasteSubitem({ id: item.id, paths: [p] }))
+                }
               }}
-              title={`Click to paste "${fileName}" · Drag to move`}
+              title={selectedKeys && selectedKeys.size > 0 ? (isSelected ? 'Click to deselect' : 'Click to select') : `Click to paste "${fileName}" · Drag to move`}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
                 padding: isSingleFile ? '16px' : '12px',
-                background: 'rgba(255,255,255,0.035)',
+                background: isSelected ? 'rgba(255, 255, 255, 0.09)' : 'rgba(255,255,255,0.035)',
                 borderRadius: 12,
-                border: '1px solid rgba(255,255,255,0.06)',
+                border: isSelected ? '1px solid #ffffff' : '1px solid rgba(255,255,255,0.06)',
+                boxShadow: isSelected ? '0 0 14px rgba(255, 255, 255, 0.15)' : 'none',
                 gap: 12,
-                transition: 'background 0.2s ease, border-color 0.2s ease',
+                transition: 'all 0.18s ease',
                 minWidth: 0,
                 cursor: 'grab'
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                {entry?.isImage && entry.preview ? (
-                  <img src={entry.preview} alt="" style={{ width: isSingleFile ? 40 : 34, height: isSingleFile ? 40 : 34, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
-                ) : (
-                  <div style={{ color: info.color, flexShrink: 0 }}>
-                    <FileKindIcon path={p} width={isSingleFile ? 32 : 26} height={isSingleFile ? 32 : 26} />
-                  </div>
-                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <SelectionBadge
+                    isSelected={isSelected}
+                    onToggle={(e) => onToggleSelectKey?.(p, e)}
+                  />
+                  {entry?.isImage && entry.preview ? (
+                    <img src={entry.preview} alt="" style={{ width: isSingleFile ? 36 : 30, height: isSingleFile ? 36 : 30, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
+                  ) : (
+                    <div style={{ color: info.color, flexShrink: 0 }}>
+                      <FileKindIcon path={p} width={isSingleFile ? 28 : 24} height={isSingleFile ? 28 : 24} />
+                    </div>
+                  )}
+                </div>
+
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                   <QuickActionButton
                     title="Copy File"
