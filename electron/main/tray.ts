@@ -64,10 +64,12 @@ export function createTray(): Tray {
       type: 'radio' as const,
       checked: d.isCurrent,
       click: () => {
-        // Persist ID + geometry so the next reboot can fuzzy-match via workArea.
+        // Persist workArea (not bounds) — geometry.ts Tier-2 fuzzy match compares
+        // d.workArea against savedWorkArea. Storing bounds (which includes the taskbar)
+        // causes a ~40px mismatch that exceeds BOUNDS_TOLERANCE, breaking cross-reboot recovery.
         const next = saveSettings({
           stickDisplayId: d.id,
-          stickDisplayWorkArea: d.bounds,
+          stickDisplayWorkArea: d.workArea,
           stickDisplayScaleFactor: d.scaleFactor
         })
         pushState.settings(next)

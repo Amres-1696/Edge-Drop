@@ -46,6 +46,15 @@ export let previewActive = false
 export let currentHotZoneWidth = 3
 export let currentStickDisplayId: number | undefined
 
+/**
+ * Fix 3: Consecutive-stale-reads counter for getStickGeometry self-heal.
+ * Tracks how many consecutive repositionWindow() calls have found the saved
+ * stickDisplayId absent from the display list. The preference is only wiped
+ * from disk after this reaches STALE_THRESHOLD (2), preventing transient TV
+ * mirror ID renegotiations from destroying the user's saved monitor choice.
+ */
+let staleIdConsecutiveCount = 0
+
 export function setHotZoneWidth(width: number): void {
   currentHotZoneWidth = width
 }
@@ -235,46 +244,72 @@ function getStickGeometry(): { x: number; y: number; width: number; height: numb
   const idWasStale = settings.stickDisplayId !== undefined && !allDisplays.some(d => d.id === settings.stickDisplayId)
 
   if (idWasStale) {
-    // The old ID no longer exists in this session (disconnected or reboot rename).
-    // Check whether we recovered via Tier-2 or fell all the way to primary.
-    const recoveredViaBounds = settings.stickDisplayWorkArea !== undefined && resolved.id !== primaryDisplay.id
-    if (recoveredViaBounds) {
-      console.log(`[Main] Display ${settings.stickDisplayId} re-matched via geometry to display ${resolved.id} — updating persisted ID.`)
+    // Fix 3: Consecutive-stale-reads guard.
+    //
+    // When a TV mirror is active, Windows briefly removes and re-adds display IDs
+    // during EDID renegotiation. This makes idWasStale=true for a single call even
+    // though the user's chosen monitor is still physically connected.
+    //
+    // Before this fix: the very first stale read immediately wrote stickDisplayId=undefined
+    // to disk, permanently wiping the user's monitor choice.
+    //
+    // After this fix: we require the ID to be absent in 2 CONSECUTIVE calls before
+    // treating it as genuinely gone. With the 600ms debounce on display events, two
+    // consecutive stale reads means the display has been absent for >600ms — a real
+    // disconnection, not a transient OS reconfiguration.
+    staleIdConsecutiveCount++
+    const STALE_THRESHOLD = 2
+    if (staleIdConsecutiveCount < STALE_THRESHOLD) {
+      console.log(`[Main] Display ${settings.stickDisplayId} temporarily absent (count=${staleIdConsecutiveCount}/${STALE_THRESHOLD}) — holding preference, will re-evaluate.`)
+      // Don't wipe settings yet — just reposition using what was resolved (likely Tier-2 or Tier-4)
     } else {
-      console.log(`[Main] Display ${settings.stickDisplayId} disconnected or unrecognised. Falling back to display ${resolved.id}.`)
+      staleIdConsecutiveCount = 0
+      // The old ID no longer exists in this session (disconnected or reboot rename).
+      // Check whether we recovered via Tier-2 or fell all the way to primary.
+      const recoveredViaBounds = settings.stickDisplayWorkArea !== undefined && resolved.id !== primaryDisplay.id
+      if (recoveredViaBounds) {
+        console.log(`[Main] Display ${settings.stickDisplayId} re-matched via geometry to display ${resolved.id} — updating persisted ID.`)
+      } else {
+        console.log(`[Main] Display ${settings.stickDisplayId} disconnected or unrecognised after ${STALE_THRESHOLD} checks. Falling back to display ${resolved.id}.`)
+      }
+      settings = saveSettings({
+        stickDisplayId: recoveredViaBounds ? resolved.id : undefined,
+        stickDisplayWorkArea: recoveredViaBounds ? resolved.workArea : undefined,
+        stickDisplayScaleFactor: recoveredViaBounds ? resolved.scaleFactor : undefined
+      })
+      if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed()) {
+        mainWindow.webContents.send('state:settings', settings)
+      }
+      if (!recoveredViaBounds) {
+        // Genuinely fell back — briefly show panel on new location.
+        popUpAndRetract(1500)
+      }
     }
-    settings = saveSettings({
-      stickDisplayId: recoveredViaBounds ? resolved.id : undefined,
-      stickDisplayWorkArea: recoveredViaBounds ? resolved.workArea : undefined,
-      stickDisplayScaleFactor: recoveredViaBounds ? resolved.scaleFactor : undefined
-    })
-    if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed()) {
-      mainWindow.webContents.send('state:settings', settings)
+  } else {
+    // Reset counter: the saved ID was found this call — monitor is present.
+    staleIdConsecutiveCount = 0
+
+    if (idChanged) {
+      // Shouldn't happen if Tier-1 matched, but guard it anyway.
+      settings = saveSettings({
+        stickDisplayId: resolved.id,
+        stickDisplayWorkArea: resolved.workArea,
+        stickDisplayScaleFactor: resolved.scaleFactor
+      })
+      if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed()) {
+        mainWindow.webContents.send('state:settings', settings)
+      }
+    } else if (settings.stickDisplayId !== undefined && (
+      settings.stickDisplayWorkArea === undefined ||
+      settings.stickDisplayScaleFactor === undefined
+    )) {
+      // Upgrade: user had a stickDisplayId saved before this feature was added;
+      // backfill geometry silently so the next reboot can fuzzy-match.
+      saveSettings({
+        stickDisplayWorkArea: resolved.workArea,
+        stickDisplayScaleFactor: resolved.scaleFactor
+      })
     }
-    if (!recoveredViaBounds) {
-      // Genuinely fell back — briefly show panel on new location.
-      popUpAndRetract(1500)
-    }
-  } else if (idChanged) {
-    // Shouldn't happen if Tier-1 matched, but guard it anyway.
-    settings = saveSettings({
-      stickDisplayId: resolved.id,
-      stickDisplayWorkArea: resolved.workArea,
-      stickDisplayScaleFactor: resolved.scaleFactor
-    })
-    if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed()) {
-      mainWindow.webContents.send('state:settings', settings)
-    }
-  } else if (settings.stickDisplayId !== undefined && (
-    settings.stickDisplayWorkArea === undefined ||
-    settings.stickDisplayScaleFactor === undefined
-  )) {
-    // Upgrade: user had a stickDisplayId saved before this feature was added;
-    // backfill geometry silently so the next reboot can fuzzy-match.
-    saveSettings({
-      stickDisplayWorkArea: resolved.workArea,
-      stickDisplayScaleFactor: resolved.scaleFactor
-    })
   }
 
   currentStickDisplayId = resolved.id
@@ -335,15 +370,34 @@ export function createWindow(): BrowserWindow {
     }
   }
 
+  // Fix 2: Debounce display-metrics-changed.
+  //
+  // When a TV is in mirror mode, Windows can fire this event 5–20 times in rapid
+  // succession each time the TV turns on/off, wakes, or renegotiates EDID.
+  // Without debouncing, each of those 20 calls hits repositionWindow() while the
+  // display list is in a transitional state, potentially resolving to the wrong
+  // display at intermediate frames.
+  //
+  // 600ms is enough for Windows DWM to finish all its display-topology bookkeeping
+  // after a single physical event, while being fast enough to feel instantaneous.
+  let displayChangeDebounceTimer: ReturnType<typeof setTimeout> | null = null
+  const handleDisplayChangeDebounced = (triggerPopUp = false) => {
+    if (displayChangeDebounceTimer !== null) {
+      clearTimeout(displayChangeDebounceTimer)
+    }
+    displayChangeDebounceTimer = setTimeout(() => {
+      displayChangeDebounceTimer = null
+      handleDisplayChange(triggerPopUp)
+    }, 600)
+  }
+
   // Keep the panel glued to the primary display if the work area changes.
-  screen.on('display-metrics-changed', () => handleDisplayChange(false))
+  screen.on('display-metrics-changed', () => handleDisplayChangeDebounced(false))
   screen.on('display-added', () => {
-    handleDisplayChange(true)
-    setTimeout(() => handleDisplayChange(false), 300)
+    handleDisplayChangeDebounced(true)
   })
   screen.on('display-removed', () => {
-    handleDisplayChange(true)
-    setTimeout(() => handleDisplayChange(false), 300)
+    handleDisplayChangeDebounced(true)
   })
 
   // Respect OS-level always-on-top reordering.
@@ -448,6 +502,7 @@ export function getActiveDisplayId(allDisplays?: Electron.Display[]): number {
 export function getDisplayListOptions(): Array<{
   id: number
   bounds: { x: number; y: number; width: number; height: number }
+  workArea: { x: number; y: number; width: number; height: number }
   scaleFactor: number
   isPrimary: boolean
   isCurrent: boolean
@@ -474,6 +529,7 @@ export function getDisplayListOptions(): Array<{
     return {
       id: d.id,
       bounds: { x: d.bounds.x, y: d.bounds.y, width: d.bounds.width, height: d.bounds.height },
+      workArea: { x: d.workArea.x, y: d.workArea.y, width: d.workArea.width, height: d.workArea.height },
       scaleFactor: scale,
       isPrimary,
       isCurrent: d.id === activeId,

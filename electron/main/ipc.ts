@@ -466,9 +466,13 @@ export function registerIpc(): void {
       const displays = getDisplayListOptions()
       const chosen = displays.find(d => d.id === patch.stickDisplayId)
       if (chosen) {
+        // IMPORTANT: persist workArea (not bounds) — geometry.ts Tier-2 fuzzy match
+        // compares d.workArea against savedWorkArea. Using bounds (which includes the
+        // taskbar) would create a mismatch of ~40px, exceeding the 8px BOUNDS_TOLERANCE
+        // and causing Tier-2 to always fail on reboot.
         enrichedPatch = {
           ...enrichedPatch,
-          stickDisplayWorkArea: chosen.bounds,
+          stickDisplayWorkArea: chosen.workArea,
           stickDisplayScaleFactor: chosen.scaleFactor
         }
       }

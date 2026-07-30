@@ -4,6 +4,8 @@ export interface DisplayInfo {
   id: number
   workArea: { x: number; y: number; width: number; height: number }
   scaleFactor?: number
+  /** True when this is the OS-designated primary display. */
+  isPrimary?: boolean
 }
 
 export interface StickBoundsParams {
@@ -95,7 +97,7 @@ export function computeStickBounds(params: StickBoundsParams): StickBoundsResult
 
   // ── Tier 4: primary display fallback ──────────────────────────────────────────
   if (!display) {
-    display = displays.find(d => (d as any).isPrimary) ?? displays[0]
+    display = displays.find(d => d.isPrimary) ?? displays[0]
   }
 
   const wa = display.workArea
