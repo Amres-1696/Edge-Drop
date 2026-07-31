@@ -33,8 +33,6 @@
   border: none;
   -webkit-background-clip: padding-box;
   background-clip: padding-box;
-  transform: translateZ(0);
-  backface-visibility: hidden;
 }
 .blade-container.blade-right .blade {
   border-top-right-radius: 0;

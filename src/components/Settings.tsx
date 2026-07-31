@@ -837,21 +837,6 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                     />
                   </div>
 
-                  {/* ── GROUP: Animations ────────────────────────────────── */}
-                  <div className="setting-group-label" style={{ marginTop: 20 }}>Animations</div>
-
-                  <div className="setting-row">
-                    <div className="setting-info">
-                      <div className="setting-title">Bounce Animation</div>
-                      <div className="setting-desc">Adds a springy overshoot pop when the panel opens.</div>
-                      <div className="setting-badge-subtle">May slightly affect performance</div>
-                    </div>
-                    <Toggle
-                      checked={settings.bounceAnimation ?? false}
-                      onChange={(v) => patch({ bounceAnimation: v })}
-                    />
-                  </div>
-
                   {PersistentFooter}
                 </motion.div>
               )}

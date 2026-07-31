@@ -28,7 +28,6 @@ export function Panel() {
   const settingsOpen = useStore((s) => s.settingsOpen)
   const setSettingsOpen = useStore((s) => s.setSettingsOpen)
   const setQuery = useStore((s) => s.setQuery)
-  const bounceAnimation = settings.bounceAnimation
   const edgeHintActive = useStore((s) => s.edgeHintActive)
 
   useEffect(() => {
@@ -44,12 +43,12 @@ export function Panel() {
   const minY = panelH / 2
   const maxY = screenH - panelH / 2
   const vOffset = settings.verticalOffset ?? 0.5
-  const midY = minY + vOffset * (maxY - minY)
+  const midY = Math.round(minY + vOffset * (maxY - minY))
   const topOffset = `${midY}px`
 
   // The actual pixel height of the trigger zone on the left edge
-  const triggerHeightPx = window.innerHeight * settings.hotZoneHeight
-  const halfTrigger = triggerHeightPx / 2
+  const triggerHeightPx = Math.round(window.innerHeight * settings.hotZoneHeight)
+  const halfTrigger = Math.round(triggerHeightPx / 2)
 
   // The height of the complete pop-up panel
   const panelHeightStr = `${(settings.panelHeight || 0.6) * 100}vh`
@@ -193,7 +192,7 @@ export function Panel() {
     position: 'absolute',
     zIndex: 10,
     pointerEvents: open ? 'auto' : 'none',
-    transition: 'clip-path 0.38s cubic-bezier(0.16, 1, 0.3, 1)'
+    transition: 'clip-path 0.44s cubic-bezier(0.175, 0.885, 0.32, 1.08)'
   }
 
   let originX = 0
@@ -245,20 +244,30 @@ export function Panel() {
       <CopyIndicatorCurve />
       <motion.div
         className={containerClass}
-        initial={false}
+        initial={{ scaleX: 0.93, scaleY: 0.96, opacity: 0.98 }}
         onDragEnter={onDragEnter}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
         style={containerStyle}
-        animate={{
-          scale: bounceAnimation && open ? [0.92, 1.05, 0.98, 1] : 1,
-          opacity: open ? 1 : 0.98
-        }}
-        transition={{
-          scale: bounceAnimation && open ? { duration: 0.55, ease: [0.22, 1, 0.36, 1] } : { duration: 0.15 },
-          opacity: { duration: open ? 0.12 : 0.08, ease: 'easeOut' }
-        }}
+        animate={
+          open
+            ? { scaleX: 1, scaleY: 1, opacity: 1 }
+            : { scaleX: 0.96, scaleY: 0.97, opacity: 0.98 }
+        }
+        transition={
+          open
+            ? {
+                scaleX: { type: 'spring', stiffness: 380, damping: 24, mass: 0.75 },
+                scaleY: { type: 'spring', stiffness: 340, damping: 26, mass: 0.8 },
+                opacity: { duration: 0.12, ease: 'easeOut' }
+              }
+            : {
+                scaleX: { duration: 0.15, ease: [0.22, 1, 0.36, 1] },
+                scaleY: { duration: 0.15, ease: [0.22, 1, 0.36, 1] },
+                opacity: { duration: 0.08, ease: 'easeOut' }
+              }
+        }
       >
         {/* Edge Location Hint Beacon (Ultra-subtle fast hairline pulse when touching edge at wrong position) */}
         <AnimatePresence>

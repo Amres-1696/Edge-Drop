@@ -91,9 +91,8 @@ svg polygon {
 .copy-curve-container,
 .bundle-stack-card,
 .style-card {
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  transform: translateZ(0);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   -webkit-background-clip: padding-box;
   background-clip: padding-box;
 }
