@@ -718,7 +718,7 @@ function PreviewContent({
       const p = item.data.paths[0]
       const entry = item.data.entries?.[0]
       const fileName = entry?.name || p.split(/[\\\/]/).pop() || p
-      const previewUrl = entry?.preview
+      const fullResUrl = `edgelocal://file/${encodeURIComponent(p.replace(/\\/g, '/'))}`
       return (
         <div
           draggable={true}
@@ -769,13 +769,17 @@ function PreviewContent({
               <FolderOpenIcon width={14} height={14} />
             </button>
           </div>
-          {previewUrl ? (
-            <img src={previewUrl} alt={fileName} style={{ width: '100%', maxHeight: '65vh', objectFit: 'contain', borderRadius: 8 }} draggable={false} />
-          ) : (
-            <div style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontFamily: SYS_FONT }}>
-              {fileName}
-            </div>
-          )}
+          <img
+            src={fullResUrl}
+            onError={(e) => {
+              if (entry?.preview) {
+                e.currentTarget.src = entry.preview
+              }
+            }}
+            alt={fileName}
+            style={{ width: '100%', maxHeight: '65vh', objectFit: 'contain', borderRadius: 8 }}
+            draggable={false}
+          />
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontFamily: SYS_FONT, letterSpacing: '0.02em', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>{fileName}</span>
             {entry?.size ? <span>{formatBytes(entry.size)}</span> : null}
@@ -785,14 +789,151 @@ function PreviewContent({
     }
 
     const isSingleFile = item.data.paths.length === 1
+    const hasImageFiles = item.data.entries?.some((e: any) => e.isImage) || item.data.paths.some((p: string) => getFileKind(p).kind === 'image')
+    const useSingleColumn = isSingleFile || hasImageFiles
 
     return (
-      <div style={{ display: 'grid', gridTemplateColumns: isSingleFile ? '1fr' : 'repeat(2, 1fr)', gap: 10 }}>
+      <div style={{ display: useSingleColumn ? 'flex' : 'grid', flexDirection: useSingleColumn ? 'column' : undefined, gridTemplateColumns: useSingleColumn ? undefined : 'repeat(2, 1fr)', gap: 12 }}>
         {item.data.paths.map((p: string, i: number) => {
           const entry = item.data.entries?.[i]
           const info = getFileKind(p)
           const fileName = entry?.name || p.split(/[\\\/]/).pop() || p
           const isSelected = selectedKeys?.has(p) ?? false
+          const isImg = entry?.isImage || info.kind === 'image'
+
+          if (isImg) {
+            const fullResUrl = `edgelocal://file/${encodeURIComponent(p.replace(/\\/g, '/'))}`
+            return (
+              <div
+                key={i}
+                draggable={true}
+                onDragStart={(e) => {
+                  e.preventDefault()
+                  const sel = selectedKeys ? Array.from(selectedKeys) : []
+                  const req = (sel.length > 0 && isSelected)
+                    ? { id: item.id, paths: sel }
+                    : { id: item.id, paths: [p] }
+                  useStore.getState().setInternalDragReq(req)
+                  startDrag(req)
+                }}
+                onDragEnd={() => useStore.getState().setInternalDragReq(null)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (selectedKeys && selectedKeys.size > 0 && onToggleSelectKey) {
+                    onToggleSelectKey(p, e)
+                  } else {
+                    tryPaste(() => window.edge.pasteSubitem({ id: item.id, paths: [p] }))
+                  }
+                }}
+                title={selectedKeys && selectedKeys.size > 0 ? (isSelected ? 'Click to deselect' : 'Click to select') : `Click to paste "${fileName}" · Drag to move`}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  background: isSelected ? 'rgba(255, 255, 255, 0.09)' : 'rgba(255,255,255,0.035)',
+                  borderRadius: 12,
+                  border: isSelected ? '1px solid #ffffff' : '1px solid rgba(255,255,255,0.06)',
+                  boxShadow: isSelected ? '0 0 14px rgba(255, 255, 255, 0.15)' : 'none',
+                  overflow: 'hidden',
+                  transition: 'all 0.18s ease',
+                  minWidth: 0,
+                  position: 'relative',
+                  cursor: 'grab'
+                }}
+              >
+                {/* Floating Top Overlay: Selection & Action Buttons */}
+                <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 3 }}>
+                  <SelectionBadge
+                    isSelected={isSelected}
+                    onToggle={(e) => onToggleSelectKey?.(p, e)}
+                  />
+                </div>
+
+                <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 3, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <QuickActionButton
+                    title="Copy File"
+                    icon={CopyIcon}
+                    onClick={() => window.edge.copySubitem({ id: item.id, paths: [p] })}
+                    solidDark={true}
+                  />
+                  <button
+                    title="Open location in Explorer"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      window.edge.revealFile(p)
+                    }}
+                    style={{
+                      width: 28,
+                      height: 28,
+                      background: 'rgba(0, 0, 0, 0.75)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      color: 'rgba(255, 255, 255, 0.9)',
+                      borderRadius: 8,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.15s ease',
+                      flexShrink: 0,
+                      backdropFilter: 'blur(8px)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(0, 0, 0, 0.95)'
+                      e.currentTarget.style.color = '#fff'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(0, 0, 0, 0.75)'
+                      e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)'
+                    }}
+                  >
+                    <FolderOpenIcon width={14} height={14} />
+                  </button>
+                </div>
+
+                {/* Real full-resolution image loaded directly from disk without thumbnail blur */}
+                <div style={{ width: '100%', background: 'rgba(0, 0, 0, 0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 120 }}>
+                  <img
+                    src={fullResUrl}
+                    onError={(e) => {
+                      // Fallback to entry.preview if file on disk was moved
+                      if (entry?.preview) {
+                        e.currentTarget.src = entry.preview
+                      }
+                    }}
+                    alt={fileName}
+                    style={{
+                      width: '100%',
+                      height: 'auto',
+                      maxHeight: '65vh',
+                      objectFit: 'contain',
+                      display: 'block'
+                    }}
+                    draggable={false}
+                  />
+                </div>
+
+                {/* File Name & Size at the Bottom — NO image icon */}
+                <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 2, background: 'rgba(0, 0, 0, 0.4)', borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                  <span
+                    title={fileName}
+                    style={{
+                      fontSize: 12.5,
+                      fontWeight: 500,
+                      color: 'rgba(255,255,255,0.95)',
+                      whiteSpace: 'nowrap',
+                      textOverflow: 'ellipsis',
+                      overflow: 'hidden',
+                      fontFamily: SYS_FONT
+                    }}
+                  >
+                    {fileName}
+                  </span>
+                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontFamily: SYS_FONT, letterSpacing: '0.02em' }}>
+                    {entry?.size ? formatBytes(entry.size) : info.label}
+                  </span>
+                </div>
+              </div>
+            )
+          }
 
           return (
             <div
@@ -820,34 +961,48 @@ function PreviewContent({
               style={{
                 display: 'flex',
                 flexDirection: 'column',
-                justifyContent: 'space-between',
-                padding: isSingleFile ? '16px' : '12px',
+                padding: '12px 14px',
                 background: isSelected ? 'rgba(255, 255, 255, 0.09)' : 'rgba(255,255,255,0.035)',
                 borderRadius: 12,
                 border: isSelected ? '1px solid #ffffff' : '1px solid rgba(255,255,255,0.06)',
                 boxShadow: isSelected ? '0 0 14px rgba(255, 255, 255, 0.15)' : 'none',
-                gap: 12,
+                gap: 10,
                 transition: 'all 0.18s ease',
                 minWidth: 0,
                 cursor: 'grab'
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                   <SelectionBadge
                     isSelected={isSelected}
                     onToggle={(e) => onToggleSelectKey?.(p, e)}
                   />
-                  {entry?.isImage && entry.preview ? (
-                    <img src={entry.preview} alt="" style={{ width: isSingleFile ? 36 : 30, height: isSingleFile ? 36 : 30, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
-                  ) : (
-                    <div style={{ color: info.color, flexShrink: 0 }}>
-                      <FileKindIcon path={p} width={isSingleFile ? 28 : 24} height={isSingleFile ? 28 : 24} />
-                    </div>
-                  )}
+                  <div style={{ color: info.color, flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+                    <FileKindIcon path={p} width={18} height={18} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
+                    <span
+                      title={fileName}
+                      style={{
+                        fontSize: 12.5,
+                        fontWeight: 500,
+                        color: 'rgba(255,255,255,0.9)',
+                        whiteSpace: 'nowrap',
+                        textOverflow: 'ellipsis',
+                        overflow: 'hidden',
+                        fontFamily: SYS_FONT
+                      }}
+                    >
+                      {fileName}
+                    </span>
+                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.38)', fontFamily: SYS_FONT, letterSpacing: '0.02em' }}>
+                      {entry?.size ? formatBytes(entry.size) : info.label}
+                    </span>
+                  </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
                   <QuickActionButton
                     title="Copy File"
                     icon={CopyIcon}
@@ -885,25 +1040,6 @@ function PreviewContent({
                     <FolderOpenIcon width={14} height={14} />
                   </button>
                 </div>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', gap: 2 }}>
-                <span
-                  title={fileName}
-                  style={{
-                    fontSize: 12.5,
-                    fontWeight: 500,
-                    color: 'rgba(255,255,255,0.9)',
-                    whiteSpace: 'nowrap',
-                    textOverflow: 'ellipsis',
-                    overflow: 'hidden',
-                    fontFamily: SYS_FONT
-                  }}
-                >
-                  {fileName}
-                </span>
-                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.38)', fontFamily: SYS_FONT, letterSpacing: '0.02em' }}>
-                  {entry?.size ? formatBytes(entry.size) : info.label}
-                </span>
               </div>
             </div>
           )

@@ -162,8 +162,23 @@ export function useEdgeHover(): void {
       // in half if we close both simultaneously — so we sequence it properly.
       if (state.styleFlyoutOpen) {
         state.setStyleFlyoutOpen(false)
-        window.setTimeout(() => {
+        if (graceTimer !== undefined) window.clearTimeout(graceTimer)
+        graceTimer = window.setTimeout(() => {
+          graceTimer = undefined
           if (!useStore.getState().open) return // already closed by another path
+          closePanelNow()
+        }, 300)
+        return
+      }
+
+      // If the preview screen is open, close the preview screen first,
+      // and after a delay let the main clipboard panel start retracting.
+      if (state.previewItemId) {
+        state.setPreviewItemId(null)
+        if (graceTimer !== undefined) window.clearTimeout(graceTimer)
+        graceTimer = window.setTimeout(() => {
+          graceTimer = undefined
+          if (!useStore.getState().open) return
           closePanelNow()
         }, 300)
         return

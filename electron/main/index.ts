@@ -19,7 +19,7 @@ import { initState, getWatcher, loadSettings, pushState, stopStateTimers } from 
 import { initAutoUpdater } from './updater'
 import { createOnboardingWindow } from './onboardingWindow'
 import { startFullscreenMonitor, stopFullscreenMonitor, triggerFullscreenCheck } from './fullscreen'
-import { join, resolve } from 'node:path'
+import { join, resolve, extname, normalize } from 'node:path'
 import { existsSync, createReadStream } from 'node:fs'
 import { createHash } from 'node:crypto'
 
@@ -148,6 +148,33 @@ app.on('activate', () => {
 function registerImageProtocol(): void {
   protocol.handle(APP_CONFIG.imageProtocol, async (request) => {
     try {
+      // Support streaming full-resolution local image files: edgelocal://file/<encodedPath>
+      if (request.url.startsWith(`${APP_CONFIG.imageProtocol}://file/`)) {
+        const rawPath = request.url.slice(`${APP_CONFIG.imageProtocol}://file/`.length)
+        const filePath = normalize(decodeURIComponent(rawPath))
+        if (existsSync(filePath)) {
+          const ext = extname(filePath).toLowerCase()
+          let contentType = 'image/png'
+          if (ext === '.jpg' || ext === '.jpeg') contentType = 'image/jpeg'
+          else if (ext === '.gif') contentType = 'image/gif'
+          else if (ext === '.webp') contentType = 'image/webp'
+          else if (ext === '.svg') contentType = 'image/svg+xml'
+          else if (ext === '.bmp') contentType = 'image/bmp'
+          else if (ext === '.avif') contentType = 'image/avif'
+
+          const stream = createReadStream(filePath)
+          const body = new Response(stream as unknown as ReadableStream<Uint8Array>).body
+          return new Response(body, {
+            status: 200,
+            headers: new Headers({
+              'Content-Type': contentType,
+              'Cache-Control': 'max-age=3600'
+            })
+          })
+        }
+        return new Response('Not found', { status: 404 })
+      }
+
       const id = request.url.replace(`${APP_CONFIG.imageProtocol}://`, '').replace(/\/$/, '')
       const cleanId = sanitizeId(id)
       if (!cleanId) {
