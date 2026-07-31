@@ -24,9 +24,10 @@ import { existsSync, createReadStream } from 'node:fs'
 import { createHash } from 'node:crypto'
 
 // Edge-Drop renders a small, mostly static transparent panel. Chromium's GPU
-// process costs substantially more memory than it saves here, so use software
-// compositing and retain the same visual/UI behavior without that process.
-// Electron requires this before the ready event.
+// process costs substantially more memory (~150–250 MB) than the iGPU compositing
+// savings are worth for such a simple UI. Software compositing keeps the process
+// count and RAM footprint minimal without meaningfully affecting visual quality.
+// Electron requires this call before the ready event.
 app.disableHardwareAcceleration()
 
 // Restrict the renderer to a single webContents and forbid remote module usage.

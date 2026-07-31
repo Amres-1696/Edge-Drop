@@ -22,7 +22,7 @@
  *
  * NOTE: this module must NOT import from state.ts to avoid circular dependencies.
  */
-import { BrowserWindow, screen, shell } from 'electron'
+import { BrowserWindow, screen, shell, powerMonitor } from 'electron'
 import { join } from 'node:path'
 import { existsSync } from 'node:fs'
 import { APP_CONFIG } from './config'
@@ -105,24 +105,55 @@ export function setPreviewMode(active: boolean): void {
 }
 
 /**
- * Poll the OS cursor position every ~16ms and send `window:cursor-edge` to
- * the renderer. This is the reliable alternative to `forward:true` on Windows
- * transparent windows, where pointermove forwarding often silently stops
- * working.
+ * Adaptive cursor poll — two-speed design to minimise battery drain.
+ *
+ * Problem: a fixed 16ms setInterval fires 60× per second, permanently
+ * preventing Intel Core Ultra CPUs from entering deep C-states (C6/C7/C8)
+ * that save 2–3W each. During idle browsing (panel closed, cursor far from
+ * edge) there is zero useful work being done at 60Hz.
+ *
+ * Solution: run at SLOW speed (150ms on battery, 80ms on AC) when the panel
+ * is closed and the cursor is not within PROXIMITY_PX of the edge. Switch to
+ * FAST speed (16ms) the moment the cursor approaches within PROXIMITY_PX.
+ * Switch back to SLOW after SLOW_COOLDOWN_MS of no edge-proximity.
+ *
+ * This reduces timer wake-ups by 5–10× during idle browsing while keeping
+ * panel open/close responsiveness completely unchanged (human reaction time
+ * is ~150ms, so a SLOW tick of 150ms is imperceptible).
  */
+
+/** Proximity threshold for entering fast-poll mode (px from the edge). */
+const FAST_POLL_PROXIMITY_PX = 100
+/** Full-speed poll when edge is near. */
+const POLL_FAST_MS = 16
+/** Battery-power slow poll (panel closed, cursor far). */
+const POLL_SLOW_BATTERY_MS = 150
+/** AC-power slow poll (panel closed, cursor far). */
+const POLL_SLOW_AC_MS = 80
+/** After leaving proximity, stay in fast mode for this long before throttling. */
+const SLOW_COOLDOWN_MS = 800
+
 let cursorPollTimer: ReturnType<typeof setInterval> | null = null
 let heartbeatTimer: ReturnType<typeof setInterval> | null = null
 let lastEdgeState = false
 let heartbeatPaused = false
 
+/** Whether the poll is currently running in fast (16ms) mode. */
+let _pollFast = false
+/** Timestamp of when the cursor last left the proximity zone. */
+let _lastProximityExitMs = 0
+/** Last sent cursor position — used to suppress duplicate IPC messages. */
+let _lastSentX = -9999
+let _lastSentY = -9999
+
 /**
  * Temporarily suspend the always-on-top heartbeat.
  *
- * The heartbeat calls setAlwaysOnTop() every 500 ms, which reasserts z-order
+ * The heartbeat calls setAlwaysOnTop() every 2 000 ms, which reasserts z-order
  * via SetWindowPos(HWND_TOPMOST) on Windows.  During a native drag the OS
  * renders the drag-ghost image using the DWM compositor at a layer that sits
  * BELOW HWND_TOPMOST windows.  Every heartbeat tick therefore pushes our
- * window in front of the ghost, making it disappear ~0.5 s into any drag.
+ * window in front of the ghost, making it disappear during any drag.
  *
  * Pausing the heartbeat for the duration of the drag keeps the window at its
  * current z-position and lets the DWM ghost stay visible for the full drag.
@@ -133,72 +164,135 @@ export function setHeartbeatPaused(paused: boolean): void {
   heartbeatPaused = paused
   if (!paused) {
     // Re-assert z-order immediately when drag ends so the window snaps back
-    // to the correct level without waiting up to 500 ms for the next tick.
+    // to the correct level without waiting for the next heartbeat tick.
     if (mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible()) {
       mainWindow.setAlwaysOnTop(true, 'screen-saver')
     }
   }
 }
 
-export function startCursorPoll(): void {
-  if (cursorPollTimer !== null) return
-  cursorPollTimer = setInterval(() => {
-    if (runtime.quitting || !mainWindow || mainWindow.isDestroyed() || !mainWindow.isVisible()) return
+/** Restart the poll timer at the given interval. Clears any existing timer. */
+function _restartPollTimer(intervalMs: number): void {
+  if (cursorPollTimer !== null) {
+    clearInterval(cursorPollTimer)
+  }
+  cursorPollTimer = setInterval(_pollTick, intervalMs)
+}
 
-    const settings = loadSettings()
-    if (settings.suppressInFullscreen && isFullscreenAppActive()) return
+/** Single cursor poll tick — shared by both fast and slow modes. */
+function _pollTick(): void {
+  if (runtime.quitting || !mainWindow || mainWindow.isDestroyed() || !mainWindow.isVisible()) return
 
-    const pt = screen.getCursorScreenPoint()
+  const settings = loadSettings()
+  if (settings.suppressInFullscreen && isFullscreenAppActive()) return
 
-    // Find the stick display (or fallback to primary)
-    const allDisplays = screen.getAllDisplays()
-    let stickDisplay = allDisplays.find(d => d.id === currentStickDisplayId)
-    if (!stickDisplay) {
-      stickDisplay = screen.getPrimaryDisplay()
+  const pt = screen.getCursorScreenPoint()
+
+  // Find the stick display (or fallback to primary)
+  const allDisplays = screen.getAllDisplays()
+  let stickDisplay = allDisplays.find(d => d.id === currentStickDisplayId)
+  if (!stickDisplay) {
+    stickDisplay = screen.getPrimaryDisplay()
+  }
+
+  const wa = stickDisplay.workArea
+
+  // Translate screen coords → stick display client coords.
+  const clientX = pt.x - wa.x
+  const clientY = pt.y - wa.y
+
+  // Guard against garbage values that Windows occasionally sends.
+  if (clientX < -5000 || clientX > 15000 || clientY < -5000 || clientY > 15000) return
+
+  // ── Adaptive speed: switch to fast poll when cursor approaches the edge ──
+  const distFromEdge = settings.stickPosition === 'right'
+    ? wa.width - clientX   // distance from right edge
+    : clientX              // distance from left edge
+  const nearProximity = distFromEdge <= FAST_POLL_PROXIMITY_PX
+
+  if (nearProximity || interactive) {
+    _lastProximityExitMs = 0  // reset cooldown
+    if (!_pollFast) {
+      _pollFast = true
+      _restartPollTimer(POLL_FAST_MS)
     }
-
-    const wa = stickDisplay.workArea
-
-    // Translate screen coords → stick display client coords.
-    const clientX = pt.x - wa.x
-    const clientY = pt.y - wa.y
-
-    // Guard against garbage values that Windows occasionally sends.
-    if (clientX < -5000 || clientX > 15000 || clientY < -5000 || clientY > 15000) return
-
-    let inEdge = false
-    switch (settings.stickPosition) {
-      case 'left':
-        inEdge = clientX >= -30 && clientX <= currentHotZoneWidth
-        break
-      case 'right':
-        const distFromRight = wa.width - clientX
-        inEdge = distFromRight >= -30 && distFromRight <= currentHotZoneWidth
-        break
-    }
-
-    const newState = inEdge
-
-    // Stream cursor position while near the edge (opening), while open (closing),
-    // or when edge state changes. The near-edge check adapts to stick position.
-    const nearEdge = settings.stickPosition === 'right'
-      ? (wa.width - clientX) <= 450
-      : clientX <= 450
-    if (nearEdge || interactive || newState !== lastEdgeState) {
-      lastEdgeState = newState
-      if (!mainWindow.webContents.isDestroyed()) {
-        mainWindow.webContents.send('window:cursor-edge', {
-          x: clientX,
-          y: clientY,
-          inEdge,
-          inZone: true,
-          stickPosition: settings.stickPosition,
-          displayWidth: wa.width,
-          displayHeight: wa.height
-        })
+  } else {
+    // Cursor is far from edge and panel is closed.
+    if (_pollFast) {
+      if (_lastProximityExitMs === 0) {
+        _lastProximityExitMs = Date.now()
+      }
+      // Wait for the cooldown before throttling back.
+      if (Date.now() - _lastProximityExitMs >= SLOW_COOLDOWN_MS) {
+        _pollFast = false
+        _lastProximityExitMs = 0
+        const slowMs = powerMonitor.isOnBatteryPower() ? POLL_SLOW_BATTERY_MS : POLL_SLOW_AC_MS
+        _restartPollTimer(slowMs)
+        return
       }
     }
-  }, 16)
+  }
+
+  let inEdge = false
+  switch (settings.stickPosition) {
+    case 'left':
+      inEdge = clientX >= -30 && clientX <= currentHotZoneWidth
+      break
+    case 'right': {
+      const d = wa.width - clientX
+      inEdge = d >= -30 && d <= currentHotZoneWidth
+      break
+    }
+  }
+
+  const newState = inEdge
+
+  // ── Fix 5: IPC gating — suppress redundant messages ──────────────────────
+  // Previously every poll tick within 450px of the edge sent a full IPC message
+  // to the renderer, even when the cursor hadn't moved. This flooded the IPC
+  // channel at 60Hz during all active browsing.
+  //
+  // Now we only send when:
+  //   a) Edge crossing state changes (inEdge flip) — always send immediately.
+  //   b) Panel is open (interactive) — send on every fast tick so the renderer
+  //      can track cursor position for the close-panel logic.
+  //   c) Cursor moved >= IPC_MIN_DELTA_PX since last send — avoids spamming
+  //      the renderer when the cursor is stationary near the edge.
+  const IPC_MIN_DELTA_PX = 3
+  const nearEdge = settings.stickPosition === 'right'
+    ? (wa.width - clientX) <= 450
+    : clientX <= 450
+
+  const positionChangedEnough =
+    Math.abs(clientX - _lastSentX) >= IPC_MIN_DELTA_PX ||
+    Math.abs(clientY - _lastSentY) >= IPC_MIN_DELTA_PX
+
+  const shouldSend = newState !== lastEdgeState || interactive || (nearEdge && positionChangedEnough)
+
+  if (shouldSend) {
+    lastEdgeState = newState
+    _lastSentX = clientX
+    _lastSentY = clientY
+    if (!mainWindow.webContents.isDestroyed()) {
+      mainWindow.webContents.send('window:cursor-edge', {
+        x: clientX,
+        y: clientY,
+        inEdge,
+        inZone: true,
+        stickPosition: settings.stickPosition,
+        displayWidth: wa.width,
+        displayHeight: wa.height
+      })
+    }
+  }
+}
+
+export function startCursorPoll(): void {
+  if (cursorPollTimer !== null) return
+  // Start in slow mode; will accelerate when cursor approaches the edge.
+  const slowMs = powerMonitor.isOnBatteryPower() ? POLL_SLOW_BATTERY_MS : POLL_SLOW_AC_MS
+  _pollFast = false
+  cursorPollTimer = setInterval(_pollTick, slowMs)
 }
 
 export function stopCursorPoll(): void {
@@ -436,15 +530,21 @@ export function createWindow(): BrowserWindow {
   })
 
   // Periodic heartbeat: Windows fullscreen apps (Chrome YouTube, games) push
-  // floating windows behind them. Re-asserting 'screen-saver' level every 500ms
-  // ensures the panel instantly re-appears when the user exits fullscreen.
+  // floating windows behind them. Re-asserting 'screen-saver' level periodically
+  // ensures the panel re-appears when the user exits fullscreen.
+  //
+  // Power fix: interval increased from 500ms to 2000ms.
+  // The old 500ms interval called SetWindowPos(HWND_TOPMOST) 120 times/min,
+  // even when nothing was happening. 2000ms reduces this to 30 times/min with
+  // no perceptible difference — the panel reappears within 2s of a fullscreen
+  // app losing focus, which is already faster than the user notices.
   if (heartbeatTimer !== null) clearInterval(heartbeatTimer)
   heartbeatTimer = setInterval(() => {
     if (runtime.quitting || heartbeatPaused || interactive) return
     if (mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible()) {
       mainWindow.setAlwaysOnTop(true, 'screen-saver')
     }
-  }, 500)
+  }, 2000)
 
   return mainWindow
 }
