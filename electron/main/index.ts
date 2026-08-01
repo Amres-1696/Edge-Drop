@@ -19,9 +19,10 @@ import { initState, getWatcher, loadSettings, pushState, stopStateTimers } from 
 import { initAutoUpdater } from './updater'
 import { createOnboardingWindow } from './onboardingWindow'
 import { startFullscreenMonitor, stopFullscreenMonitor, triggerFullscreenCheck } from './fullscreen'
-import { join, resolve, extname, normalize } from 'node:path'
+import { extname, normalize } from 'node:path'
 import { existsSync, createReadStream } from 'node:fs'
 import { createHash } from 'node:crypto'
+import { resolveStoredImage } from './imageProtocol'
 
 // Edge-Drop renders a small, mostly static transparent panel. Chromium's GPU
 // process costs substantially more memory (~150–250 MB) than the iGPU compositing
@@ -83,7 +84,7 @@ app.whenReady().then(() => {
   const ses = session.defaultSession
   ses.setPermissionRequestHandler((_wc, _perm, cb) => cb(false))
 
-  // Register the image protocol: edgelocal://<imageId> -> images/<imageId>.png
+  // Register the image protocol: edgelocal://<imageId> -> the staged image file.
   registerImageProtocol()
 
   createWindow()
@@ -175,37 +176,28 @@ function registerImageProtocol(): void {
         return new Response('Not found', { status: 404 })
       }
 
-      const id = request.url.replace(`${APP_CONFIG.imageProtocol}://`, '').replace(/\/$/, '')
-      const cleanId = sanitizeId(id)
-      if (!cleanId) {
+      const imageId = new URL(request.url).hostname
+      if (!/^[a-z0-9-]+$/i.test(imageId)) {
         return new Response('Forbidden', { status: 403 })
       }
 
-      const targetFile = resolve(join(PATHS.imagesDir(), `${cleanId}.png`))
-      const baseDir = resolve(PATHS.imagesDir())
-
-      // Strict path confinement check: target file MUST reside directly inside imagesDir
-      if (!targetFile.startsWith(baseDir) || !existsSync(targetFile)) {
+      const storedImage = resolveStoredImage(PATHS.imagesDir(), imageId)
+      if (!storedImage) {
         return new Response('Not found', { status: 404 })
       }
 
-      const stream = createReadStream(targetFile)
+      const stream = createReadStream(storedImage.filePath)
       const body = new Response(stream as unknown as ReadableStream<Uint8Array>).body
       const headers = new Headers({
-        'Content-Type': 'image/png',
+        'Content-Type': storedImage.contentType,
         'Cache-Control': 'no-cache',
-        'ETag': `"${createHash('sha256').update(targetFile).digest('hex')}"`
+        'ETag': `"${createHash('sha256').update(storedImage.filePath).digest('hex')}"`
       })
       return new Response(body, { status: 200, headers })
     } catch {
       return new Response('Error', { status: 500 })
     }
   })
-}
-
-/** Allow only id-like characters to prevent path traversal via the protocol. */
-function sanitizeId(id: string): string {
-  return id.replace(/[^a-z0-9-]/gi, '')
 }
 
 // Silence unused import in environments where setVisible isn't referenced
