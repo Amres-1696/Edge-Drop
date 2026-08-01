@@ -330,11 +330,13 @@ export function useEdgeHover(): void {
             edgeHintFired = false
           }
 
-          if (inEdgeNear && !inZone && !state.open && (state.settings.showEdgeLocationHint ?? true)) {
+          const isHoverEnabled = state.settings.hoverActivation ?? true
+
+          if (inEdgeNear && !inZone && !state.open && isHoverEnabled && (state.settings.showEdgeLocationHint ?? true)) {
             triggerEdgeHint()
           }
 
-          if (distFromRight >= -BUFFER_PX && distFromRight <= TRIGGER_PX && inZone && !state.open) {
+          if (distFromRight >= -BUFFER_PX && distFromRight <= TRIGGER_PX && inZone && !state.open && isHoverEnabled) {
             if (state.edgeHintActive) state.setEdgeHintActive(false)
             cancelClose()
             if (dwellTimer === undefined) {
@@ -390,11 +392,13 @@ export function useEdgeHover(): void {
             edgeHintFired = false
           }
 
-          if (inEdgeNear && !inZone && !state.open && (state.settings.showEdgeLocationHint ?? true)) {
+          const isHoverEnabled = state.settings.hoverActivation ?? true
+
+          if (inEdgeNear && !inZone && !state.open && isHoverEnabled && (state.settings.showEdgeLocationHint ?? true)) {
             triggerEdgeHint()
           }
 
-          if (data.x >= -BUFFER_PX && data.x <= TRIGGER_PX && inZone && !state.open) {
+          if (data.x >= -BUFFER_PX && data.x <= TRIGGER_PX && inZone && !state.open && isHoverEnabled) {
             if (state.edgeHintActive) state.setEdgeHintActive(false)
             cancelClose()
             if (dwellTimer === undefined) {

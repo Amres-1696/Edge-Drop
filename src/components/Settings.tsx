@@ -278,12 +278,65 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
 
                   <div className="setting-row">
                     <div className="setting-info">
-                      <div className="setting-title">Fullscreen Protection</div>
-                      <div className="setting-desc">Automatically pause edge hover while playing games or watching fullscreen videos</div>
+                      <div className="setting-title">Hover Activation</div>
+                      <div className="setting-desc" style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '3px 5px', marginTop: 2 }}>
+                        {(settings.hoverActivation ?? true) ? (
+                          <span>Slide open shelf when hovering cursor near screen edge</span>
+                        ) : (
+                          <>
+                            <span>Hover trigger paused. Use</span>
+                            <kbd
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                padding: '1px 6px',
+                                fontSize: 10.5,
+                                fontWeight: 600,
+                                fontFamily: 'inherit',
+                                color: '#ffffff',
+                                background: 'rgba(255, 255, 255, 0.14)',
+                                border: '1px solid rgba(255, 255, 255, 0.28)',
+                                borderRadius: 4,
+                                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                                whiteSpace: 'nowrap',
+                                letterSpacing: '0.02em',
+                                lineHeight: '14px'
+                              }}
+                            >
+                              Alt + C
+                            </kbd>
+                            <span>to open.</span>
+                          </>
+                        )}
+                      </div>
                     </div>
                     <Toggle
-                      checked={settings.suppressInFullscreen}
-                      onChange={(v) => patch({ suppressInFullscreen: v })}
+                      checked={settings.hoverActivation ?? true}
+                      onChange={(v) => {
+                        if (!v) {
+                          patch({ hoverActivation: false, suppressInFullscreen: false })
+                        } else {
+                          patch({ hoverActivation: true, suppressInFullscreen: true })
+                        }
+                      }}
+                    />
+                  </div>
+
+                  <div className="setting-divider" />
+
+                  <div className="setting-row" style={{ opacity: (settings.hoverActivation ?? true) ? 1 : 0.45, transition: 'opacity 0.2s ease' }}>
+                    <div className="setting-info">
+                      <div className="setting-title">Fullscreen Protection</div>
+                      <div className="setting-desc">
+                        {(settings.hoverActivation ?? true)
+                          ? 'Automatically pause edge hover while playing games or watching fullscreen videos'
+                          : 'Disabled because Hover Activation is turned off'}
+                      </div>
+                    </div>
+                    <Toggle
+                      checked={(settings.hoverActivation ?? true) ? settings.suppressInFullscreen : false}
+                      onChange={(v) => (settings.hoverActivation ?? true) && patch({ suppressInFullscreen: v })}
+                      disabled={!(settings.hoverActivation ?? true)}
                     />
                   </div>
 
@@ -851,10 +904,12 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
 
 function Toggle({
   checked,
-  onChange
+  onChange,
+  disabled
 }: {
   checked: boolean
   onChange: (v: boolean) => void
+  disabled?: boolean
 }) {
   return (
     <button
@@ -862,7 +917,9 @@ function Toggle({
       className={`setting-toggle${checked ? ' checked' : ''}`}
       role="switch"
       aria-checked={checked}
+      disabled={disabled}
       onClick={() => {
+        if (disabled) return
         playToggleSound(!checked)
         onChange(!checked)
       }}
@@ -871,14 +928,15 @@ function Toggle({
         width: 38,
         height: 22,
         borderRadius: 999,
-        background: checked ? '#ffffff' : 'rgba(255, 255, 255, 0.12)',
-        border: checked ? '1px solid #ffffff' : '1px solid rgba(255, 255, 255, 0.18)',
+        background: disabled ? 'rgba(255, 255, 255, 0.05)' : checked ? '#ffffff' : 'rgba(255, 255, 255, 0.12)',
+        border: disabled ? '1px solid rgba(255, 255, 255, 0.08)' : checked ? '1px solid #ffffff' : '1px solid rgba(255, 255, 255, 0.18)',
         position: 'relative',
-        cursor: 'pointer',
+        cursor: disabled ? 'not-allowed' : 'pointer',
         padding: 0,
         outline: 'none',
         transition: 'background 0.22s ease, border-color 0.22s ease',
-        boxShadow: checked ? '0 0 12px rgba(255, 255, 255, 0.25)' : 'none'
+        boxShadow: !disabled && checked ? '0 0 12px rgba(255, 255, 255, 0.25)' : 'none',
+        opacity: disabled ? 0.45 : 1
       }}
     >
       <motion.span

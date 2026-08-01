@@ -448,7 +448,7 @@ export function createWindow(): BrowserWindow {
 
   registerFullscreenActiveListener(() => {
     const settings = loadSettings()
-    if (settings.suppressInFullscreen) {
+    if (settings.suppressInFullscreen && (settings.hoverActivation ?? true)) {
       if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed()) {
         mainWindow.webContents.send('window:toggle', false)
       }

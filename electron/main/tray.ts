@@ -128,6 +128,19 @@ export function createTray(): Tray {
           rebuild()
         }
       },
+      {
+        label: 'Hover Trigger (open on hover)',
+        type: 'checkbox',
+        checked: settings.hoverActivation ?? true,
+        click: (item) => {
+          const next = saveSettings({
+            hoverActivation: item.checked,
+            suppressInFullscreen: item.checked ? true : false
+          })
+          pushState.settings(next)
+          rebuild()
+        }
+      },
       { type: 'separator' },
       {
         label: 'Stick to',

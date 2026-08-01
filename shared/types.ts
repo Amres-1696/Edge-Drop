@@ -160,6 +160,8 @@ export interface Settings {
   soundEffects?: boolean
   /** Last version for which the user opened/viewed the What's New changelog panel. */
   lastSeenChangelogVersion?: string
+  /** When true, hovering cursor near edge activates the panel. When false, panel opens exclusively via Alt + C. Default: true. */
+  hoverActivation?: boolean
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -186,7 +188,8 @@ export const DEFAULT_SETTINGS: Settings = {
   triggerAlignment: 'center',
   showEdgeLocationHint: true,
   soundEffects: true,
-  lastSeenChangelogVersion: undefined
+  lastSeenChangelogVersion: undefined,
+  hoverActivation: true
 }
 
 
