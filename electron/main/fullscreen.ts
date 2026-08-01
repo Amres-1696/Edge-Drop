@@ -96,7 +96,7 @@ export function triggerFullscreenCheck(): void {
  * still fires immediately whenever the OS focus changes, so the effective
  * detection latency for Alt+Tab scenarios is still ~0ms.
  */
-const FULLSCREEN_CHECK_INTERVAL_MS = 5000
+const FULLSCREEN_CHECK_INTERVAL_MS = 800
 
 export function startFullscreenMonitor(): void {
   if (process.platform !== 'win32') return

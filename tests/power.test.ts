@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Power optimisation test suite.
  *
  * These tests verify the logic of each power fix without requiring an
@@ -20,10 +20,10 @@ function makeTick(clientX: number, clientY: number, displayWidth = 1920, stickPo
 // ──────────────────────────────────────────────────────────────────────────────
 describe('Fix 1 — adaptive poll rate constants', () => {
   // The constants are embedded in window.ts but we can test the logic in isolation.
-  const FAST_POLL_PROXIMITY_PX = 100
+  const FAST_POLL_PROXIMITY_PX = 250
   const POLL_FAST_MS = 16
-  const POLL_SLOW_BATTERY_MS = 150
-  const POLL_SLOW_AC_MS = 80
+  const POLL_SLOW_BATTERY_MS = 60
+  const POLL_SLOW_AC_MS = 35
   const SLOW_COOLDOWN_MS = 800
 
   it('POLL_FAST_MS is exactly 16ms (one frame at 60Hz)', () => {
@@ -34,14 +34,14 @@ describe('Fix 1 — adaptive poll rate constants', () => {
     expect(POLL_SLOW_BATTERY_MS).toBeGreaterThanOrEqual(POLL_SLOW_AC_MS)
   })
 
-  it('POLL_SLOW_BATTERY_MS falls within human reaction time (150–250ms)', () => {
-    expect(POLL_SLOW_BATTERY_MS).toBeGreaterThanOrEqual(100)
-    expect(POLL_SLOW_BATTERY_MS).toBeLessThanOrEqual(250)
+  it('POLL_SLOW_BATTERY_MS ensures low latency (30–100ms)', () => {
+    expect(POLL_SLOW_BATTERY_MS).toBeGreaterThanOrEqual(30)
+    expect(POLL_SLOW_BATTERY_MS).toBeLessThanOrEqual(100)
   })
 
-  it('FAST_POLL_PROXIMITY_PX is a meaningful approach distance (50–200px)', () => {
-    expect(FAST_POLL_PROXIMITY_PX).toBeGreaterThanOrEqual(50)
-    expect(FAST_POLL_PROXIMITY_PX).toBeLessThanOrEqual(200)
+  it('FAST_POLL_PROXIMITY_PX is a meaningful approach distance (100–400px)', () => {
+    expect(FAST_POLL_PROXIMITY_PX).toBeGreaterThanOrEqual(100)
+    expect(FAST_POLL_PROXIMITY_PX).toBeLessThanOrEqual(400)
   })
 
   it('cursor within PROXIMITY triggers fast mode (left panel)', () => {
@@ -72,9 +72,9 @@ describe('Fix 1 — adaptive poll rate constants', () => {
     expect(SLOW_COOLDOWN_MS).toBeGreaterThanOrEqual(500)
   })
 
-  it('slow poll provides >= 5x improvement over fast poll', () => {
+  it('slow poll provides >= 3x improvement over fast poll', () => {
     // Verify that the slow poll is meaningfully slower, not just slightly slower
-    expect(POLL_SLOW_BATTERY_MS / POLL_FAST_MS).toBeGreaterThanOrEqual(5)
+    expect(POLL_SLOW_BATTERY_MS / POLL_FAST_MS).toBeGreaterThanOrEqual(3)
   })
 })
 

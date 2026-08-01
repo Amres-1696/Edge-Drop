@@ -123,13 +123,13 @@ export function setPreviewMode(active: boolean): void {
  */
 
 /** Proximity threshold for entering fast-poll mode (px from the edge). */
-const FAST_POLL_PROXIMITY_PX = 100
+const FAST_POLL_PROXIMITY_PX = 250
 /** Full-speed poll when edge is near. */
 const POLL_FAST_MS = 16
 /** Battery-power slow poll (panel closed, cursor far). */
-const POLL_SLOW_BATTERY_MS = 150
+const POLL_SLOW_BATTERY_MS = 60
 /** AC-power slow poll (panel closed, cursor far). */
-const POLL_SLOW_AC_MS = 80
+const POLL_SLOW_AC_MS = 35
 /** After leaving proximity, stay in fast mode for this long before throttling. */
 const SLOW_COOLDOWN_MS = 800
 

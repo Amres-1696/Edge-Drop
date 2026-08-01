@@ -25,7 +25,7 @@ import { edge } from '../lib/edge'
 import { useStore } from '../store/appStore'
 
 const TRIGGER_PX = 3    // leftmost px that count as "the edge"
-const DWELL_MS = 120     // cursor must linger this long to open
+const DWELL_MS = 40      // cursor must linger this long to open
 const GRACE_MS = 250     // close delay after leaving
 const PANEL_WIDE = 270   // blade is 270px (var(--panel-width))
 /** Hysteresis thresholds for closing the panel.
