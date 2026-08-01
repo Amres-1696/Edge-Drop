@@ -95,7 +95,9 @@ export default function App() {
   // Apply theme whenever settings change.
   useEffect(() => {
     applyReduceMotion(settings.reduceMotion)
-  }, [settings.reduceMotion])
+    const scale = settings.fontSizeScale ?? 1.0
+    document.documentElement.style.setProperty('--font-scale', String(scale))
+  }, [settings.reduceMotion, settings.fontSizeScale])
 
   return <Panel />
 }

@@ -242,10 +242,10 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
               {activeTab === 'behaviour' && (
                 <motion.div
                   key="tab-behaviour"
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.16, ease: 'easeOut' }}
+                  initial={{ opacity: 0, scale: 0.98, y: 4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.98, y: -4 }}
+                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                 >
                   {/* ── GROUP: Behaviour ─────────────────────────────────── */}
                   <div className="setting-group-label">Behaviour</div>
@@ -412,10 +412,10 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
               {activeTab === 'position' && (
                 <motion.div
                   key="tab-position"
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.16, ease: 'easeOut' }}
+                  initial={{ opacity: 0, scale: 0.98, y: 4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.98, y: -4 }}
+                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                 >
                   {/* ── GROUP: Position ──────────────────────────────────── */}
                   <div className="setting-group-label">Position</div>
@@ -697,10 +697,10 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
               {activeTab === 'appearance' && (
                 <motion.div
                   key="tab-appearance"
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.16, ease: 'easeOut' }}
+                  initial={{ opacity: 0, scale: 0.98, y: 4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.98, y: -4 }}
+                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                 >
                   {/* ── GROUP: Copy Indicator ────────────────────────────── */}
                   <div className="setting-group-label">Copy Indicator</div>
@@ -872,6 +872,36 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                       )}
                     </>
                   )}
+
+                  {/* ── GROUP: Typography ────────────────────────────────── */}
+                  <div className="setting-group-label" style={{ marginTop: 20 }}>Typography</div>
+
+                  <div className="setting-row vertical">
+                    <div className="setting-info">
+                      <div className="setting-title">Text size</div>
+                      <div className="setting-desc">Adjust UI typography scale across Edge-Drop</div>
+                    </div>
+                    <div className="setting-pills">
+                      {[
+                        { label: 'Small', val: 0.85 },
+                        { label: 'Normal', val: 1.0 },
+                        { label: 'Large', val: 1.15 }
+                      ].map((opt) => (
+                        <button
+                          key={opt.label}
+                          className={`pill ${Math.abs((settings.fontSizeScale ?? 1.0) - opt.val) < 0.05 ? 'active' : ''}`}
+                          onClick={() => {
+                            playButtonClickSound()
+                            patch({ fontSizeScale: opt.val })
+                          }}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="setting-divider" />
 
                   {/* ── GROUP: Audio & Feedback ──────────────────────────── */}
                   <div className="setting-group-label" style={{ marginTop: 20 }}>Audio & Feedback</div>

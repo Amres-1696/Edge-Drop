@@ -42,6 +42,9 @@
   --dur-fast: 140ms;
   --dur-base: 240ms;
 
+  /* Typography scale */
+  --font-scale: 1;
+
   /* Layout */
   --panel-width: 270px;
   --gap: 12px;

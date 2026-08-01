@@ -187,7 +187,6 @@ export function ItemList() {
     <motion.div 
       className="list" 
       ref={listRef} 
-      layoutScroll
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeaveOrDrop}
       onDrop={handleDragLeaveOrDrop}

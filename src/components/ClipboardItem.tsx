@@ -108,20 +108,20 @@ function ClipboardItemBase({ item }: Props) {
 
   return (
     <motion.div
-      layout
-      layoutId={`card-${item.id}`}
-      initial={open ? { opacity: 0, y: 6, scale: 0.97 } : false}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.1, ease: 'easeIn' } }}
+      layout="position"
+      initial={open ? { opacity: 0, scale: 0.96, y: 6 } : false}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95, y: -4, transition: { duration: 0.12, ease: [0.32, 0, 0.67, 0] } }}
       transition={{
-        layout: { type: 'spring', stiffness: 500, damping: 32 },
+        layout: { type: 'spring', stiffness: 280, damping: 28, mass: 0.8 },
         type: 'spring',
-        stiffness: 500,
-        damping: 38,
-        mass: 0.6,
+        stiffness: 300,
+        damping: 30,
+        mass: 0.8,
         restDelta: 0.001,
         restSpeed: 0.001
       }}
+      style={{ willChange: 'transform, opacity' }}
       className={`item${item.pinned ? ' pinned' : ''}${isBundle ? ' bundle' : ''}`}
     >
       {copied && (

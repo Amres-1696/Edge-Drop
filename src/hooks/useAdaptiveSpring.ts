@@ -20,23 +20,23 @@ export function useAdaptiveSpring() {
     }
 
     if (dpr >= 1.75) {
-      // Hi-DPI (2×+): critically damped, settles in ≈8 frames at 120Hz.
+      // Hi-DPI (2×+): Apple fluid spring curve
       return {
         type: 'spring',
-        stiffness: 480,
-        damping: 42,
-        mass: 0.7,
+        stiffness: 320,
+        damping: 30,
+        mass: 0.8,
         restDelta: 0.001,
         restSpeed: 0.001
       } as const
     }
 
-    // Standard DPI: slightly springy but no overshoot.
+    // Standard DPI: smooth fluid spring curve
     return {
       type: 'spring',
-      stiffness: 420,
-      damping: 38,
-      mass: 0.7,
+      stiffness: 300,
+      damping: 28,
+      mass: 0.8,
       restDelta: 0.001,
       restSpeed: 0.001
     } as const

@@ -37,12 +37,13 @@
 .settings-tab-btn {
   position: relative;
   flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 7px 4px;
+  padding: 6px 2px;
   border-radius: 7px;
-  font-size: 12px;
+  font-size: calc(11.5px * var(--font-scale, 1));
   font-weight: 500;
   color: rgba(255, 255, 255, 0.65);
   background: transparent;
@@ -53,6 +54,8 @@
   -webkit-font-smoothing: antialiased;
   letter-spacing: 0.01em;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .settings-tab-btn:hover:not(.active) {
@@ -104,14 +107,14 @@
 }
 
 .setting-title {
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale, 1));
   font-weight: 600;
   color: #ffffff;
   letter-spacing: 0.01em;
 }
 
 .setting-desc {
-  font-size: 12.5px;
+  font-size: calc(12.5px * var(--font-scale, 1));
   font-weight: 400;
   color: rgba(255, 255, 255, 0.78);
   line-height: 1.48;
@@ -125,7 +128,7 @@
 }
 
 .setting-group-label {
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale, 1));
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -143,7 +146,7 @@
   align-items: center;
   margin-top: 4px;
   padding: 2px 7px;
-  font-size: 10px;
+  font-size: calc(10px * var(--font-scale, 1));
   font-weight: 500;
   color: rgba(255, 255, 255, 0.55);
   background: rgba(255, 255, 255, 0.04);
@@ -181,7 +184,7 @@
 }
 
 .setting-slider-val {
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale, 1));
   font-weight: 600;
   font-family: 'JetBrains Mono', -apple-system, BlinkMacSystemFont, monospace;
   color: #ffffff;
@@ -298,9 +301,10 @@
 
 .pill {
   flex: 1;
-  padding: 7px 0;
+  min-width: 0;
+  padding: 6px 2px;
   border-radius: 6px;
-  font-size: 12.5px;
+  font-size: calc(11.5px * var(--font-scale, 1));
   font-weight: 500;
   color: #a1a1aa;
   background: transparent;
@@ -308,6 +312,10 @@
   cursor: pointer;
   transition: all 0.15s ease;
   -webkit-font-smoothing: antialiased;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
 }
 
 .pill:hover:not(.active) {
@@ -331,11 +339,11 @@
   line-height: 1.2;
 }
 .display-pill .pill-name {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale, 1));
   font-weight: 600;
 }
 .display-pill .pill-res {
-  font-size: 10px;
+  font-size: calc(10px * var(--font-scale, 1));
   opacity: 0.7;
 }
 
