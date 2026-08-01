@@ -8,7 +8,7 @@
  * transparent and click-through.
  */
 import { motion, AnimatePresence } from 'framer-motion'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { useStore } from '../store/appStore'
 import { PANEL_LEAVE_EVENT, PANEL_ENTER_EVENT } from '../hooks/useEdgeHover'
 import { Header } from './Header'
@@ -19,11 +19,28 @@ import { TrashIcon } from './icons'
 import { PreviewFlyout } from './PreviewFlyout'
 import { IndicatorStyleFlyout } from './IndicatorStyleFlyout'
 import { CopyIndicatorCurve } from './CopyIndicatorCurve'
+import { useFilteredItems } from '../hooks/useFilteredItems'
 
 export function Panel() {
   const open = useStore((s) => s.open)
-  const total = useStore((s) => s.items.length)
+  const { pinned, recent } = useFilteredItems()
+  const filteredItems = useMemo(() => [...pinned, ...recent], [pinned, recent])
+  const filteredCount = filteredItems.length
   const clear = useStore((s) => s.clear)
+  const typeFilter = useStore((s) => s.typeFilter)
+  const query = useStore((s) => s.query)
+  const isFiltered = typeFilter !== 'all' || query.trim().length > 0
+
+  const handleClear = () => {
+    if (filteredCount === 0) return
+    if (!isFiltered) {
+      clear()
+    } else {
+      const ids = filteredItems.map((it: any) => it.id)
+      clear(ids)
+    }
+  }
+
   const settings = useStore((s) => s.settings)
   const settingsOpen = useStore((s) => s.settingsOpen)
   const setSettingsOpen = useStore((s) => s.setSettingsOpen)
@@ -358,14 +375,14 @@ export function Panel() {
                 <div className="footer" style={{ position: 'relative' }}>
                   <div style={{ position: 'absolute', top: -18, left: 0, right: 0, height: 18, background: 'linear-gradient(to top, #000000, transparent)', pointerEvents: 'none', zIndex: 10 }} />
                   <span className="count">
-                    {total} item{total === 1 ? '' : 's'}
+                    {filteredCount} item{filteredCount === 1 ? '' : 's'}
                   </span>
                   <div className="spacer" />
                   <button 
                     className="text-btn danger"
-                    onClick={clear} 
-                    disabled={total === 0} 
-                    title="Clear shelf" 
+                    onClick={handleClear} 
+                    disabled={filteredCount === 0} 
+                    title={isFiltered ? "Clear filtered items" : "Clear shelf"} 
                     style={{ display: 'flex', alignItems: 'center', gap: 6 }}
                   >
                     <TrashIcon width={14} height={14} />

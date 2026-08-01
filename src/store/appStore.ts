@@ -87,7 +87,7 @@ interface AppState {
   /* mutations (delegate to main) */
   togglePin: (id: string, pinned: boolean) => Promise<void>
   remove: (id: string) => Promise<void>
-  clear: () => Promise<void>
+  clear: (ids?: string[]) => Promise<void>
   copy: (id: string) => Promise<void>
   paste: (id: string) => Promise<void>
   pasteSubitem: (req: DragRequest) => Promise<void>
@@ -257,9 +257,19 @@ export const useStore = create<AppState>((set, get) => ({
     set({ items })
   },
 
-  async clear() {
-    const items = await edge.clearItems()
-    set({ items })
+  async clear(ids?: string[]) {
+    if (!ids || ids.length === 0) {
+      const items = await edge.clearItems()
+      set({ items })
+    } else {
+      const idSet = new Set(ids)
+      set({ items: get().items.filter((it) => !idSet.has(it.id)) })
+      let items = get().items
+      for (const id of ids) {
+        items = await edge.deleteItem(id)
+      }
+      set({ items })
+    }
   },
 
   async copy(id) {
