@@ -72,36 +72,9 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
   const updateDownloaded = updateInfo?.downloaded ? { version: updateInfo.latestVersion } : null
   const autoUpdates = settings.autoUpdates ?? true
 
-  const [checkState, setCheckState] = useState<{
-    status: 'idle' | 'checking' | 'up-to-date' | 'available' | 'downloading' | 'error'
-    version?: string
-    error?: string
-  }>({ status: 'idle' })
-
-  const handleManualCheck = async () => {
-    setCheckState({ status: 'checking' })
-    try {
-      const res = await window.edge.checkForUpdatesManual()
-      if (res.status === 'available') {
-        setCheckState({ status: 'available', version: res.version })
-      } else if (res.status === 'up-to-date') {
-        setCheckState({ status: 'up-to-date', version: res.version })
-      } else {
-        setCheckState({ status: 'error', error: res.error || 'Check failed' })
-      }
-    } catch (err: any) {
-      setCheckState({ status: 'error', error: err?.message || 'Check failed' })
-    }
-  }
-
-  const handleStartDownload = async () => {
-    setCheckState({ status: 'downloading' })
-    try {
-      await window.edge.startUpdateDownload()
-    } catch {
-      setCheckState({ status: 'error', error: 'Download failed' })
-    }
-  }
+  const checkState = useStore((s) => s.manualCheckState)
+  const handleManualCheck = () => useStore.getState().startManualCheck()
+  const handleStartDownload = () => useStore.getState().startManualDownload()
 
   // ── Tab state & Independent Scroll Memory per section ──────────────────────
   const [activeTab, setActiveTab] = useState<SettingsTab>('behaviour')
@@ -129,6 +102,46 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
       scrollListRef.current.scrollTop = targetPos
     }
   }, [activeTab])
+
+  // ── Off-screen Update Banner Visibility Tracking ─────────────────────────────
+  const updateBannerRef = useRef<HTMLDivElement | null>(null)
+  const [isUpdateBannerVisible, setIsUpdateBannerVisible] = useState(true)
+
+  const hasUpdatePrompt = !isStoreBuild && !!(updateDownloaded || ((settings.autoUpdates ?? true) && updateInfo?.hasUpdate) || checkState.status === 'available')
+  const showScrollUpdateBadge = hasUpdatePrompt && activeTab === 'behaviour' && !isUpdateBannerVisible
+
+  useEffect(() => {
+    if (isStoreBuild || activeTab !== 'behaviour' || !hasUpdatePrompt) {
+      setIsUpdateBannerVisible(true)
+      return
+    }
+
+    const container = scrollListRef.current
+    if (!container) return
+
+    const checkVisibility = () => {
+      const el = updateBannerRef.current
+      if (!el) {
+        setIsUpdateBannerVisible(true)
+        return
+      }
+      const elRect = el.getBoundingClientRect()
+      const containerRect = container.getBoundingClientRect()
+      // Element is visible if its top and bottom are inside container's view
+      const visible = elRect.top >= containerRect.top - 10 && elRect.bottom <= containerRect.bottom + 20
+      setIsUpdateBannerVisible(visible)
+    }
+
+    checkVisibility()
+    // Small delay to allow DOM render on tab switch
+    const timer = setTimeout(checkVisibility, 60)
+
+    container.addEventListener('scroll', checkVisibility, { passive: true })
+    return () => {
+      clearTimeout(timer)
+      container.removeEventListener('scroll', checkVisibility)
+    }
+  }, [isStoreBuild, activeTab, hasUpdatePrompt, updateDownloaded, updateInfo, checkState.status])
 
   // ── Persistent footer shared across all tabs ───────────────────────────
   const PersistentFooter = (
@@ -226,7 +239,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 12 }}
           transition={{ type: 'spring', stiffness: 400, damping: 36, mass: 0.6 }}
-          style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+          style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}
         >
           {/* ── Stationary Fixed Header (Tab Selector) ────────────────── */}
           <div className="settings-fixed-header">
@@ -386,224 +399,223 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                       </div>
 
                       {/* ── UPDATE CONTROL / MANUAL CHECK BANNER ── */}
-                      {updateDownloaded ? (
-                        <div style={{
-                          marginTop: 12,
-                          background: 'rgba(76, 175, 80, 0.08)',
-                          border: '1px solid rgba(76, 175, 80, 0.3)',
-                          borderRadius: 12,
-                          padding: '14px 16px',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: 10,
-                          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
-                        }}>
-                          <div>
-                            <div style={{ fontSize: 13.5, fontWeight: 600, color: '#ffffff', letterSpacing: '-0.01em' }}>
-                              Update v{updateDownloaded.version} Ready
+                      <div ref={updateBannerRef}>
+                        {updateDownloaded ? (
+                          <div style={{
+                            marginTop: 12,
+                            background: 'rgba(76, 175, 80, 0.08)',
+                            border: '1px solid rgba(76, 175, 80, 0.3)',
+                            borderRadius: 12,
+                            padding: '14px 16px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 10,
+                            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
+                          }}>
+                            <div>
+                              <div style={{ fontSize: 13.5, fontWeight: 600, color: '#ffffff', letterSpacing: '-0.01em' }}>
+                                Update v{updateDownloaded.version} Ready
+                              </div>
+                              <div style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.7)', marginTop: 3, lineHeight: 1.45 }}>
+                                Click to restart Edge-Drop and apply the update.
+                              </div>
                             </div>
-                            <div style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.7)', marginTop: 3, lineHeight: 1.45 }}>
-                              Click to restart Edge-Drop and apply the update.
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => window.edge.installUpdate()}
-                            style={{
-                              width: '100%',
-                              background: '#ffffff',
-                              color: '#000000',
-                              border: 'none',
-                              borderRadius: 9,
-                              padding: '8px 16px',
-                              fontSize: 12.5,
-                              fontWeight: 600,
-                              cursor: 'pointer',
-                              textAlign: 'center',
-                              boxShadow: '0 2px 8px rgba(255, 255, 255, 0.15)',
-                              transition: 'opacity 0.15s ease'
-                            }}
-                            onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.92' }}
-                            onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
-                          >
-                            Restart to Update
-                          </button>
-                        </div>
-                      ) : !autoUpdates ? (
-                        <div style={{
-                          marginTop: 12,
-                          background: 'rgba(255, 255, 255, 0.035)',
-                          border: '1px solid rgba(255, 255, 255, 0.08)',
-                          borderRadius: 12,
-                          padding: '14px 16px',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: 12,
-                          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.18)'
-                        }}>
-                          {checkState.status === 'idle' && (
                             <button
-                              onClick={handleManualCheck}
+                              onClick={() => window.edge.installUpdate()}
                               style={{
                                 width: '100%',
-                                background: 'rgba(255, 255, 255, 0.07)',
-                                color: '#ffffff',
-                                border: '1px solid rgba(255, 255, 255, 0.14)',
-                                borderRadius: 10,
-                                padding: '9px 16px',
+                                background: '#ffffff',
+                                color: '#000000',
+                                border: 'none',
+                                borderRadius: 9,
+                                padding: '8px 16px',
                                 fontSize: 12.5,
-                                fontWeight: 500,
+                                fontWeight: 600,
                                 cursor: 'pointer',
                                 textAlign: 'center',
-                                transition: 'all 0.2s ease'
+                                boxShadow: '0 2px 8px rgba(255, 255, 255, 0.15)',
+                                transition: 'opacity 0.15s ease'
                               }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)'
-                                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)'
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.07)'
-                                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.14)'
-                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.92' }}
+                              onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
                             >
-                              Check for updates
+                              Restart to Update
                             </button>
-                          )}
-
-                          {checkState.status === 'checking' && (
-                            <div style={{ fontSize: 12.5, color: 'rgba(255, 255, 255, 0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '6px 0' }}>
-                              <motion.span
-                                animate={{ rotate: 360 }}
-                                transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
-                                style={{
-                                  display: 'inline-block',
-                                  width: 13,
-                                  height: 13,
-                                  border: '2px solid rgba(255, 255, 255, 0.25)',
-                                  borderTopColor: '#ffffff',
-                                  borderRadius: '50%'
-                                }}
-                              />
-                              Checking GitHub for updates...
-                            </div>
-                          )}
-
-                          {checkState.status === 'up-to-date' && (
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                              <div style={{ fontSize: 12.5, color: '#4caf50', fontWeight: 500 }}>
-                                ✓ Edge-Drop is up to date (v{currentVersion || '0.2.1'})
-                              </div>
+                          </div>
+                        ) : !autoUpdates ? (
+                          <div style={{
+                            marginTop: 12,
+                            background: 'rgba(255, 255, 255, 0.035)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            borderRadius: 12,
+                            padding: '14px 16px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 12,
+                            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.18)'
+                          }}>
+                            {checkState.status === 'idle' && (
                               <button
                                 onClick={handleManualCheck}
                                 style={{
-                                  background: 'transparent',
-                                  color: 'rgba(255, 255, 255, 0.65)',
-                                  border: 'none',
-                                  fontSize: 11.5,
-                                  cursor: 'pointer',
-                                  textDecoration: 'underline'
-                                }}
-                              >
-                                Check again
-                              </button>
-                            </div>
-                          )}
-
-                          {checkState.status === 'available' && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                              <div>
-                                <div style={{ fontSize: 13.5, fontWeight: 600, color: '#ffffff', letterSpacing: '-0.01em' }}>
-                                  Edge-Drop v{checkState.version} is available!
-                                </div>
-                                <div style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.65)', marginTop: 3, lineHeight: 1.45 }}>
-                                  A newer version is ready on GitHub. Would you like to download and update now?
-                                </div>
-                              </div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4 }}>
-                                <button
-                                  onClick={handleStartDownload}
-                                  style={{
-                                    background: '#ffffff',
-                                    color: '#000000',
-                                    border: 'none',
-                                    borderRadius: 9,
-                                    padding: '7px 16px',
-                                    fontSize: 12,
-                                    fontWeight: 600,
-                                    cursor: 'pointer',
-                                    boxShadow: '0 2px 8px rgba(255, 255, 255, 0.15)',
-                                    transition: 'transform 0.15s ease, opacity 0.15s ease'
-                                  }}
-                                  onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.92' }}
-                                  onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
-                                >
-                                  Download & Update
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    useStore.getState().dismissUpdate()
-                                    setCheckState({ status: 'idle' })
-                                  }}
-                                  style={{
-                                    background: 'rgba(255, 255, 255, 0.08)',
-                                    color: 'rgba(255, 255, 255, 0.8)',
-                                    border: '1px solid rgba(255, 255, 255, 0.14)',
-                                    borderRadius: 9,
-                                    padding: '7px 14px',
-                                    fontSize: 12,
-                                    fontWeight: 500,
-                                    cursor: 'pointer',
-                                    transition: 'background 0.2s ease'
-                                  }}
-                                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.14)' }}
-                                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)' }}
-                                >
-                                  Skip
-                                </button>
-                              </div>
-                            </div>
-                          )}
-
-                          {checkState.status === 'downloading' && (
-                            <div style={{ fontSize: 12.5, color: 'rgba(255, 255, 255, 0.9)', display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0' }}>
-                              <motion.span
-                                animate={{ rotate: 360 }}
-                                transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
-                                style={{
-                                  display: 'inline-block',
-                                  width: 13,
-                                  height: 13,
-                                  border: '2px solid rgba(255, 255, 255, 0.25)',
-                                  borderTopColor: '#ffffff',
-                                  borderRadius: '50%'
-                                }}
-                              />
-                              Downloading update package in background...
-                            </div>
-                          )}
-
-                          {checkState.status === 'error' && (
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                              <div style={{ fontSize: 12, color: '#f44336' }}>
-                                ⚠️ {checkState.error || 'Update check failed'}
-                              </div>
-                              <button
-                                onClick={handleManualCheck}
-                                style={{
-                                  background: 'rgba(255, 255, 255, 0.12)',
+                                  width: '100%',
+                                  background: 'rgba(255, 255, 255, 0.07)',
                                   color: '#ffffff',
-                                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                                  borderRadius: 7,
-                                  padding: '4px 10px',
-                                  fontSize: 11.5,
-                                  cursor: 'pointer'
+                                  border: '1px solid rgba(255, 255, 255, 0.14)',
+                                  borderRadius: 10,
+                                  padding: '9px 16px',
+                                  fontSize: 12.5,
+                                  fontWeight: 500,
+                                  cursor: 'pointer',
+                                  textAlign: 'center',
+                                  transition: 'all 0.2s ease'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)'
+                                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)'
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.07)'
+                                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.14)'
                                 }}
                               >
-                                Try again
+                                Check for updates
                               </button>
-                            </div>
-                          )}
-                        </div>
-                      ) : null}
+                            )}
+
+                            {checkState.status === 'checking' && (
+                              <div style={{ fontSize: 12.5, color: 'rgba(255, 255, 255, 0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '6px 0' }}>
+                                <motion.span
+                                  animate={{ rotate: 360 }}
+                                  transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
+                                  style={{
+                                    display: 'inline-block',
+                                    width: 13,
+                                    height: 13,
+                                    border: '2px solid rgba(255, 255, 255, 0.25)',
+                                    borderTopColor: '#ffffff',
+                                    borderRadius: '50%'
+                                  }}
+                                />
+                                Checking GitHub for updates...
+                              </div>
+                            )}
+
+                            {checkState.status === 'up-to-date' && (
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                                <div style={{ fontSize: 12.5, color: '#4caf50', fontWeight: 500 }}>
+                                  ✓ Edge-Drop is up to date (v{currentVersion || '0.2.1'})
+                                </div>
+                                <button
+                                  onClick={handleManualCheck}
+                                  style={{
+                                    background: 'transparent',
+                                    color: 'rgba(255, 255, 255, 0.65)',
+                                    border: 'none',
+                                    fontSize: 11.5,
+                                    cursor: 'pointer',
+                                    textDecoration: 'underline'
+                                  }}
+                                >
+                                  Check again
+                                </button>
+                              </div>
+                            )}
+
+                            {checkState.status === 'available' && (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                <div>
+                                  <div style={{ fontSize: 13.5, fontWeight: 600, color: '#ffffff', letterSpacing: '-0.01em' }}>
+                                    Edge-Drop v{checkState.version} is available!
+                                  </div>
+                                  <div style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.65)', marginTop: 3, lineHeight: 1.45 }}>
+                                    A newer version is ready on GitHub. Would you like to download and update now?
+                                  </div>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4 }}>
+                                  <button
+                                    onClick={handleStartDownload}
+                                    style={{
+                                      background: '#ffffff',
+                                      color: '#000000',
+                                      border: 'none',
+                                      borderRadius: 9,
+                                      padding: '7px 16px',
+                                      fontSize: 12,
+                                      fontWeight: 600,
+                                      cursor: 'pointer',
+                                      boxShadow: '0 2px 8px rgba(255, 255, 255, 0.15)',
+                                      transition: 'transform 0.15s ease, opacity 0.15s ease'
+                                    }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.92' }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
+                                  >
+                                    Download & Update
+                                  </button>
+                                  <button
+                                    onClick={() => useStore.getState().dismissUpdate()}
+                                    style={{
+                                      background: 'rgba(255, 255, 255, 0.08)',
+                                      color: 'rgba(255, 255, 255, 0.8)',
+                                      border: '1px solid rgba(255, 255, 255, 0.14)',
+                                      borderRadius: 9,
+                                      padding: '7px 14px',
+                                      fontSize: 12,
+                                      fontWeight: 500,
+                                      cursor: 'pointer',
+                                      transition: 'background 0.2s ease'
+                                    }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.14)' }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)' }}
+                                  >
+                                    Skip
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+
+                            {checkState.status === 'downloading' && (
+                              <div style={{ fontSize: 12.5, color: 'rgba(255, 255, 255, 0.9)', display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0' }}>
+                                <motion.span
+                                  animate={{ rotate: 360 }}
+                                  transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
+                                  style={{
+                                    display: 'inline-block',
+                                    width: 13,
+                                    height: 13,
+                                    border: '2px solid rgba(255, 255, 255, 0.25)',
+                                    borderTopColor: '#ffffff',
+                                    borderRadius: '50%'
+                                  }}
+                                />
+                                Downloading update package in background...
+                              </div>
+                            )}
+
+                            {checkState.status === 'error' && (
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                                <div style={{ fontSize: 12, color: '#f44336' }}>
+                                  ⚠️ {checkState.error || 'Update check failed'}
+                                </div>
+                                <button
+                                  onClick={handleManualCheck}
+                                  style={{
+                                    background: 'rgba(255, 255, 255, 0.12)',
+                                    color: '#ffffff',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    borderRadius: 7,
+                                    padding: '4px 10px',
+                                    fontSize: 11.5,
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  Try again
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ) : null}
+                      </div>
                     </>
                   )}
 
@@ -1180,6 +1192,52 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
             </AnimatePresence>
 
           </div>
+
+          {/* ── Floating Scroll Indicator Badge for Off-Screen Update Banner ── */}
+          <AnimatePresence>
+            {showScrollUpdateBadge && (
+              <motion.div
+                key="scroll-update-badge"
+                initial={{ opacity: 0, y: 12, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 12, scale: 0.9 }}
+                transition={{ type: 'spring', stiffness: 450, damping: 30 }}
+                onClick={() => {
+                  playButtonClickSound()
+                  updateBannerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+                }}
+                style={{
+                  position: 'absolute',
+                  bottom: 14,
+                  left: 12,
+                  right: 12,
+                  margin: '0 auto',
+                  width: 'fit-content',
+                  maxWidth: 'calc(100% - 24px)',
+                  background: 'rgba(76, 175, 80, 0.95)',
+                  color: '#ffffff',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  borderRadius: 20,
+                  padding: '6px 14px',
+                  fontSize: 11.5,
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  cursor: 'pointer',
+                  boxShadow: '0 6px 20px rgba(0, 0, 0, 0.45)',
+                  zIndex: 30,
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: '#ffffff' }} />
+                <span>{updateDownloaded ? 'Restart to update below' : 'New update available below'}</span>
+                <span style={{ fontSize: 11, marginLeft: 2 }}>↓</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       )}
     </AnimatePresence>

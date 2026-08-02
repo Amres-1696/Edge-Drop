@@ -218,7 +218,7 @@ export function Header() {
                 width: 8,
                 height: 8,
                 borderRadius: '50%',
-                backgroundColor: updateInfo?.downloaded ? '#4caf50' : '#f97316',
+                backgroundColor: '#4caf50',
                 border: '1.5px solid #000000',
                 pointerEvents: 'none'
               }}

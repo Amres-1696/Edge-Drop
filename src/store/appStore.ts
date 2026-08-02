@@ -60,6 +60,14 @@ interface AppState {
 
   /* hydration + sync */
   hydrate: () => Promise<void>
+  manualCheckState: {
+    status: 'idle' | 'checking' | 'up-to-date' | 'available' | 'downloading' | 'error'
+    version?: string
+    error?: string
+  }
+  startManualCheck: () => Promise<void>
+  startManualDownload: () => Promise<void>
+  resetManualCheck: () => void
   setUpdateAvailable: (info: { version: string }) => void
   setUpdateDownloaded: (info: { version: string }) => void
   dismissUpdate: () => void
@@ -153,6 +161,44 @@ export const useStore = create<AppState>((set, get) => ({
     })
   },
 
+  manualCheckState: { status: 'idle' },
+
+  startManualCheck: async () => {
+    set({ manualCheckState: { status: 'checking' } })
+    try {
+      const res = await edge.checkForUpdatesManual()
+      if (res.status === 'available') {
+        set({
+          manualCheckState: { status: 'available', version: res.version },
+          updateInfo: { hasUpdate: true, latestVersion: res.version || '', downloaded: false }
+        })
+      } else if (res.status === 'up-to-date') {
+        set({
+          manualCheckState: { status: 'up-to-date', version: res.version }
+        })
+      } else {
+        set({
+          manualCheckState: { status: 'error', error: res.error || 'Check failed' }
+        })
+      }
+    } catch (err: any) {
+      set({
+        manualCheckState: { status: 'error', error: err?.message || 'Check failed' }
+      })
+    }
+  },
+
+  startManualDownload: async () => {
+    set({ manualCheckState: { status: 'downloading' } })
+    try {
+      await edge.startUpdateDownload()
+    } catch {
+      set({ manualCheckState: { status: 'error', error: 'Download failed' } })
+    }
+  },
+
+  resetManualCheck: () => set({ manualCheckState: { status: 'idle' } }),
+
   setUpdateAvailable: (info) => {
     set({
       updateInfo: {
@@ -169,11 +215,12 @@ export const useStore = create<AppState>((set, get) => ({
         hasUpdate: true,
         latestVersion: info.version,
         downloaded: true
-      }
+      },
+      manualCheckState: { status: 'idle' }
     })
   },
 
-  dismissUpdate: () => set({ updateInfo: null }),
+  dismissUpdate: () => set({ updateInfo: null, manualCheckState: { status: 'idle' } }),
 
   async installUpdate() {
     await edge.installUpdate()
