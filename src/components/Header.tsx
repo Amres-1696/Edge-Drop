@@ -177,9 +177,21 @@ export function Header() {
           title={settingsOpen ? 'Close Settings' : 'Settings'}
           onClick={() => {
             playButtonClickSound()
-            setSettingsOpen(!settingsOpen)
             if (settingsOpen) {
+              setSettingsOpen(false)
               setSettingsSubView('main')
+              return
+            }
+            const state = useStore.getState()
+            const hasActiveFlyout = !!(state.previewItemId || state.styleFlyoutOpen)
+            if (hasActiveFlyout) {
+              state.setPreviewItemId(null)
+              state.setStyleFlyoutOpen(false)
+              setTimeout(() => {
+                useStore.getState().setSettingsOpen(true)
+              }, 220)
+            } else {
+              setSettingsOpen(true)
             }
           }}
           style={{
@@ -197,7 +209,7 @@ export function Header() {
           }}
         >
           {settingsOpen ? <CloseIcon /> : <GearIcon />}
-          {!settingsOpen && updateInfo?.hasUpdate && (
+          {!settingsOpen && (updateInfo?.downloaded || ((settings.autoUpdates ?? true) && updateInfo?.hasUpdate)) && (
             <span
               style={{
                 position: 'absolute',
@@ -206,7 +218,7 @@ export function Header() {
                 width: 8,
                 height: 8,
                 borderRadius: '50%',
-                backgroundColor: '#f97316',
+                backgroundColor: updateInfo?.downloaded ? '#4caf50' : '#f97316',
                 border: '1.5px solid #000000',
                 pointerEvents: 'none'
               }}

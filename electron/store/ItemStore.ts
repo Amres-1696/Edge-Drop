@@ -233,28 +233,52 @@ export class ItemStore {
     const tgt = this.items[tgtIdx]
 
     // Determine how to merge based on kinds
-    // 1. Files + Files -> Files          (any non-image files stack together)
-    // 2. Image(s) + Image(s) -> Image Collection
-    // 3. Cross image <-> files -> reject (keeps image previews intact)
+    // 1. Image(s) + Image(s) -> Image Collection / Image File Stack (any screenshot or image file)
+    // 2. Files + Files -> Files (any non-image files stack together)
 
     let newData: ItemData | null = null
 
-    const srcIsImage = src.data.kind === 'image' || src.data.kind === 'image-collection'
-    const tgtIsImage = tgt.data.kind === 'image' || tgt.data.kind === 'image-collection'
+    const isImageItem = (item: ClipboardItem): boolean => {
+      if (item.data.kind === 'image' || item.data.kind === 'image-collection') return true
+      if (item.data.kind === 'files' && item.data.paths.length > 0) {
+        return item.data.paths.every((p) => isImageExt(p))
+      }
+      return false
+    }
+
+    const getImagePaths = (item: ClipboardItem): string[] => {
+      if (item.data.kind === 'files') return item.data.paths
+      if (item.data.kind === 'image') return [this.imagePath(item.data.imageId, item.data.ext)]
+      if (item.data.kind === 'image-collection') return item.data.images.map((img) => this.imagePath(img.imageId, img.ext))
+      return []
+    }
+
+    const srcIsImage = isImageItem(src)
+    const tgtIsImage = isImageItem(tgt)
 
     if (srcIsImage && tgtIsImage) {
-      const srcImages = src.data.kind === 'image-collection' ? src.data.images : src.data.kind === 'image' ? [{ imageId: src.data.imageId, width: src.data.width, height: src.data.height, bytes: src.data.bytes }] : []
-      const tgtImages = tgt.data.kind === 'image-collection' ? tgt.data.images : tgt.data.kind === 'image' ? [{ imageId: tgt.data.imageId, width: tgt.data.width, height: tgt.data.height, bytes: tgt.data.bytes }] : []
-      // Filter out exact duplicate imageIds just in case
-      const seen = new Set(tgtImages.map((i: { imageId: string }) => i.imageId))
-      const combined = [...tgtImages, ...srcImages.filter((i: { imageId: string }) => !seen.has(i.imageId))]
+      if (src.data.kind !== 'files' && tgt.data.kind !== 'files') {
+        const srcData = src.data
+        const tgtData = tgt.data
+        const srcImages = srcData.kind === 'image-collection' ? srcData.images : srcData.kind === 'image' ? [{ imageId: srcData.imageId, width: srcData.width, height: srcData.height, bytes: srcData.bytes, ext: srcData.ext }] : []
+        const tgtImages = tgtData.kind === 'image-collection' ? tgtData.images : tgtData.kind === 'image' ? [{ imageId: tgtData.imageId, width: tgtData.width, height: tgtData.height, bytes: tgtData.bytes, ext: tgtData.ext }] : []
+        const seen = new Set(tgtImages.map((i) => i.imageId))
+        const combined = [...tgtImages, ...srcImages.filter((i) => !seen.has(i.imageId))]
 
-      // Enforce the per-stack cap BEFORE mutating anything.
-      if (combined.length > MAX_STACK) return { ok: false, reason: 'full', message: 'An image collection can hold a maximum of 10 items' }
-      newData = { kind: 'image-collection', images: combined }
+        if (combined.length > MAX_STACK) return { ok: false, reason: 'full', message: 'An image collection can hold a maximum of 10 items' }
+        newData = { kind: 'image-collection', images: combined }
+      } else {
+        const srcPaths = getImagePaths(src)
+        const tgtPaths = getImagePaths(tgt)
+        const seen = new Set(tgtPaths)
+        const combined = [...tgtPaths, ...srcPaths.filter((p) => !seen.has(p))]
+
+        if (combined.length > MAX_STACK) return { ok: false, reason: 'full', message: 'An image collection can hold a maximum of 10 items' }
+        newData = { kind: 'files', paths: combined }
+      }
     } else if (src.data.kind === 'files' && tgt.data.kind === 'files') {
       const seen = new Set(tgt.data.paths)
-      const combined = [...tgt.data.paths, ...src.data.paths.filter(p => !seen.has(p))]
+      const combined = [...tgt.data.paths, ...src.data.paths.filter((p) => !seen.has(p))]
 
       if (combined.length > MAX_STACK) return { ok: false, reason: 'full', message: 'A folder bundle can hold a maximum of 10 files' }
       newData = { kind: 'files', paths: combined }
@@ -365,12 +389,25 @@ export class ItemStore {
         this.items.splice(sourceIndex, 1)
       }
 
+      let newData: ItemData = { kind: 'files', paths: targetPaths }
+      if (targetPaths.length === 1) {
+        const p = targetPaths[0]
+        const imgName = pathBasename(p)
+        if (/^[a-z0-9]{6,12}-[a-z0-9]{6,12}\.[a-z0-9]+$/i.test(imgName) || p.includes('edge-drop/images') || p.includes('edge-drop\\images') || p.includes('edge-drop/temp') || p.includes('edge-drop\\temp')) {
+          const imageId = imgName.split('.')[0]
+          const ext = extname(p).slice(1) || 'png'
+          let bytes = 0
+          try { bytes = statSync(p).size } catch {}
+          newData = { kind: 'image', imageId, width: 0, height: 0, bytes, ext }
+        }
+      }
+
       const newItem: ClipboardItem = {
         id: createId(),
         capturedAt: Date.now(),
         hitCount: 1,
         pinned: false,
-        data: { kind: 'files', paths: targetPaths }
+        data: newData
       }
       this.items.splice(req.splitPlacement === 'after' ? sourceIndex + 1 : sourceIndex, 0, newItem)
       this.rebuildIndex()

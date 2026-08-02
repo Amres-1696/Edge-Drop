@@ -21,9 +21,9 @@ import { MAX_STACK } from '../../shared/types'
 import type { DragRequest } from '../../shared/types'
 import { useStore } from '../store/appStore'
 import { useDragOut } from '../hooks/useDragOut'
-import { basename, formatBytes, previewText, relativeTime } from '../lib/format'
+import { basename, formatBytes, previewText, relativeTime, formatImageDisplayName } from '../lib/format'
 import { getFileKind } from '../lib/fileType'
-import { playButtonClickSound, playToggleSound, playDeleteSound } from '../lib/soundEffects'
+import { playButtonClickSound, playToggleSound, playDeleteSound, playCardExpandSound } from '../lib/soundEffects'
 import { CopyIcon, FileKindIcon, ImageIcon, LinkIcon, PinIcon, PinFillIcon, TrashIcon, MinusIcon, ChevronUpIcon, ExpandIcon, ContractIcon, ExternalLinkIcon } from './icons'
 import '../styles/item.css'
 
@@ -76,6 +76,7 @@ function ClipboardItemBase({ item }: Props) {
   const onExpand = useCallback((e?: React.MouseEvent) => {
     e?.stopPropagation()
     if (isBundle) {
+      playCardExpandSound(true)
       setExpanded(true)
       if (useStore.getState().tutorialStep === 4 && item.id === 'onboarding-files') {
         useStore.getState().setTutorialStep(5)
@@ -85,6 +86,7 @@ function ClipboardItemBase({ item }: Props) {
 
   const onCollapse = useCallback((e?: React.MouseEvent) => {
     e?.stopPropagation()
+    playCardExpandSound(false)
     setExpanded(false)
   }, [])
 
@@ -222,7 +224,7 @@ function ClipboardItemBase({ item }: Props) {
             onClick={(e) => {
               e.stopPropagation()
               e.currentTarget.blur()
-              playButtonClickSound()
+              playCardExpandSound(!isPreviewing)
               const rect = e.currentTarget.closest('.item-main')?.getBoundingClientRect()
               const rectData = rect ? { y: rect.y, height: rect.height } : undefined
               useStore.getState().setPreviewItemId(isPreviewing ? null : item.id, rectData)
@@ -502,7 +504,7 @@ function BundleFluidPreview({
               </div>
               {paths.map((filePath, idx) => {
                 const entry = entries?.[idx]
-                const name = entry?.name ?? basename(filePath)
+                const name = formatImageDisplayName(entry?.name ?? filePath, item.capturedAt)
                 const size = entry?.size ?? 0
                 return (
                   <motion.div
@@ -642,27 +644,33 @@ function Preview({ item }: { item: ClipboardItemDto }) {
     case 'files': {
       const first = item.data.paths[0]
       const entry = item.data.entries?.[0]
-      const name = entry?.name ?? basename(first)
+      const rawName = entry?.name ?? basename(first)
+      const displayName = formatImageDisplayName(first, item.capturedAt)
+      const isInternalHash = /^[a-z0-9]{6,12}-[a-z0-9]{6,12}\.[a-z0-9]+$/i.test(rawName) || first.includes('edge-drop/images') || first.includes('edge-drop\\images') || first.includes('edge-drop/temp') || first.includes('edge-drop\\temp')
       const isImage = entry?.isImage || getFileKind(first).kind === 'image'
 
       // Single image file — show its thumbnail.
       if (item.data.paths.length === 1 && isImage) {
         return (
-          <div className="thumb-wrap">
-            {entry?.preview ? (
-              <img
-                className="thumb"
-                src={entry.preview}
-                alt=""
-                draggable={false}
-              />
-            ) : (
-              <div className="preview">[image: {name}]</div>
-            )}
-            <div className="preview single">
-              {name}
+          <>
+            <div className="thumb-wrap">
+              {entry?.preview ? (
+                <img
+                  className="thumb"
+                  src={entry.preview}
+                  alt=""
+                  draggable={false}
+                />
+              ) : (
+                <div className="preview">[image: {displayName}]</div>
+              )}
             </div>
-          </div>
+            {!isInternalHash && (
+              <div className="preview single" style={{ marginTop: 4 }}>
+                {displayName}
+              </div>
+            )}
+          </>
         )
       }
       // Non-image single file — show a tinted type icon alongside its name.
@@ -674,7 +682,7 @@ function Preview({ item }: { item: ClipboardItemDto }) {
           </div>
           <div className="single-file-meta">
             <div className="preview single">
-              {name}
+              {displayName}
             </div>
             <div className="single-file-sub">
               {info.label}{entry && entry.size > 0 ? ` · ${formatBytes(entry.size)}` : ''}

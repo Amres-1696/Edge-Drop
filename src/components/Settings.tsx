@@ -21,7 +21,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
   const settings = useStore((s) => s.settings)
   const patch = useStore((s) => s.patchSettings)
   const updateInfo = useStore((s) => s.updateInfo)
-  const installUpdate = useStore((s) => s.installUpdate)
+  const isStoreBuild = useStore((s) => s.isStoreBuild)
   const currentVersion = useStore((s) => s.currentVersion)
   const styleFlyoutOpen = useStore((s) => s.styleFlyoutOpen)
   const setStyleFlyoutOpen = useStore((s) => s.setStyleFlyoutOpen)
@@ -68,6 +68,40 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
   useEffect(() => {
     window.edge.getDisplays().then(setDisplays).catch(() => {})
   }, [])
+
+  const updateDownloaded = updateInfo?.downloaded ? { version: updateInfo.latestVersion } : null
+  const autoUpdates = settings.autoUpdates ?? true
+
+  const [checkState, setCheckState] = useState<{
+    status: 'idle' | 'checking' | 'up-to-date' | 'available' | 'downloading' | 'error'
+    version?: string
+    error?: string
+  }>({ status: 'idle' })
+
+  const handleManualCheck = async () => {
+    setCheckState({ status: 'checking' })
+    try {
+      const res = await window.edge.checkForUpdatesManual()
+      if (res.status === 'available') {
+        setCheckState({ status: 'available', version: res.version })
+      } else if (res.status === 'up-to-date') {
+        setCheckState({ status: 'up-to-date', version: res.version })
+      } else {
+        setCheckState({ status: 'error', error: res.error || 'Check failed' })
+      }
+    } catch (err: any) {
+      setCheckState({ status: 'error', error: err?.message || 'Check failed' })
+    }
+  }
+
+  const handleStartDownload = async () => {
+    setCheckState({ status: 'downloading' })
+    try {
+      await window.edge.startUpdateDownload()
+    } catch {
+      setCheckState({ status: 'error', error: 'Download failed' })
+    }
+  }
 
   // ── Tab state & Independent Scroll Memory per section ──────────────────────
   const [activeTab, setActiveTab] = useState<SettingsTab>('behaviour')
@@ -216,27 +250,6 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
           {/* ── Scrollable Content Area (Independent per section) ───────── */}
           <div className="settings-scroll-list" ref={scrollListRef}>
 
-            {/* ── Update Banner (Prominently displayed at top of all sections) ── */}
-            {updateInfo?.hasUpdate && (
-              <div style={{ marginBottom: 12 }}>
-                <div className="update-prompt">
-                  <div className="update-text">
-                    {updateInfo.downloaded
-                      ? `Update ${updateInfo.latestVersion} is ready to install.`
-                      : `Downloading update ${updateInfo.latestVersion} in the background...`}
-                  </div>
-                  <button
-                    className="update-btn"
-                    disabled={!updateInfo.downloaded}
-                    onClick={() => void installUpdate()}
-                  >
-                    {updateInfo.downloaded ? `Restart to Update` : `Downloading...`}
-                  </button>
-                </div>
-                <div className="setting-divider" />
-              </div>
-            )}
-
             {/* ── Tab 1: Behaviour (First) ──────────────────────────────── */}
             <AnimatePresence mode="wait">
               {activeTab === 'behaviour' && (
@@ -352,6 +365,247 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                       onChange={(v) => patch({ clearUnpinnedOnRestart: v })}
                     />
                   </div>
+
+                  {!isStoreBuild && (
+                    <>
+                      <div className="setting-divider" />
+
+                      <div className="setting-row">
+                        <div className="setting-info">
+                          <div className="setting-title">Automatic updates</div>
+                          <div className="setting-desc">
+                            {(settings.autoUpdates ?? true)
+                              ? 'Check for and download app updates automatically in background'
+                              : 'Background update checks paused. Check for updates manually below'}
+                          </div>
+                        </div>
+                        <Toggle
+                          checked={settings.autoUpdates ?? true}
+                          onChange={(v) => patch({ autoUpdates: v })}
+                        />
+                      </div>
+
+                      {/* ── UPDATE CONTROL / MANUAL CHECK BANNER ── */}
+                      {updateDownloaded ? (
+                        <div style={{
+                          marginTop: 12,
+                          background: 'rgba(76, 175, 80, 0.08)',
+                          border: '1px solid rgba(76, 175, 80, 0.3)',
+                          borderRadius: 12,
+                          padding: '14px 16px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 10,
+                          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
+                        }}>
+                          <div>
+                            <div style={{ fontSize: 13.5, fontWeight: 600, color: '#ffffff', letterSpacing: '-0.01em' }}>
+                              Update v{updateDownloaded.version} Ready
+                            </div>
+                            <div style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.7)', marginTop: 3, lineHeight: 1.45 }}>
+                              Click to restart Edge-Drop and apply the update.
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => window.edge.installUpdate()}
+                            style={{
+                              width: '100%',
+                              background: '#ffffff',
+                              color: '#000000',
+                              border: 'none',
+                              borderRadius: 9,
+                              padding: '8px 16px',
+                              fontSize: 12.5,
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              textAlign: 'center',
+                              boxShadow: '0 2px 8px rgba(255, 255, 255, 0.15)',
+                              transition: 'opacity 0.15s ease'
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.92' }}
+                            onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
+                          >
+                            Restart to Update
+                          </button>
+                        </div>
+                      ) : !autoUpdates ? (
+                        <div style={{
+                          marginTop: 12,
+                          background: 'rgba(255, 255, 255, 0.035)',
+                          border: '1px solid rgba(255, 255, 255, 0.08)',
+                          borderRadius: 12,
+                          padding: '14px 16px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 12,
+                          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.18)'
+                        }}>
+                          {checkState.status === 'idle' && (
+                            <button
+                              onClick={handleManualCheck}
+                              style={{
+                                width: '100%',
+                                background: 'rgba(255, 255, 255, 0.07)',
+                                color: '#ffffff',
+                                border: '1px solid rgba(255, 255, 255, 0.14)',
+                                borderRadius: 10,
+                                padding: '9px 16px',
+                                fontSize: 12.5,
+                                fontWeight: 500,
+                                cursor: 'pointer',
+                                textAlign: 'center',
+                                transition: 'all 0.2s ease'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)'
+                                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)'
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.07)'
+                                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.14)'
+                              }}
+                            >
+                              Check for updates
+                            </button>
+                          )}
+
+                          {checkState.status === 'checking' && (
+                            <div style={{ fontSize: 12.5, color: 'rgba(255, 255, 255, 0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '6px 0' }}>
+                              <motion.span
+                                animate={{ rotate: 360 }}
+                                transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
+                                style={{
+                                  display: 'inline-block',
+                                  width: 13,
+                                  height: 13,
+                                  border: '2px solid rgba(255, 255, 255, 0.25)',
+                                  borderTopColor: '#ffffff',
+                                  borderRadius: '50%'
+                                }}
+                              />
+                              Checking GitHub for updates...
+                            </div>
+                          )}
+
+                          {checkState.status === 'up-to-date' && (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                              <div style={{ fontSize: 12.5, color: '#4caf50', fontWeight: 500 }}>
+                                ✓ Edge-Drop is up to date (v{currentVersion || '0.2.1'})
+                              </div>
+                              <button
+                                onClick={handleManualCheck}
+                                style={{
+                                  background: 'transparent',
+                                  color: 'rgba(255, 255, 255, 0.65)',
+                                  border: 'none',
+                                  fontSize: 11.5,
+                                  cursor: 'pointer',
+                                  textDecoration: 'underline'
+                                }}
+                              >
+                                Check again
+                              </button>
+                            </div>
+                          )}
+
+                          {checkState.status === 'available' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                              <div>
+                                <div style={{ fontSize: 13.5, fontWeight: 600, color: '#ffffff', letterSpacing: '-0.01em' }}>
+                                  Edge-Drop v{checkState.version} is available!
+                                </div>
+                                <div style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.65)', marginTop: 3, lineHeight: 1.45 }}>
+                                  A newer version is ready on GitHub. Would you like to download and update now?
+                                </div>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4 }}>
+                                <button
+                                  onClick={handleStartDownload}
+                                  style={{
+                                    background: '#ffffff',
+                                    color: '#000000',
+                                    border: 'none',
+                                    borderRadius: 9,
+                                    padding: '7px 16px',
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    boxShadow: '0 2px 8px rgba(255, 255, 255, 0.15)',
+                                    transition: 'transform 0.15s ease, opacity 0.15s ease'
+                                  }}
+                                  onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.92' }}
+                                  onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
+                                >
+                                  Download & Update
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    useStore.getState().dismissUpdate()
+                                    setCheckState({ status: 'idle' })
+                                  }}
+                                  style={{
+                                    background: 'rgba(255, 255, 255, 0.08)',
+                                    color: 'rgba(255, 255, 255, 0.8)',
+                                    border: '1px solid rgba(255, 255, 255, 0.14)',
+                                    borderRadius: 9,
+                                    padding: '7px 14px',
+                                    fontSize: 12,
+                                    fontWeight: 500,
+                                    cursor: 'pointer',
+                                    transition: 'background 0.2s ease'
+                                  }}
+                                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.14)' }}
+                                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)' }}
+                                >
+                                  Skip
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {checkState.status === 'downloading' && (
+                            <div style={{ fontSize: 12.5, color: 'rgba(255, 255, 255, 0.9)', display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0' }}>
+                              <motion.span
+                                animate={{ rotate: 360 }}
+                                transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
+                                style={{
+                                  display: 'inline-block',
+                                  width: 13,
+                                  height: 13,
+                                  border: '2px solid rgba(255, 255, 255, 0.25)',
+                                  borderTopColor: '#ffffff',
+                                  borderRadius: '50%'
+                                }}
+                              />
+                              Downloading update package in background...
+                            </div>
+                          )}
+
+                          {checkState.status === 'error' && (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                              <div style={{ fontSize: 12, color: '#f44336' }}>
+                                ⚠️ {checkState.error || 'Update check failed'}
+                              </div>
+                              <button
+                                onClick={handleManualCheck}
+                                style={{
+                                  background: 'rgba(255, 255, 255, 0.12)',
+                                  color: '#ffffff',
+                                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                                  borderRadius: 7,
+                                  padding: '4px 10px',
+                                  fontSize: 11.5,
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                Try again
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ) : null}
+                    </>
+                  )}
 
                   <div className="setting-divider" />
 

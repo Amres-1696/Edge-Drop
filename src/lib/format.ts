@@ -38,6 +38,23 @@ export function basename(p: string): string {
   return parts[parts.length - 1] ?? p
 }
 
+/** Formats a path into a clean display title (converts internal hash IDs to human screenshot titles). */
+export function formatImageDisplayName(path: string, capturedAt?: number): string {
+  const name = basename(path)
+  const isInternalHash = /^[a-z0-9]{6,12}-[a-z0-9]{6,12}\.[a-z0-9]+$/i.test(name) || path.includes('edge-drop/images') || path.includes('edge-drop\\images') || path.includes('edge-drop/temp') || path.includes('edge-drop\\temp')
+  
+  if (isInternalHash) {
+    if (capturedAt) {
+      const d = new Date(capturedAt)
+      const dateStr = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+      const timeStr = d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+      return `Screenshot ${dateStr}, ${timeStr}`
+    }
+    return 'Screenshot'
+  }
+  return name
+}
+
 /** Is this a path to an image (by extension)? */
 const IMG_EXT = /\.(png|jpe?g|gif|webp|bmp|svg|avif|ico|tiff?|jfif|pjpeg|pjp)$/i
 export function isImagePath(p: string): boolean {

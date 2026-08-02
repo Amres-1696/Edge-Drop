@@ -162,8 +162,10 @@ export interface Settings {
   lastSeenChangelogVersion?: string
   /** When true, hovering cursor near edge activates the panel. When false, panel opens exclusively via Alt + C. Default: true. */
   hoverActivation?: boolean
-  /** Font size scale multiplier (0.85 = Small, 1.00 = Normal, 1.15 = Large, 1.30 = XL). Default: 1.0. */
+  /** Font size scale multiplier (0.85 = Small, 1.00 = Normal, 1.15 = Large). Default: 1.0. */
   fontSizeScale?: number
+  /** When true, automatically checks for and downloads app updates in background. Default: true. */
+  autoUpdates?: boolean
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -192,7 +194,8 @@ export const DEFAULT_SETTINGS: Settings = {
   soundEffects: true,
   lastSeenChangelogVersion: undefined,
   hoverActivation: true,
-  fontSizeScale: 1.0
+  fontSizeScale: 1.0,
+  autoUpdates: true
 }
 
 

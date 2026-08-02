@@ -263,3 +263,121 @@ export function playDeleteSound(): void {
     /* ignore Web Audio API restrictions */
   }
 }
+
+/**
+ * Plays a warm mechanical expansion/contraction sound for collapsible sections (e.g. Pinned section).
+ */
+export function playExpandSound(expanding: boolean): void {
+  try {
+    const ctx = getAudioContext()
+    if (!ctx) return
+
+    const play = () => {
+      const now = ctx.currentTime
+
+      const startFreq = expanding ? 450 : 1100
+      const endFreq = expanding ? 1250 : 380
+      const dur = expanding ? 0.022 : 0.018
+
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(startFreq, now)
+      osc.frequency.exponentialRampToValueAtTime(endFreq, now + dur)
+
+      gain.gain.setValueAtTime(0.12, now)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + dur)
+
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+
+      osc.start(now)
+      osc.stop(now + dur)
+
+      const bodyOsc = ctx.createOscillator()
+      const bodyGain = ctx.createGain()
+
+      bodyOsc.type = 'triangle'
+      bodyOsc.frequency.setValueAtTime(expanding ? 90 : 140, now)
+      bodyOsc.frequency.exponentialRampToValueAtTime(expanding ? 180 : 60, now + dur + 0.004)
+
+      bodyGain.gain.setValueAtTime(0.09, now)
+      bodyGain.gain.exponentialRampToValueAtTime(0.001, now + dur + 0.004)
+
+      bodyOsc.connect(bodyGain)
+      bodyGain.connect(ctx.destination)
+
+      bodyOsc.start(now)
+      bodyOsc.stop(now + dur + 0.004)
+    }
+
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(() => play()).catch(() => {})
+    } else {
+      play()
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
+ * Plays a rich 3D glassmorphic pop sound when cards expand, file bundles open/close, or preview flyout toggles.
+ */
+export function playCardExpandSound(expanding: boolean): void {
+  try {
+    const ctx = getAudioContext()
+    if (!ctx) return
+
+    const play = () => {
+      const now = ctx.currentTime
+
+      const startFreq = expanding ? 650 : 1500
+      const endFreq = expanding ? 1650 : 480
+      const dur = expanding ? 0.028 : 0.022
+
+      // Primary tone
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(startFreq, now)
+      osc.frequency.exponentialRampToValueAtTime(endFreq, now + dur)
+
+      gain.gain.setValueAtTime(0.15, now)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + dur)
+
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+
+      osc.start(now)
+      osc.stop(now + dur)
+
+      // Harmonics for rich glassmorphic texture
+      const harmonicOsc = ctx.createOscillator()
+      const harmonicGain = ctx.createGain()
+
+      harmonicOsc.type = 'triangle'
+      harmonicOsc.frequency.setValueAtTime(startFreq * 1.5, now)
+      harmonicOsc.frequency.exponentialRampToValueAtTime(endFreq * 1.5, now + dur * 0.8)
+
+      harmonicGain.gain.setValueAtTime(0.06, now)
+      harmonicGain.gain.exponentialRampToValueAtTime(0.001, now + dur * 0.8)
+
+      harmonicOsc.connect(harmonicGain)
+      harmonicGain.connect(ctx.destination)
+
+      harmonicOsc.start(now)
+      harmonicOsc.stop(now + dur * 0.8)
+    }
+
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(() => play()).catch(() => {})
+    } else {
+      play()
+    }
+  } catch {
+    /* ignore */
+  }
+}

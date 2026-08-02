@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '../store/appStore'
-import { formatBytes } from '../lib/format'
+import { formatBytes, formatImageDisplayName } from '../lib/format'
 import { getFileKind } from '../lib/fileType'
 import { FileKindIcon, FolderOpenIcon, CopyIcon, CheckIcon, ExternalLinkIcon, CloseIcon } from './icons'
 import { createPortal } from 'react-dom'
@@ -717,7 +717,7 @@ function PreviewContent({
     if (isSingleImage) {
       const p = item.data.paths[0]
       const entry = item.data.entries?.[0]
-      const fileName = entry?.name || p.split(/[\\\/]/).pop() || p
+      const fileName = formatImageDisplayName(entry?.name || p, item.capturedAt)
       const fullResUrl = `edgelocal://file/${encodeURIComponent(p.replace(/\\/g, '/'))}`
       return (
         <div
@@ -797,7 +797,7 @@ function PreviewContent({
         {item.data.paths.map((p: string, i: number) => {
           const entry = item.data.entries?.[i]
           const info = getFileKind(p)
-          const fileName = entry?.name || p.split(/[\\\/]/).pop() || p
+          const fileName = formatImageDisplayName(entry?.name || p, item.capturedAt)
           const isSelected = selectedKeys?.has(p) ?? false
           const isImg = entry?.isImage || info.kind === 'image'
 

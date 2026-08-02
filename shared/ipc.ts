@@ -17,7 +17,7 @@ import type { ClipboardItemDto, DragRequest, MergeResult, Settings } from './typ
 
 export interface InvokeMap {
   /** Returns the full current item list + settings on startup. */
-  'state:load': { args: []; result: { items: ClipboardItemDto[]; settings: Settings; version: string } }
+  'state:load': { args: []; result: { items: ClipboardItemDto[]; settings: Settings; version: string; isStoreBuild?: boolean } }
 
   /** Set an item's pinned state. */
   'item:set-pinned': { args: [id: string, pinned: boolean]; result: ClipboardItemDto[] }
@@ -67,6 +67,12 @@ export interface InvokeMap {
 
   /** Trigger a download of the already-available update and quit-and-install. */
   'app:install-update': { args: []; result: void }
+
+  /** Manually check for updates on user click. */
+  'updater:check-manual': { args: []; result: { status: string; version?: string; error?: string } }
+
+  /** Start background download of an update in manual mode. */
+  'updater:start-download': { args: []; result: void }
 
   /** Quit the application process. */
   'app:quit': { args: []; result: void }

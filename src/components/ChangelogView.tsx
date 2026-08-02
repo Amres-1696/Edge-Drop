@@ -234,8 +234,8 @@ export function ChangelogView() {
               gap: '12px',
               maxWidth: '100%',
               overflowX: 'hidden',
-              paddingBottom: index < CHANGELOG_DATA.length - 1 ? '24px' : '0',
-              borderBottom: index < CHANGELOG_DATA.length - 1 ? '1px solid rgba(255, 255, 255, 0.08)' : 'none'
+              paddingBottom: index < releases.length - 1 ? '24px' : '0',
+              borderBottom: index < releases.length - 1 ? '1px solid rgba(255, 255, 255, 0.08)' : 'none'
             }}
           >
             {/* Version Header */}
@@ -259,68 +259,57 @@ export function ChangelogView() {
                     border: '1px solid rgba(255, 255, 255, 0.15)',
                     padding: '2px 6px',
                     borderRadius: '4px',
-                    letterSpacing: '0.04em',
                     textTransform: 'uppercase',
-                    flexShrink: 0
+                    letterSpacing: '0.04em'
                   }}>
-                    LATEST
+                    Current
                   </span>
                 )}
               </div>
-              <span style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.45)', fontWeight: 400, flexShrink: 0 }}>
-                {rel.date}
-              </span>
+              {rel.date && (
+                <span style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.45)', whiteSpace: 'nowrap' }}>
+                  {rel.date}
+                </span>
+              )}
             </div>
 
             {/* Summary */}
             <p style={{
-              fontSize: '13px',
-              lineHeight: '1.6',
-              color: 'rgba(255, 255, 255, 0.75)',
               margin: 0,
-              fontWeight: 400,
-              overflowWrap: 'break-word',
-              wordBreak: 'break-word'
+              fontSize: '12.5px',
+              lineHeight: '1.5',
+              color: 'rgba(255, 255, 255, 0.8)',
+              fontWeight: 400
             }}>
               {rel.summary}
             </p>
 
-            {/* Highlights Bullet List */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
-              {rel.highlights.map((item, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '10px',
-                    fontSize: '13px',
-                    lineHeight: '1.55',
-                    minWidth: 0
-                  }}
-                >
-                  <span style={{
-                    color: 'rgba(255, 255, 255, 0.35)',
-                    fontSize: '14px',
-                    lineHeight: '1.5',
-                    userSelect: 'none',
-                    flexShrink: 0
-                  }}>
-                    •
-                  </span>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1, minWidth: 0 }}>
-                    <span style={{ fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
-                      {item.title}
-                    </span>
-                    {item.description && (
-                      <span style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '12.5px', lineHeight: '1.5', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
-                        {item.description}
-                      </span>
-                    )}
+            {/* Highlights List */}
+            {rel.highlights && rel.highlights.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
+                {rel.highlights.map((h, hIdx) => (
+                  <div
+                    key={hIdx}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      border: '1px solid rgba(255, 255, 255, 0.06)',
+                      borderRadius: '8px',
+                      padding: '10px 12px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '4px'
+                    }}
+                  >
+                    <div style={{ fontSize: '12px', fontWeight: 600, color: '#ffffff' }}>
+                      {h.title}
+                    </div>
+                    <div style={{ fontSize: '11.5px', lineHeight: '1.4', color: 'rgba(255, 255, 255, 0.6)' }}>
+                      {h.description}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )
       })}

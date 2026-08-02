@@ -44,6 +44,7 @@ interface AppState {
   toasts: ToastMsg[]
   tutorialStep: number
   currentVersion: string
+  isStoreBuild: boolean
   updateInfo: { hasUpdate: boolean; latestVersion: string; downloaded: boolean } | null
   /** Item ID currently being previewed in the flyout. */
   previewItemId: string | null
@@ -61,6 +62,7 @@ interface AppState {
   hydrate: () => Promise<void>
   setUpdateAvailable: (info: { version: string }) => void
   setUpdateDownloaded: (info: { version: string }) => void
+  dismissUpdate: () => void
   installUpdate: () => Promise<void>
   setItems: (items: ClipboardItemDto[]) => void
   setSettings: (next: Settings) => void
@@ -111,6 +113,7 @@ export const useStore = create<AppState>((set, get) => ({
   toasts: [],
   tutorialStep: 0,
   currentVersion: '',
+  isStoreBuild: false,
   updateInfo: null,
   previewItemId: null,
   previewItemRect: null,
@@ -140,11 +143,12 @@ export const useStore = create<AppState>((set, get) => ({
   flareKey: 0,
 
   async hydrate() {
-    const { items, settings, version } = await edge.loadState()
+    const { items, settings, version, isStoreBuild } = await edge.loadState()
     set({ 
       items, 
       settings, 
       currentVersion: version,
+      isStoreBuild: isStoreBuild ?? false,
       hydrated: true
     })
   },
@@ -168,6 +172,8 @@ export const useStore = create<AppState>((set, get) => ({
       }
     })
   },
+
+  dismissUpdate: () => set({ updateInfo: null }),
 
   async installUpdate() {
     await edge.installUpdate()
@@ -203,7 +209,20 @@ export const useStore = create<AppState>((set, get) => ({
       edge.setPreviewMode(false)
     }
   },
-  setSettingsOpen: (settingsOpen) => set({ settingsOpen, settingsSubView: 'main' }),
+  setSettingsOpen: (settingsOpen) => {
+    set({
+      settingsOpen,
+      settingsSubView: 'main',
+      ...(settingsOpen
+        ? {
+            previewItemId: null,
+            previewItemRect: null,
+            previewFlyoutRect: null,
+            styleFlyoutOpen: false
+          }
+        : {})
+    })
+  },
   setDragActive: (dragActive) => set({ dragActive }),
   setInternalDragReq: (internalDragReq) => {
     if (internalDragReq === null) {

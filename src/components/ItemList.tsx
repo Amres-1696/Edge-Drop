@@ -15,6 +15,7 @@ import { useFilteredItems } from '../hooks/useFilteredItems'
 import { ClipboardItemCard } from './ClipboardItem'
 import { EmptyState } from './EmptyState'
 import { ChevronDownIcon, PinFillIcon } from './icons'
+import { playExpandSound } from '../lib/soundEffects'
 
 export function ItemList() {
   const { pinned, recent } = useFilteredItems()
@@ -200,7 +201,11 @@ export function ItemList() {
             <section className="pinned-section">
               <div 
                 className={`section-label pinned-header-interactive ${pinnedCollapsed ? 'is-collapsed' : ''}`}
-                onClick={() => setPinnedCollapsed(!pinnedCollapsed)}
+                onClick={() => {
+                  const next = !pinnedCollapsed
+                  playExpandSound(!next)
+                  setPinnedCollapsed(next)
+                }}
                 title={pinnedCollapsed ? "Click to expand pinned items" : "Click to collapse pinned items"}
               >
                 <div className="pinned-header-left">

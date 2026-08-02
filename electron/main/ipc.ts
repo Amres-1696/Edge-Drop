@@ -20,7 +20,7 @@ import { rebuildTrayMenu } from './tray'
 import { startDragOut, resolveDragData } from './drag'
 import { clipboardSignature } from '../clipboard/formats'
 import type { ItemData, MergeResult } from '../../shared/types'
-import { quitAndInstallUpdate } from './updater'
+import { quitAndInstallUpdate, checkForUpdatesManual, startUpdateDownload, syncAutoUpdaterState } from './updater'
 
 /**
  * Returns true if the current system clipboard content matches the given item data.
@@ -180,7 +180,8 @@ export function registerIpc(): void {
     return {
       items: getStore().toDto(),
       settings: loadSettings(),
-      version: app.getVersion()
+      version: app.getVersion(),
+      isStoreBuild: isStoreBuild()
     }
   })
 
@@ -188,6 +189,16 @@ export function registerIpc(): void {
     if (isStoreBuild()) return
     console.log('[IPC] app:install-update requested by renderer — calling quitAndInstallUpdate')
     quitAndInstallUpdate()
+  })
+
+  handle('updater:check-manual', async () => {
+    if (isStoreBuild()) return { status: 'up-to-date', version: app.getVersion() }
+    return checkForUpdatesManual()
+  })
+
+  handle('updater:start-download', async () => {
+    if (isStoreBuild()) return
+    await startUpdateDownload()
   })
 
   handle('app:quit', () => {
@@ -494,6 +505,9 @@ export function registerIpc(): void {
       if (patch.stickPosition !== undefined || patch.stickDisplayId !== undefined) {
         popUpAndRetract(1500)
       }
+    }
+    if (patch.autoUpdates !== undefined) {
+      syncAutoUpdaterState()
     }
     pushState.settings(next)
     rebuildTrayMenu()
@@ -857,9 +871,13 @@ async function fetchAndCacheReleases() {
   }
 }
 
-// Background pre-fetch 3 seconds after startup so releases are cached in memory before user opens Settings
+// Background pre-fetch 3 seconds after startup ONLY if autoUpdates is enabled
 setTimeout(() => {
-  fetchAndCacheReleases().catch(() => {})
+  if (loadSettings().autoUpdates !== false) {
+    fetchAndCacheReleases().catch(() => {})
+  } else {
+    console.log('[IPC] Automatic updates disabled by setting; using bundled static release notes.')
+  }
 }, 3000)
 
 
