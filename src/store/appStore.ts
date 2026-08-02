@@ -301,7 +301,7 @@ export const useStore = create<AppState>((set, get) => ({
     set({ toasts: [...get().toasts, toast] })
     // Auto-dismiss after 2.6s. Errors linger slightly longer for readability.
     const ttl = toast.tone === 'error' ? 3400 : 2600
-    window.setTimeout(() => get().dismissToast(toast.id), ttl)
+    setTimeout(() => get().dismissToast(toast.id), ttl)
   },
 
   dismissToast: (id) => {

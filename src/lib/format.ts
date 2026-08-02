@@ -1,6 +1,7 @@
 /**
  * Small display helpers for clipboard item previews.
  */
+import { t } from '../i18n'
 
 /** Truncate long text for list previews. */
 export function previewText(text: string, max = 160): string {
@@ -20,14 +21,15 @@ export function formatBytes(bytes: number): string {
 export function relativeTime(ts: number): string {
   const diff = Date.now() - ts
   const s = Math.round(diff / 1000)
-  if (s < 5) return 'just now'
-  if (s < 60) return `${s}s ago`
+  const agoStr = t('item.ago')
+  if (s < 5) return t('item.justNow')
+  if (s < 60) return `${s}s ${agoStr}`.trim()
   const m = Math.round(s / 60)
-  if (m < 60) return `${m}m ago`
+  if (m < 60) return `${m}m ${agoStr}`.trim()
   const h = Math.round(m / 60)
-  if (h < 24) return `${h}h ago`
+  if (h < 24) return `${h}h ${agoStr}`.trim()
   const d = Math.round(h / 24)
-  if (d < 7) return `${d}d ago`
+  if (d < 7) return `${d}d ${agoStr}`.trim()
   return new Date(ts).toLocaleDateString()
 }
 
@@ -44,13 +46,14 @@ export function formatImageDisplayName(path: string, capturedAt?: number): strin
   const isInternalHash = /^[a-z0-9]{6,12}-[a-z0-9]{6,12}\.[a-z0-9]+$/i.test(name) || path.includes('edge-drop/images') || path.includes('edge-drop\\images') || path.includes('edge-drop/temp') || path.includes('edge-drop\\temp')
   
   if (isInternalHash) {
+    const screenshotLabel = t('item.screenshot')
     if (capturedAt) {
       const d = new Date(capturedAt)
       const dateStr = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
       const timeStr = d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
-      return `Screenshot ${dateStr}, ${timeStr}`
+      return `${screenshotLabel} ${dateStr}, ${timeStr}`
     }
-    return 'Screenshot'
+    return screenshotLabel
   }
   return name
 }

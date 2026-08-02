@@ -17,7 +17,10 @@ import { EmptyState } from './EmptyState'
 import { ChevronDownIcon, PinFillIcon } from './icons'
 import { playExpandSound } from '../lib/soundEffects'
 
+import { useTranslation } from '../i18n'
+
 export function ItemList() {
+  const { t } = useTranslation()
   const { pinned, recent } = useFilteredItems()
   const query = useStore((s) => s.query)
   const listRef = useRef<HTMLDivElement>(null)
@@ -206,11 +209,11 @@ export function ItemList() {
                   playExpandSound(!next)
                   setPinnedCollapsed(next)
                 }}
-                title={pinnedCollapsed ? "Click to expand pinned items" : "Click to collapse pinned items"}
+                title={pinnedCollapsed ? t('item.expandPinned') : t('item.collapsePinned')}
               >
                 <div className="pinned-header-left">
                   <PinFillIcon width={13} height={13} style={{ opacity: 0.9, color: '#ffffff' }} />
-                  <span>Pinned</span>
+                  <span>{t('item.pinned')}</span>
                   <span className="pinned-count-badge">{pinned.length}</span>
                 </div>
                 <div className="pinned-header-right">
@@ -240,7 +243,7 @@ export function ItemList() {
 
           {recent.length > 0 && (
             <section>
-              {pinned.length > 0 && <div className="section-label">Recent</div>}
+              {pinned.length > 0 && <div className="section-label">{t('item.recent')}</div>}
               <AnimatePresence initial={false}>
                 {recent.map((it) => (
                   <ClipboardItemCard key={it.id} item={it} />
@@ -259,7 +262,7 @@ export function ItemList() {
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             className="scroll-top-btn"
             onClick={scrollToTop}
-            title="Scroll to top"
+            title={t('item.scrollToTop')}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="18 15 12 9 6 15"></polyline>

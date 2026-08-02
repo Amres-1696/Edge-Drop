@@ -15,8 +15,10 @@ import { CloseIcon } from './icons'
 import { playButtonClickSound } from '../lib/soundEffects'
 import { createPortal } from 'react-dom'
 import { useAdaptiveSpring } from '../hooks/useAdaptiveSpring'
+import { useTranslation } from '../i18n'
 
 export function IndicatorStyleFlyout({ isRight }: { isRight: boolean }) {
+  const { t } = useTranslation()
   const styleFlyoutOpen = useStore((s) => s.styleFlyoutOpen)
   const setStyleFlyoutOpen = useStore((s) => s.setStyleFlyoutOpen)
   const settings = useStore((s) => s.settings)
@@ -113,88 +115,88 @@ export function IndicatorStyleFlyout({ isRight }: { isRight: boolean }) {
               padding: 14
             }}
           >
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 600, color: '#ffffff', letterSpacing: '-0.01em' }}>
-                Indicator Style
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 600, color: '#ffffff', letterSpacing: '-0.01em' }}>
+                  {t('flyout.copyBeaconStyleTitle')}
+                </div>
+                <button
+                  type="button"
+                  className="icon-btn"
+                  style={{
+                    width: 26,
+                    height: 26,
+                    borderRadius: 6,
+                    background: 'rgba(255,255,255,0.06)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    color: 'rgba(255,255,255,0.7)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    transition: 'background 0.15s ease, color 0.15s ease'
+                  }}
+                  onClick={() => {
+                    playButtonClickSound()
+                    setStyleFlyoutOpen(false)
+                  }}
+                  title={t('header.close')}
+                >
+                  <CloseIcon width={12} height={12} />
+                </button>
               </div>
-              <button
-                type="button"
-                className="icon-btn"
-                style={{
-                  width: 26,
-                  height: 26,
-                  borderRadius: 6,
-                  background: 'rgba(255,255,255,0.06)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  color: 'rgba(255,255,255,0.7)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                  transition: 'background 0.15s ease, color 0.15s ease'
-                }}
-                onClick={() => {
-                  playButtonClickSound()
-                  setStyleFlyoutOpen(false)
-                }}
-                title="Close Style Panel"
-              >
-                <CloseIcon width={12} height={12} />
-              </button>
-            </div>
 
-            {/* 2-Column Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, overflowY: 'auto' }}>
-              {/* Card 1: Logo */}
-              <StyleCard
-                active={(settings.copyIndicatorStyle || 'logo') === 'logo'}
-                onClick={() => {
-                  playButtonClickSound()
-                  patch({ copyIndicatorStyle: 'logo' })
-                  useStore.getState().triggerCopyFlare()
-                }}
-                preview={<LiquidOctopusLoader fillColor="#ffffff" glowColor="rgba(255, 255, 255, 0.85)" speed={1.2} />}
-                title="Edge-Drop Logo"
-              />
+              {/* 2-Column Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, overflowY: 'auto' }}>
+                {/* Card 1: Logo */}
+                <StyleCard
+                  active={(settings.copyIndicatorStyle || 'logo') === 'logo'}
+                  onClick={() => {
+                    playButtonClickSound()
+                    patch({ copyIndicatorStyle: 'logo' })
+                    useStore.getState().triggerCopyFlare()
+                  }}
+                  preview={<LiquidOctopusLoader fillColor="#ffffff" glowColor="rgba(255, 255, 255, 0.85)" speed={1.2} />}
+                  title={t('appearance.logoStyle')}
+                />
 
-              {/* Card 2: Tick */}
-              <StyleCard
-                active={(settings.copyIndicatorStyle || 'logo') === 'check'}
-                onClick={() => {
-                  playButtonClickSound()
-                  patch({ copyIndicatorStyle: 'check' })
-                  useStore.getState().triggerCopyFlare()
-                }}
-                preview={<TickIndicatorIcon fillColor="#ffffff" glowColor="rgba(255, 255, 255, 0.85)" size={32} />}
-                title="Tick"
-              />
+                {/* Card 2: Tick */}
+                <StyleCard
+                  active={(settings.copyIndicatorStyle || 'logo') === 'check'}
+                  onClick={() => {
+                    playButtonClickSound()
+                    patch({ copyIndicatorStyle: 'check' })
+                    useStore.getState().triggerCopyFlare()
+                  }}
+                  preview={<TickIndicatorIcon fillColor="#ffffff" glowColor="rgba(255, 255, 255, 0.85)" size={32} />}
+                  title={t('appearance.tickStyle')}
+                />
 
-              {/* Card 3: Copy */}
-              <StyleCard
-                active={(settings.copyIndicatorStyle || 'logo') === 'copy'}
-                onClick={() => {
-                  playButtonClickSound()
-                  patch({ copyIndicatorStyle: 'copy' })
-                  useStore.getState().triggerCopyFlare()
-                }}
-                preview={<CopyIndicatorIcon fillColor="#ffffff" glowColor="rgba(255, 255, 255, 0.85)" size={32} />}
-                title="Copy"
-              />
+                {/* Card 3: Copy */}
+                <StyleCard
+                  active={(settings.copyIndicatorStyle || 'logo') === 'copy'}
+                  onClick={() => {
+                    playButtonClickSound()
+                    patch({ copyIndicatorStyle: 'copy' })
+                    useStore.getState().triggerCopyFlare()
+                  }}
+                  preview={<CopyIndicatorIcon fillColor="#ffffff" glowColor="rgba(255, 255, 255, 0.85)" size={32} />}
+                  title={t('appearance.copyStyle')}
+                />
 
-              {/* Card 4: Sparkle */}
-              <StyleCard
-                active={(settings.copyIndicatorStyle || 'logo') === 'sparkle'}
-                onClick={() => {
-                  playButtonClickSound()
-                  patch({ copyIndicatorStyle: 'sparkle' })
-                  useStore.getState().triggerCopyFlare()
-                }}
-                preview={<SparkleIndicatorIcon fillColor="#ffffff" glowColor="rgba(255, 255, 255, 0.85)" size={32} />}
-                title="Sparkle"
-              />
-            </div>
+                {/* Card 4: Sparkle */}
+                <StyleCard
+                  active={(settings.copyIndicatorStyle || 'logo') === 'sparkle'}
+                  onClick={() => {
+                    playButtonClickSound()
+                    patch({ copyIndicatorStyle: 'sparkle' })
+                    useStore.getState().triggerCopyFlare()
+                  }}
+                  preview={<SparkleIndicatorIcon fillColor="#ffffff" glowColor="rgba(255, 255, 255, 0.85)" size={32} />}
+                  title={t('appearance.sparkleStyle')}
+                />
+              </div>
           </motion.div>
         )}
       </AnimatePresence>

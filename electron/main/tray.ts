@@ -13,6 +13,7 @@ import { loadSettings, saveSettings } from '../store/settings'
 import { getMainWindow, setVisible, repositionWindow, getDisplayListOptions, registerWindowRepositionListener, popUpAndRetract } from './window'
 import type { StickPosition } from '../../shared/types'
 import { pushState } from './state'
+import { TRANSLATIONS, en } from '../../src/i18n/translations'
 
 let tray: Tray | null = null
 
@@ -48,9 +49,10 @@ export function createTray(): Tray {
   if (!existsSync(PATHS.indexFile())) {
     try {
       if (Notification.isSupported()) {
+        const initialSettings = loadSettings()
         new Notification({
-          title: 'Edge-Drop Clipboard Shelf',
-          body: 'Hover against the middle-left screen edge, or press Alt+C to slide open your shelf.',
+          title: getTrayText(initialSettings.language, 'welcomeTitle'),
+          body: getTrayText(initialSettings.language, 'welcomeBody'),
           icon: PATHS.icon()
         }).show()
       }
@@ -81,8 +83,12 @@ export function createTray(): Tray {
   }
 
   function buildStickSubmenu(current: StickPosition): Electron.MenuItemConstructorOptions[] {
-    return (['left', 'right'] as StickPosition[]).map((pos) => ({
-      label: pos.charAt(0).toUpperCase() + pos.slice(1),
+    const settings = loadSettings()
+    return ([
+      { pos: 'left' as const, labelKey: 'left' as const },
+      { pos: 'right' as const, labelKey: 'right' as const }
+    ]).map(({ pos, labelKey }) => ({
+      label: getTrayText(settings.language, labelKey),
       type: 'radio' as const,
       checked: current === pos,
       click: () => {
@@ -95,11 +101,32 @@ export function createTray(): Tray {
     }))
   }
 
+function getTrayText(settingsLang: string | undefined, key: keyof typeof en['tray']): string {
+  let langCode = settingsLang || 'system'
+  if (langCode === 'system') {
+    const sysLangs = app.getPreferredSystemLanguages()
+    const first = (sysLangs[0] || '').toLowerCase()
+    if (first.startsWith('zh-tw') || first.startsWith('zh-hk')) langCode = 'zh-TW'
+    else if (first.startsWith('zh')) langCode = 'zh-CN'
+    else if (first.startsWith('es')) langCode = 'es'
+    else if (first.startsWith('fr')) langCode = 'fr'
+    else if (first.startsWith('de')) langCode = 'de'
+    else if (first.startsWith('hi')) langCode = 'hi'
+    else if (first.startsWith('ja')) langCode = 'ja'
+    else if (first.startsWith('ru')) langCode = 'ru'
+    else langCode = 'en'
+  }
+  const dict = TRANSLATIONS[langCode]
+  return (dict?.tray?.[key]) || en.tray[key] || key
+}
+
   const rebuild = () => {
     const settings = loadSettings()
+    const t = (k: keyof typeof en['tray']) => getTrayText(settings.language, k)
+
     const menu = Menu.buildFromTemplate([
       {
-        label: 'Show Clipboard',
+        label: t('showClipboard'),
         click: () => {
           console.log('[Main] Context menu "Show Clipboard" clicked')
           setVisible(true)
@@ -108,7 +135,7 @@ export function createTray(): Tray {
         }
       },
       {
-        label: 'Settings',
+        label: t('settings'),
         click: () => {
           console.log('[Main] Context menu "Settings" clicked')
           setVisible(true)
@@ -118,7 +145,7 @@ export function createTray(): Tray {
       },
       { type: 'separator' },
       {
-        label: 'Incognito (pause capture)',
+        label: t('incognito'),
         type: 'checkbox',
         checked: settings.incognito,
         click: (item) => {
@@ -129,7 +156,7 @@ export function createTray(): Tray {
         }
       },
       {
-        label: 'Hover Trigger (open on hover)',
+        label: t('hoverTrigger'),
         type: 'checkbox',
         checked: settings.hoverActivation ?? true,
         click: (item) => {
@@ -143,16 +170,16 @@ export function createTray(): Tray {
       },
       { type: 'separator' },
       {
-        label: 'Stick to',
+        label: t('stickTo'),
         submenu: buildStickSubmenu(settings.stickPosition)
       },
       {
-        label: 'Display',
+        label: t('display'),
         submenu: buildDisplaySubmenu()
       },
       { type: 'separator' },
       {
-        label: 'Quit Edge-Drop',
+        label: t('quit'),
         click: () => {
           app.quit()
         }

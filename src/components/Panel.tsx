@@ -21,7 +21,10 @@ import { IndicatorStyleFlyout } from './IndicatorStyleFlyout'
 import { CopyIndicatorCurve } from './CopyIndicatorCurve'
 import { useFilteredItems } from '../hooks/useFilteredItems'
 
+import { useTranslation } from '../i18n'
+
 export function Panel() {
+  const { t } = useTranslation()
   const open = useStore((s) => s.open)
   const { pinned, recent } = useFilteredItems()
   const filteredItems = useMemo(() => [...pinned, ...recent], [pinned, recent])
@@ -375,18 +378,18 @@ export function Panel() {
                 <div className="footer" style={{ position: 'relative' }}>
                   <div style={{ position: 'absolute', top: -18, left: 0, right: 0, height: 18, background: 'linear-gradient(to top, #000000, transparent)', pointerEvents: 'none', zIndex: 10 }} />
                   <span className="count">
-                    {filteredCount} item{filteredCount === 1 ? '' : 's'}
+                    {filteredCount} {t('item.items')}
                   </span>
                   <div className="spacer" />
                   <button 
                     className="text-btn danger"
                     onClick={handleClear} 
                     disabled={filteredCount === 0} 
-                    title={isFiltered ? "Clear filtered items" : "Clear shelf"} 
+                    title={isFiltered ? t('item.clear') : t('item.clear')} 
                     style={{ display: 'flex', alignItems: 'center', gap: 6 }}
                   >
                     <TrashIcon width={14} height={14} />
-                    <span>Clear</span>
+                    <span>{t('item.clear')}</span>
                   </button>
                 </div>
               </motion.div>
@@ -422,6 +425,7 @@ function getTutorialText(step: number): string {
 */
 
 function DropOverlay() {
+  const { t } = useTranslation()
   const dragActive = useStore((s) => s.dragActive)
   const internalDragReq = useStore((s) => s.internalDragReq)
 
@@ -471,10 +475,10 @@ function DropOverlay() {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <div style={{ fontSize: '15px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', letterSpacing: '0.01em' }}>
-              Drop to save
+              {t('item.dropToSave')}
             </div>
             <div style={{ fontSize: '12px', fontWeight: 400, color: 'rgba(255, 255, 255, 0.5)', lineHeight: 1.4 }}>
-              Any file, image, link, or text
+              {t('item.dropToSaveDesc')}
             </div>
           </div>
         </motion.div>

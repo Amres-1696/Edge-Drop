@@ -10,7 +10,10 @@ import { useDragOut } from '../hooks/useDragOut'
 import { tryPaste } from '../lib/tryPaste'
 import { playButtonClickSound, playToggleSound } from '../lib/soundEffects'
 
+import { useTranslation } from '../i18n'
+
 export function PreviewFlyout({ isRight }: { isRight: boolean }) {
+  const { t } = useTranslation()
   const previewItemId = useStore((s) => s.previewItemId)
   const items = useStore((s) => s.items)
   const previewItemRect = useStore((s) => s.previewItemRect)
@@ -232,7 +235,7 @@ export function PreviewFlyout({ isRight }: { isRight: boolean }) {
                 gap: 6
               }}
             >
-              <span>+ Drop to stack into preview</span>
+              <span>+ {t('onboarding.dropToExtract')}</span>
             </div>
           )}
           {/* Content — even bezels, no header chrome */}
@@ -282,7 +285,7 @@ export function PreviewFlyout({ isRight }: { isRight: boolean }) {
                     letterSpacing: '0.02em',
                     whiteSpace: 'nowrap'
                   }}>
-                    {selectedKeys.size} Selected
+                    {t('flyout.selectedCount').replace('{count}', String(selectedKeys.size))}
                   </div>
                   <button
                     onClick={handleSelectAllToggle}
@@ -300,13 +303,13 @@ export function PreviewFlyout({ isRight }: { isRight: boolean }) {
                     onMouseEnter={(e) => (e.currentTarget.style.color = '#ffffff')}
                     onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(255, 255, 255, 0.65)')}
                   >
-                    {selectedKeys.size === allItemKeys.length ? 'Deselect All' : 'Select All'}
+                    {selectedKeys.size === allItemKeys.length ? t('flyout.deselectAll') : t('flyout.selectAll')}
                   </button>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <button
-                    title="Copy Selected"
+                    title={t('flyout.copySelected')}
                     onClick={handleBatchCopy}
                     style={{
                       display: 'flex',
@@ -334,11 +337,11 @@ export function PreviewFlyout({ isRight }: { isRight: boolean }) {
                     }}
                   >
                     <CopyIcon width={13} height={13} />
-                    <span>Copy</span>
+                    <span>{t('item.copy')}</span>
                   </button>
 
                   <button
-                    title="Paste Selected"
+                    title={t('flyout.pasteSelected')}
                     onClick={handleBatchPaste}
                     style={{
                       display: 'flex',
@@ -358,11 +361,11 @@ export function PreviewFlyout({ isRight }: { isRight: boolean }) {
                       transition: 'all 0.15s ease'
                     }}
                   >
-                    <span>Paste</span>
+                    <span>{t('flyout.paste')}</span>
                   </button>
 
                   <button
-                    title="Clear Selection"
+                    title={t('flyout.clearSelection')}
                     onClick={() => {
                       playButtonClickSound()
                       setSelectedKeys(new Set())
@@ -552,11 +555,12 @@ function PreviewContent({
   selectedKeys?: Set<string>
   onToggleSelectKey?: (key: string, e?: React.MouseEvent) => void
 }) {
+  const { t } = useTranslation()
   const startDrag = useDragOut()
 
   if (item.data.kind === 'text') {
     const text: string = item.data.text.length > 20000
-      ? item.data.text.slice(0, 20000) + '\n\n… (content truncated)'
+      ? item.data.text.slice(0, 20000) + `\n\n${t('flyout.contentTruncated')}`
       : item.data.text
     const isCode = looksLikeCode(text)
     const isUrl = item.data.isUrl
@@ -569,19 +573,19 @@ function PreviewContent({
           e.stopPropagation()
           tryPaste(() => useStore.getState().paste(item.id))
         }}
-        title="Click to paste"
+        title={t('flyout.clickToPaste')}
         style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 10, cursor: 'pointer' }}
       >
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, position: 'sticky', top: 0, zIndex: 2 }}>
           {isUrl && (
             <QuickActionButton
-              title="Open Link"
+              title={t('flyout.openLink')}
               icon={ExternalLinkIcon}
               onClick={() => window.open(item.data.text, '_blank')}
             />
           )}
           <QuickActionButton
-            title="Copy Text"
+            title={t('flyout.copyText')}
             icon={CopyIcon}
             onClick={() => navigator.clipboard.writeText(item.data.text)}
           />
@@ -630,12 +634,12 @@ function PreviewContent({
           e.stopPropagation()
           tryPaste(() => useStore.getState().paste(item.id))
         }}
-        title="Click to paste · Drag to move"
+        title={t('flyout.clickToPasteDrag')}
         style={{ display: 'flex', flexDirection: 'column', gap: 12, position: 'relative', cursor: 'grab' }}
       >
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, position: 'absolute', top: 8, right: 8, zIndex: 2 }}>
           <QuickActionButton
-            title="Copy Image"
+            title={t('flyout.copyImage')}
             icon={CopyIcon}
             onClick={() => window.edge.copyItem(item.id)}
             solidDark={true}
@@ -702,7 +706,7 @@ function PreviewContent({
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, position: 'absolute', top: 12, right: 12, zIndex: 2 }}>
                 <QuickActionButton
-                  title="Copy Image"
+                  title={t('flyout.copyImage')}
                   icon={CopyIcon}
                   onClick={() => window.edge.copySubitem({ id: item.id, imageId: img.imageId })}
                   solidDark={true}
@@ -710,7 +714,7 @@ function PreviewContent({
               </div>
               <img src={`edgelocal://${img.imageId}`} alt="" style={{ width: '100%', borderRadius: 8 }} draggable={false} />
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textAlign: 'center', fontFamily: SYS_FONT, letterSpacing: '0.02em' }}>
-                {idx + 1} of {item.data.images.length} · {img.width} × {img.height} · {formatBytes(img.bytes)}
+                {idx + 1} / {item.data.images.length} · {img.width} × {img.height} · {formatBytes(img.bytes)}
               </div>
             </div>
           )
@@ -740,18 +744,18 @@ function PreviewContent({
             e.stopPropagation()
             tryPaste(() => useStore.getState().paste(item.id))
           }}
-          title={`Click to paste "${fileName}" · Drag to move`}
+          title={t('flyout.clickToPasteDrag')}
           style={{ display: 'flex', flexDirection: 'column', gap: 12, position: 'relative', cursor: 'grab' }}
         >
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, position: 'absolute', top: 8, right: 8, zIndex: 2 }}>
             <QuickActionButton
-              title="Copy File"
+              title={t('flyout.copyFile')}
               icon={CopyIcon}
               onClick={() => window.edge.copyItem(item.id)}
               solidDark={true}
             />
             <button
-              title="Open location in Explorer"
+              title={t('flyout.openInExplorer')}
               onClick={(e) => {
                 e.stopPropagation()
                 window.edge.revealFile(p)

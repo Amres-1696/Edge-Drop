@@ -166,6 +166,8 @@ export interface Settings {
   fontSizeScale?: number
   /** When true, automatically checks for and downloads app updates in background. Default: true. */
   autoUpdates?: boolean
+  /** Active UI language code ('system' | 'en' | 'es' | 'fr' | 'de' | ...). Default: 'system'. */
+  language?: string
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -195,7 +197,8 @@ export const DEFAULT_SETTINGS: Settings = {
   lastSeenChangelogVersion: undefined,
   hoverActivation: true,
   fontSizeScale: 1.0,
-  autoUpdates: true
+  autoUpdates: true,
+  language: 'system'
 }
 
 

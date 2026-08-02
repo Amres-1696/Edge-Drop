@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useStore } from '../store/appStore'
+import { useTranslation } from '../i18n'
 
 interface HighlightItem {
   title: string
@@ -194,6 +195,7 @@ const CHANGELOG_DATA: ChangelogRelease[] = [
 ]
 
 export function ChangelogView() {
+  const { t } = useTranslation()
   const currentVersion = useStore((s) => s.currentVersion)
   const [releases, setReleases] = useState<ChangelogRelease[]>(CHANGELOG_DATA)
 
@@ -262,7 +264,7 @@ export function ChangelogView() {
                     textTransform: 'uppercase',
                     letterSpacing: '0.04em'
                   }}>
-                    Current
+                    {t('flyout.current')}
                   </span>
                 )}
               </div>

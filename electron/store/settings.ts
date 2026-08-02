@@ -24,6 +24,9 @@ function merge(base: Settings, patch: Partial<Settings>): Settings {
   if (out.triggerAlignment !== 'top' && out.triggerAlignment !== 'center' && out.triggerAlignment !== 'bottom') {
     out.triggerAlignment = 'center'
   }
+  if (typeof out.language !== 'string' || !out.language.trim()) {
+    out.language = 'system'
+  }
   return out
 }
 

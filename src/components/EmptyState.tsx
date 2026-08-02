@@ -1,15 +1,18 @@
 import { useStore } from '../store/appStore'
+import { useTranslation } from '../i18n'
 
 export function EmptyState({ filtered }: { filtered: boolean }) {
+  const { t } = useTranslation()
   const typeFilter = useStore((s) => s.typeFilter)
 
-  let title = filtered ? 'No results found' : 'Shelf is empty'
-  let hint = filtered ? 'Try a different keyword or clear search' : 'Copy anything or drop files here to begin'
+  let title = filtered ? t('emptyState.noResultsFound') : t('emptyState.shelfEmpty')
+  let hint = filtered ? t('emptyState.noResultsHint') : t('emptyState.shelfEmptyHint')
 
   if (typeFilter !== 'all') {
-    const label = typeFilter === 'text' ? 'text clips' : typeFilter === 'links' ? 'links' : typeFilter === 'images' ? 'images' : 'files'
-    title = `No ${label} found`
-    hint = `Copy ${label} or switch back to All`
+    const labelKey = typeFilter === 'text' ? 'emptyState.textClips' : typeFilter === 'links' ? 'emptyState.links' : typeFilter === 'images' ? 'emptyState.images' : 'emptyState.files'
+    const label = t(labelKey)
+    title = t('emptyState.noClipsFound', { type: label })
+    hint = t('emptyState.copyTypeHint', { type: label })
   }
 
   return (

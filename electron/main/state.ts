@@ -10,9 +10,8 @@ import { ClipboardWatcher } from '../clipboard/ClipboardWatcher'
 import { loadSettings, saveSettings } from '../store/settings'
 import type { ClipboardItemDto, Settings } from '../../shared/types'
 import { MAX_STACK } from '../../shared/types'
-import { getMainWindow } from './window'
 import { createId } from '../store/ids'
-import { nativeImage } from 'electron'
+import { nativeImage, BrowserWindow } from 'electron'
 import { readFileSync } from 'node:fs'
 import { PATHS } from '../store/paths'
 import { prefetchFileIcons } from './drag'
@@ -81,11 +80,14 @@ export function getWatcher(): ClipboardWatcher {
   return watcher
 }
 
-/** Push the full item list (DTO) to the renderer, if it's ready. */
+/** Push updates to all open windows (main window, onboarding window, etc.). */
 function send(channel: string, ...args: unknown[]): void {
   if (runtime.quitting) return
-  const win = getMainWindow()
-  if (win && !win.isDestroyed() && !win.webContents.isDestroyed()) win.webContents.send(channel, ...args)
+  for (const win of BrowserWindow.getAllWindows()) {
+    if (!win.isDestroyed() && !win.webContents.isDestroyed()) {
+      win.webContents.send(channel, ...args)
+    }
+  }
 }
 
 export const pushState = {

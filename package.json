@@ -76,6 +76,7 @@
     "@types/node": "^20.11.30",
     "@types/react": "^18.2.73",
     "@types/react-dom": "^18.2.22",
+    "@vitalets/google-translate-api": "^9.2.1",
     "@vitejs/plugin-react": "^4.2.1",
     "electron": "^34.2.0",
     "electron-builder": "^26.15.3",

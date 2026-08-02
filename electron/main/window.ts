@@ -22,12 +22,13 @@
  *
  * NOTE: this module must NOT import from state.ts to avoid circular dependencies.
  */
-import { BrowserWindow, screen, shell, powerMonitor } from 'electron'
+import { BrowserWindow, screen, shell, powerMonitor, app } from 'electron'
 import { join } from 'node:path'
 import { existsSync } from 'node:fs'
 import { APP_CONFIG } from './config'
 import { runtime } from './config'
 import { PATHS } from '../store/paths'
+import { TRANSLATIONS, en } from '../../src/i18n/translations'
 import { computeStickBounds } from './geometry'
 import { loadSettings, saveSettings } from '../store/settings'
 import { isFullscreenAppActive, registerFullscreenActiveListener } from './fullscreen'
@@ -614,13 +615,31 @@ export function getDisplayListOptions(): Array<{
   const primary = screen.getPrimaryDisplay()
   const activeId = getActiveDisplayId(all)
 
+  const settings = loadSettings()
+  let langCode = settings.language || 'system'
+  if (langCode === 'system') {
+    const sysLangs = app.getPreferredSystemLanguages()
+    const first = (sysLangs[0] || '').toLowerCase()
+    if (first.startsWith('zh-tw') || first.startsWith('zh-hk')) langCode = 'zh-TW'
+    else if (first.startsWith('zh')) langCode = 'zh-CN'
+    else if (first.startsWith('es')) langCode = 'es'
+    else if (first.startsWith('fr')) langCode = 'fr'
+    else if (first.startsWith('de')) langCode = 'de'
+    else if (first.startsWith('hi')) langCode = 'hi'
+    else if (first.startsWith('ja')) langCode = 'ja'
+    else if (first.startsWith('ru')) langCode = 'ru'
+    else langCode = 'en'
+  }
+  const dict = TRANSLATIONS[langCode]
+  const primaryText = dict?.position?.primaryDisplay || en.position.primaryDisplay
+
   return all.map((d, index) => {
     const isPrimary = d.id === primary.id
     const rawName = (d as any).label || (d as any).name || ''
-    const fallbackName = isPrimary ? 'Primary Monitor' : `Display ${index + 1}`
+    const fallbackName = isPrimary ? primaryText : `Display ${index + 1}`
     const baseName = rawName.trim() ? rawName.trim() : fallbackName
     const name = isPrimary
-      ? (baseName.toLowerCase().includes('primary') ? baseName : `${baseName} (Primary)`)
+      ? (baseName.toLowerCase().includes('primary') || baseName === primaryText ? baseName : `${baseName} (${primaryText})`)
       : baseName
     const scale = d.scaleFactor || 1
     const physW = Math.round(d.bounds.width * scale)

@@ -28,6 +28,7 @@ import { CopyIcon, FileKindIcon, ImageIcon, LinkIcon, PinIcon, PinFillIcon, Tras
 import '../styles/item.css'
 
 import { tryPaste } from '../lib/tryPaste'
+import { t } from '../i18n'
 
 interface Props {
   item: ClipboardItemDto
@@ -209,7 +210,7 @@ function ClipboardItemBase({ item }: Props) {
         >
           <button
             className={`act${item.pinned ? ' active' : ''}`}
-            title={item.pinned ? 'Unpin' : 'Pin'}
+            title={item.pinned ? t('item.unpin') : t('item.pin')}
             onClick={(e) => {
               e.currentTarget.blur()
               playToggleSound(!item.pinned)
@@ -220,7 +221,7 @@ function ClipboardItemBase({ item }: Props) {
           </button>
           <button
             className={`act${isPreviewing ? ' preview-contract active' : ' preview-expand'}`}
-            title={isPreviewing ? 'Close Preview' : 'Expand Preview'}
+            title={isPreviewing ? t('header.close') : t('item.expand')}
             onClick={(e) => {
               e.stopPropagation()
               e.currentTarget.blur()
@@ -232,7 +233,7 @@ function ClipboardItemBase({ item }: Props) {
           >
             {isPreviewing ? <ContractIcon /> : <ExpandIcon />}
           </button>
-          <button className="act" title="Copy" onClick={(e) => {
+          <button className="act" title={t('item.copy')} onClick={(e) => {
             e.currentTarget.blur()
             onCopy(e)
           }}>
@@ -241,7 +242,7 @@ function ClipboardItemBase({ item }: Props) {
           {item.data.kind === 'text' && item.data.isUrl && (
             <button
               className="act"
-              title="Open link in default browser"
+              title={t('flyout.openLink')}
               onClick={(e) => {
                 e.stopPropagation()
                 e.currentTarget.blur()
@@ -255,7 +256,7 @@ function ClipboardItemBase({ item }: Props) {
           <div className="act-divider" />
           <button
             className="act danger"
-            title="Delete"
+            title={t('item.delete')}
             onClick={(e) => {
               e.currentTarget.blur()
               playDeleteSound()
@@ -370,7 +371,7 @@ function BundleFluidPreview({
               <div className="bundle-actions">
                 <div 
                   className="bundle-collapse-zone" 
-                  title="Collapse collection"
+                  title={t('item.collapsePinned')}
                   onClick={(e) => { e.stopPropagation(); onCollapse(e); }}
                 >
                   <button className="act bundle-collapse-btn">
@@ -380,15 +381,15 @@ function BundleFluidPreview({
                 <div className="actions-pill">
                   <button
                     className={`act${item.pinned ? ' active' : ''}`}
-                    title={item.pinned ? 'Unpin' : 'Pin'}
+                    title={item.pinned ? t('item.unpin') : t('item.pin')}
                     onClick={(e) => { e.stopPropagation(); useStore.getState().togglePin(item.id, !item.pinned); }}
                   >
                     {item.pinned ? <PinFillIcon /> : <PinIcon />}
                   </button>
-                  <button className="act" title="Copy all" onClick={(e) => { e.stopPropagation(); onCopy(e); }}>
+                  <button className="act" title={t('item.copy')} onClick={(e) => { e.stopPropagation(); onCopy(e); }}>
                     <CopyIcon />
                   </button>
-                  <button className="act danger" title="Delete bundle" onClick={(e) => { e.stopPropagation(); onRemove(); }}>
+                  <button className="act danger" title={t('item.delete')} onClick={(e) => { e.stopPropagation(); onRemove(); }}>
                     <TrashIcon />
                   </button>
                 </div>
@@ -409,7 +410,7 @@ function BundleFluidPreview({
                   />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1, minWidth: 0 }}>
                     <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)' }}>
-                       Image • {img.width} × {img.height}
+                       {t('item.imageItem')} • {img.width} × {img.height}
                     </span>
                     <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
                       {formatBytes(img.bytes)}
@@ -417,7 +418,7 @@ function BundleFluidPreview({
                   </div>
                   <button
                     className="act subitem-delete-btn"
-                    title="Ungroup image from collection"
+                    title={t('item.ungroup')}
                     onClick={(e) => { e.stopPropagation(); window.edge.splitItem({ id: item.id, imageId: img.imageId, splitPlacement: 'after' }); }}
                     style={{ width: 24, height: 24 }}
                   >
@@ -456,7 +457,7 @@ function BundleFluidPreview({
                   )
                 })}
               </div>
-              {more > 0 && <div className="bundle-more-label">+{more} more image{more > 1 ? 's' : ''}</div>}
+              {more > 0 && <div className="bundle-more-label">{t('item.moreImages', { count: more })}</div>}
             </motion.div>
           )}
         </AnimatePresence>
@@ -483,7 +484,7 @@ function BundleFluidPreview({
               <div className="bundle-actions">
                 <div
                   className="bundle-collapse-zone"
-                  title="Collapse collection"
+                  title={t('item.collapsePinned')}
                   onClick={(e) => { e.stopPropagation(); onCollapse(e); }}
                 >
                   <button className="act bundle-collapse-btn">
@@ -494,10 +495,10 @@ function BundleFluidPreview({
                   {count} / {MAX_STACK}
                 </div>
                 <div className="actions-pill">
-                  <button className="act" title="Copy all" onClick={(e) => { e.stopPropagation(); onCopy(e); }}>
+                  <button className="act" title={t('item.copy')} onClick={(e) => { e.stopPropagation(); onCopy(e); }}>
                     <CopyIcon />
                   </button>
-                  <button className="act danger" title="Delete bundle" onClick={(e) => { e.stopPropagation(); onRemove(); }}>
+                  <button className="act danger" title={t('item.delete')} onClick={(e) => { e.stopPropagation(); onRemove(); }}>
                     <TrashIcon />
                   </button>
                 </div>
@@ -535,7 +536,7 @@ function BundleFluidPreview({
                     </div>
                     <button
                       className="act subitem-copy-btn"
-                      title="Copy file path"
+                      title={t('item.copyFilePath')}
                       onClick={(e) => { e.stopPropagation(); window.edge.copySubitem({ id: item.id, paths: [filePath] }); }}
                       style={{ width: 24, height: 24 }}
                     >
@@ -543,7 +544,7 @@ function BundleFluidPreview({
                     </button>
                     <button
                       className="act subitem-delete-btn"
-                      title="Ungroup file from collection"
+                      title={t('item.ungroup')}
                       onClick={(e) => { e.stopPropagation(); window.edge.splitItem({ id: item.id, paths: [filePath], splitPlacement: 'after' }); }}
                       style={{ width: 24, height: 24 }}
                     >
@@ -596,9 +597,9 @@ function BundleFluidPreview({
                 })}
               </div>
               {count > 1 ? (
-                <div className="bundle-more-label">+{count - 1} more file{count - 1 > 1 ? 's' : ''}</div>
+                <div className="bundle-more-label">{t('item.moreFiles', { count: count - 1 })}</div>
               ) : (
-                <div className="bundle-more-label">1 file</div>
+                <div className="bundle-more-label">{t('item.singleFile')}</div>
               )}
             </motion.div>
           )}
@@ -636,7 +637,7 @@ function Preview({ item }: { item: ClipboardItemDto }) {
               draggable={false}
             />
           ) : (
-            <div className="preview">[image]</div>
+            <div className="preview">[{t('item.imageItem')}]</div>
           )}
         </div>
       )
@@ -704,21 +705,21 @@ function KindBadge({ item }: { item: ClipboardItemDto }) {
       if (item.data.isUrl)
         return (
           <span className="kind-badge url">
-            <LinkIcon width={11} height={11} /> link
+            <LinkIcon width={11} height={11} /> {t('filters.links').toLowerCase()}
           </span>
         )
-      return <span className="kind-badge">text</span>
+      return <span className="kind-badge">{t('filters.text').toLowerCase()}</span>
     case 'image':
       return (
         <span className="kind-badge">
-          <ImageIcon width={11} height={11} /> image
+          <ImageIcon width={11} height={11} /> {t('filters.images').toLowerCase().slice(0, -1) || t('filters.images').toLowerCase()}
         </span>
       )
     case 'image-collection':
       return (
         <span className="kind-badge">
           <ImageIcon width={11} height={11} />
-          {item.data.images.length} images
+          {item.data.images.length} {t('filters.images').toLowerCase()}
         </span>
       )
     case 'files': {
@@ -729,11 +730,11 @@ function KindBadge({ item }: { item: ClipboardItemDto }) {
       if (isImage) {
         return (
           <span className="kind-badge">
-            <ImageIcon width={11} height={11} /> image
+            <ImageIcon width={11} height={11} /> {t('filters.images').toLowerCase().slice(0, -1) || t('filters.images').toLowerCase()}
           </span>
         )
       }
-      const label = count > 1 ? `${count} files` : info.label.toLowerCase()
+      const label = count > 1 ? `${count} ${t('filters.files').toLowerCase()}` : info.label.toLowerCase()
       return (
         <span className="kind-badge" style={{ color: count > 1 ? undefined : info.color }}>
           <FileKindIcon path={firstPath} width={11} height={11} />

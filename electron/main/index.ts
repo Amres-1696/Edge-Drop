@@ -15,7 +15,7 @@ import { createWindow, getMainWindow, setInteractive, setVisible, startCursorPol
 import { createTray, registerIncognitoApplier } from './tray'
 import { registerIpc, registerSendListeners } from './ipc'
 import { prewarmDragIcons } from './drag'
-import { initState, getWatcher, loadSettings, pushState, stopStateTimers } from './state'
+import { initState, getWatcher, loadSettings, saveSettings, pushState, stopStateTimers } from './state'
 import { initAutoUpdater } from './updater'
 import { createOnboardingWindow } from './onboardingWindow'
 import { startFullscreenMonitor, stopFullscreenMonitor, triggerFullscreenCheck } from './fullscreen'
@@ -112,13 +112,17 @@ app.whenReady().then(() => {
   prewarmDragIcons()
 
   // Reflect settings immediately.
-  const settings = loadSettings()
-  setHotZoneWidth(settings.hotZoneWidth || 3)
+  let settings = loadSettings()
   if (!settings.tutorialCompleted) {
+    // When onboarding is active (initial launch or reset tutorial), reset language to system default so onboarding always begins in System Default
+    if (settings.language !== 'system') {
+      settings = saveSettings({ language: 'system' })
+    }
     setTimeout(() => {
       createOnboardingWindow()
     }, 2000)
   }
+  setHotZoneWidth(settings.hotZoneWidth || 3)
   
   if (app.isPackaged) {
     try {

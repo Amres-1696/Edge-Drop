@@ -4,7 +4,10 @@ import { useStore } from '../store/appStore'
 import { GearIcon, CloseIcon, InfoIcon } from './icons'
 import { playButtonClickSound } from '../lib/soundEffects'
 
+import { useTranslation } from '../i18n'
+
 export function Header() {
+  const { t } = useTranslation()
   const setSettingsOpen = useStore((s) => s.setSettingsOpen)
   const settingsOpen = useStore((s) => s.settingsOpen)
   const updateInfo = useStore((s) => s.updateInfo)
@@ -34,11 +37,11 @@ export function Header() {
   const setTypeFilter = useStore((s) => s.setTypeFilter)
 
   const FILTERS: { id: import('../../shared/types').TypeFilter; label: string }[] = [
-    { id: 'all', label: 'All' },
-    { id: 'text', label: 'Text' },
-    { id: 'links', label: 'Links' },
-    { id: 'images', label: 'Images' },
-    { id: 'files', label: 'Files' }
+    { id: 'all', label: t('filters.all') },
+    { id: 'text', label: t('filters.text') },
+    { id: 'links', label: t('filters.links') },
+    { id: 'images', label: t('filters.images') },
+    { id: 'files', label: t('filters.files') }
   ]
 
   const activeIndex = Math.max(0, FILTERS.findIndex((f) => f.id === typeFilter))
@@ -48,7 +51,7 @@ export function Header() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 4, paddingLeft: 2 }}>
         {settingsOpen ? (
           <span style={{ fontSize: 13, fontWeight: 600, color: '#8e8e93', letterSpacing: '0.01em', paddingLeft: 6 }}>
-            {settingsSubView === 'changelog' ? "What's New" : 'Settings'}
+            {settingsSubView === 'changelog' ? t('header.whatsNew') : t('header.settings')}
           </span>
         ) : (
           <div 
@@ -130,7 +133,7 @@ export function Header() {
           <button
             type="button"
             className={`icon-btn${settingsSubView === 'changelog' ? ' active' : ''}`}
-            title={settingsSubView === 'changelog' ? "Back to Settings" : "What's New"}
+            title={settingsSubView === 'changelog' ? t('tabs.behaviour') : t('header.whatsNew')}
             onClick={() => {
               playButtonClickSound()
               handleOpenChangelog()
@@ -174,7 +177,7 @@ export function Header() {
         <button
           type="button"
           className={`icon-btn${settingsOpen ? ' active' : ''}`}
-          title={settingsOpen ? 'Close Settings' : 'Settings'}
+          title={settingsOpen ? t('header.close') : t('header.settings')}
           onClick={() => {
             playButtonClickSound()
             if (settingsOpen) {

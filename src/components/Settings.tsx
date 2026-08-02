@@ -7,18 +7,20 @@ import { TickIndicatorIcon, CopyIndicatorIcon, SparkleIndicatorIcon } from './Co
 import { ChevronRightIcon, CloseIcon, LogOutIcon } from './icons'
 import { ChangelogView } from './ChangelogView'
 import { playDialTickSound, playToggleSound, playButtonClickSound } from '../lib/soundEffects'
+import { useTranslation } from '../i18n'
 import '../styles/settings.css'
 
 type SettingsTab = 'behaviour' | 'position' | 'appearance'
 
-const TABS: { id: SettingsTab; label: string }[] = [
-  { id: 'behaviour',  label: 'Behaviour' },
-  { id: 'position',   label: 'Position' },
-  { id: 'appearance', label: 'Appearance' },
-]
-
 export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: boolean }) {
+  const { t } = useTranslation()
   const settings = useStore((s) => s.settings)
+
+  const TABS: { id: SettingsTab; label: string }[] = [
+    { id: 'behaviour',  label: t('tabs.behaviour') },
+    { id: 'position',   label: t('tabs.position') },
+    { id: 'appearance', label: t('tabs.appearance') },
+  ]
   const patch = useStore((s) => s.patchSettings)
   const updateInfo = useStore((s) => s.updateInfo)
   const isStoreBuild = useStore((s) => s.isStoreBuild)
@@ -147,12 +149,12 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
   const PersistentFooter = (
     <>
       {/* Community & Support */}
-      <div className="setting-group-label" style={{ marginTop: 20 }}>Community & Support</div>
+      <div className="setting-group-label" style={{ marginTop: 20 }}>{t('footer.communityAndSupport')}</div>
 
       <div className="setting-row vertical" style={{ gap: 10 }}>
         <div className="setting-info">
-          <div className="setting-title">Feedback & Issues</div>
-          <div className="setting-desc">Report bugs or suggest features on GitHub</div>
+          <div className="setting-title">{t('footer.feedbackTitle')}</div>
+          <div className="setting-desc">{t('footer.feedbackDesc')}</div>
         </div>
         <button
           className="pill display-pill"
@@ -162,17 +164,17 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
             window.open('https://github.com/Deepender25/Edge-Drop/issues/new/choose', '_blank')
           }}
         >
-          Submit Feedback ↗
+          {t('footer.submitFeedback')}
         </button>
       </div>
 
       {/* Application */}
-      <div className="setting-group-label" style={{ marginTop: 20 }}>Application</div>
+      <div className="setting-group-label" style={{ marginTop: 20 }}>{t('footer.applicationGroup')}</div>
 
       <div className="setting-row vertical" style={{ gap: 10 }}>
         <div className="setting-info">
-          <div className="setting-title">Quit Edge-Drop</div>
-          <div className="setting-desc">Close application and stop background process</div>
+          <div className="setting-title">{t('footer.quitTitle')}</div>
+          <div className="setting-desc">{t('footer.quitDesc')}</div>
         </div>
         <button
           className="quit-app-btn"
@@ -182,7 +184,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
           }}
         >
           <LogOutIcon width={14} height={14} />
-          Quit Edge-Drop
+          {t('tray.quit')}
         </button>
       </div>
 
@@ -191,7 +193,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
 
       <div className="github-promo">
         <div className="github-promo-text">
-          If you like Edge-Drop, please consider starring the project on GitHub!
+          {t('footer.githubPromo')}
         </div>
         <button
           className="github-promo-btn"
@@ -210,10 +212,10 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
           >
             <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
           </svg>
-          Star on GitHub
+          {t('footer.starOnGithub')}
         </button>
         <div className="app-version-footer">
-          Version {currentVersion || '0.1.0'}
+          {t('footer.version')} {currentVersion || '0.1.0'}
         </div>
       </div>
     </>
@@ -274,12 +276,28 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                   transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                 >
                   {/* ── GROUP: Behaviour ─────────────────────────────────── */}
-                  <div className="setting-group-label">Behaviour</div>
+                  <div className="setting-group-label">{t('tabs.behaviour')}</div>
+
+                  {/* ── Language Selector ── */}
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 8,
+                    padding: '2px 0'
+                  }}>
+                    <div>
+                      <div className="setting-title">{t('behaviour.languageTitle')}</div>
+                      <div className="setting-desc" style={{ marginTop: 2 }}>{t('behaviour.languageDesc')}</div>
+                    </div>
+                    <LanguageDropdown />
+                  </div>
+
+                  <div className="setting-divider" />
 
                   <div className="setting-row">
                     <div className="setting-info">
-                      <div className="setting-title">Launch at login</div>
-                      <div className="setting-desc">Start silently in background when computer boots</div>
+                      <div className="setting-title">{t('behaviour.launchAtLoginTitle')}</div>
+                      <div className="setting-desc">{t('behaviour.launchAtLoginDesc')}</div>
                     </div>
                     <Toggle
                       checked={settings.launchAtLogin}
@@ -291,8 +309,8 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
 
                   <div className="setting-row">
                     <div className="setting-info">
-                      <div className="setting-title">Incognito mode</div>
-                      <div className="setting-desc">Temporarily pause recording new clipboard items</div>
+                      <div className="setting-title">{t('behaviour.incognitoTitle')}</div>
+                      <div className="setting-desc">{t('behaviour.incognitoDesc')}</div>
                     </div>
                     <Toggle
                       checked={settings.incognito}
@@ -304,35 +322,12 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
 
                   <div className="setting-row">
                     <div className="setting-info">
-                      <div className="setting-title">Hover Activation</div>
+                      <div className="setting-title">{t('behaviour.hoverActivationTitle')}</div>
                       <div className="setting-desc" style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '3px 5px', marginTop: 2 }}>
                         {(settings.hoverActivation ?? true) ? (
-                          <span>Slide open shelf when hovering cursor near screen edge</span>
+                          <span>{t('behaviour.hoverActivationDescOn')}</span>
                         ) : (
-                          <>
-                            <span>Hover trigger paused. Use</span>
-                            <kbd
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                padding: '1px 6px',
-                                fontSize: 10.5,
-                                fontWeight: 600,
-                                fontFamily: 'inherit',
-                                color: '#ffffff',
-                                background: 'rgba(255, 255, 255, 0.14)',
-                                border: '1px solid rgba(255, 255, 255, 0.28)',
-                                borderRadius: 4,
-                                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
-                                whiteSpace: 'nowrap',
-                                letterSpacing: '0.02em',
-                                lineHeight: '14px'
-                              }}
-                            >
-                              Alt + C
-                            </kbd>
-                            <span>to open.</span>
-                          </>
+                          <span>{t('behaviour.hoverActivationDescOff')}</span>
                         )}
                       </div>
                     </div>
@@ -352,11 +347,11 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
 
                   <div className="setting-row" style={{ opacity: (settings.hoverActivation ?? true) ? 1 : 0.45, transition: 'opacity 0.2s ease' }}>
                     <div className="setting-info">
-                      <div className="setting-title">Fullscreen Protection</div>
+                      <div className="setting-title">{t('behaviour.fullscreenProtectionTitle')}</div>
                       <div className="setting-desc">
                         {(settings.hoverActivation ?? true)
-                          ? 'Automatically pause edge hover while playing games or watching fullscreen videos'
-                          : 'Disabled because Hover Activation is turned off'}
+                          ? t('behaviour.fullscreenProtectionDesc')
+                          : t('behaviour.disabledHoverOff')}
                       </div>
                     </div>
                     <Toggle
@@ -370,8 +365,8 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
 
                   <div className="setting-row">
                     <div className="setting-info">
-                      <div className="setting-title">Clear unpinned on restart</div>
-                      <div className="setting-desc">Wipe unpinned items whenever the app restarts</div>
+                      <div className="setting-title">{t('behaviour.clearUnpinnedTitle')}</div>
+                      <div className="setting-desc">{t('behaviour.clearUnpinnedDesc')}</div>
                     </div>
                     <Toggle
                       checked={settings.clearUnpinnedOnRestart}
@@ -385,11 +380,11 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
 
                       <div className="setting-row">
                         <div className="setting-info">
-                          <div className="setting-title">Automatic updates</div>
+                          <div className="setting-title">{t('behaviour.autoUpdatesTitle')}</div>
                           <div className="setting-desc">
                             {(settings.autoUpdates ?? true)
-                              ? 'Check for and download app updates automatically in background'
-                              : 'Background update checks paused. Check for updates manually below'}
+                              ? t('behaviour.autoUpdatesDescOn')
+                              : t('behaviour.autoUpdatesDescOff')}
                           </div>
                         </div>
                         <Toggle
@@ -414,10 +409,10 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                           }}>
                             <div>
                               <div style={{ fontSize: 13.5, fontWeight: 600, color: '#ffffff', letterSpacing: '-0.01em' }}>
-                                Update v{updateDownloaded.version} Ready
+                                {t('behaviour.updateReadyTitle', { version: updateDownloaded.version })}
                               </div>
                               <div style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.7)', marginTop: 3, lineHeight: 1.45 }}>
-                                Click to restart Edge-Drop and apply the update.
+                                {t('behaviour.updateReadyDesc')}
                               </div>
                             </div>
                             <button
@@ -439,7 +434,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                               onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.92' }}
                               onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
                             >
-                              Restart to Update
+                              {t('behaviour.restartToUpdate')}
                             </button>
                           </div>
                         ) : !autoUpdates ? (
@@ -479,7 +474,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                                   e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.14)'
                                 }}
                               >
-                                Check for updates
+                                {t('behaviour.checkForUpdates')}
                               </button>
                             )}
 
@@ -497,14 +492,14 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                                     borderRadius: '50%'
                                   }}
                                 />
-                                Checking GitHub for updates...
+                                {t('behaviour.checkingForUpdates')}
                               </div>
                             )}
 
                             {checkState.status === 'up-to-date' && (
                               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                                 <div style={{ fontSize: 12.5, color: '#4caf50', fontWeight: 500 }}>
-                                  ✓ Edge-Drop is up to date (v{currentVersion || '0.2.1'})
+                                  {t('behaviour.isUpToDate')} (v{currentVersion || '0.2.1'})
                                 </div>
                                 <button
                                   onClick={handleManualCheck}
@@ -517,7 +512,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                                     textDecoration: 'underline'
                                   }}
                                 >
-                                  Check again
+                                  {t('behaviour.checkAgain')}
                                 </button>
                               </div>
                             )}
@@ -526,10 +521,10 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                                 <div>
                                   <div style={{ fontSize: 13.5, fontWeight: 600, color: '#ffffff', letterSpacing: '-0.01em' }}>
-                                    Edge-Drop v{checkState.version} is available!
+                                    {t('behaviour.updateAvailableTitle', { version: checkState.version || '' })}
                                   </div>
                                   <div style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.65)', marginTop: 3, lineHeight: 1.45 }}>
-                                    A newer version is ready on GitHub. Would you like to download and update now?
+                                    {t('behaviour.updateAvailableDesc')}
                                   </div>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4 }}>
@@ -550,7 +545,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                                     onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.92' }}
                                     onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
                                   >
-                                    Download & Update
+                                    {t('behaviour.downloadAndUpdate')}
                                   </button>
                                   <button
                                     onClick={() => useStore.getState().dismissUpdate()}
@@ -568,7 +563,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                                     onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.14)' }}
                                     onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)' }}
                                   >
-                                    Skip
+                                    {t('behaviour.skip')}
                                   </button>
                                 </div>
                               </div>
@@ -588,14 +583,14 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                                     borderRadius: '50%'
                                   }}
                                 />
-                                Downloading update package in background...
+                                {t('behaviour.downloadingUpdate')}
                               </div>
                             )}
 
                             {checkState.status === 'error' && (
                               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                                 <div style={{ fontSize: 12, color: '#f44336' }}>
-                                  ⚠️ {checkState.error || 'Update check failed'}
+                                  ⚠️ {checkState.error || t('behaviour.updateCheckFailed')}
                                 </div>
                                 <button
                                   onClick={handleManualCheck}
@@ -609,7 +604,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                                     cursor: 'pointer'
                                   }}
                                 >
-                                  Try again
+                                  {t('behaviour.tryAgain')}
                                 </button>
                               </div>
                             )}
@@ -623,12 +618,12 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
 
                   <div className="setting-row vertical">
                     <div className="setting-info">
-                      <div className="setting-title">Auto-delete timer</div>
-                      <div className="setting-desc">Automatically purge copied items (preserves Pinned)</div>
+                      <div className="setting-title">{t('behaviour.autoDeleteTitle')}</div>
+                      <div className="setting-desc">{t('behaviour.autoDeleteDesc')}</div>
                     </div>
                     <div className="setting-pills">
                       {[
-                        { label: 'Never', val: 0 },
+                        { label: t('behaviour.never'), val: 0 },
                         { label: '1h', val: 1 },
                         { label: '6h', val: 6 },
                         { label: '24h', val: 24 },
@@ -649,8 +644,8 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
 
                   <div className="setting-row vertical">
                     <div className="setting-info">
-                      <div className="setting-title">History capacity</div>
-                      <div className="setting-desc">Maximum unpinned items stored in history</div>
+                      <div className="setting-title">{t('behaviour.capacityTitle')}</div>
+                      <div className="setting-desc">{t('behaviour.capacityDesc')}</div>
                     </div>
                     <div className="setting-pills">
                       {[
@@ -684,20 +679,20 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                   transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                 >
                   {/* ── GROUP: Position ──────────────────────────────────── */}
-                  <div className="setting-group-label">Position</div>
+                  <div className="setting-group-label">{t('tabs.position')}</div>
 
                   <div className="setting-row vertical">
                     <div className="setting-info">
-                      <div className="setting-title">Stick position</div>
-                      <div className="setting-desc">Screen edge to attach the panel to</div>
+                      <div className="setting-title">{t('position.edgePlacementTitle')}</div>
+                      <div className="setting-desc">{t('position.edgePlacementDesc')}</div>
                     </div>
                     <div className="setting-pills">
                       {[
-                        { label: 'Left', val: 'left' as const },
-                        { label: 'Right', val: 'right' as const }
+                        { label: t('position.leftEdge'), val: 'left' as const },
+                        { label: t('position.rightEdge'), val: 'right' as const }
                       ].map((opt) => (
                         <button
-                          key={opt.label}
+                          key={opt.val}
                           className={`pill ${settings.stickPosition === opt.val ? 'active' : ''}`}
                           onClick={() => {
                             playButtonClickSound()
@@ -717,8 +712,8 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                   <div className="setting-row vertical" style={{ gap: 10 }}>
                     <div className="setting-slider-header">
                       <div className="setting-info">
-                        <div className="setting-title">Vertical position</div>
-                        <div className="setting-desc">Vertical alignment of the shelf along the screen edge</div>
+                        <div className="setting-title">{t('position.verticalPositionTitle')}</div>
+                        <div className="setting-desc">{t('position.verticalPositionDesc')}</div>
                       </div>
                       <div className="setting-slider-val">
                         {`${Math.round((settings.verticalOffset ?? 0.5) * 100)}%`}
@@ -803,8 +798,8 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
 
                   <div className="setting-row vertical">
                     <div className="setting-info">
-                      <div className="setting-title">Display</div>
-                      <div className="setting-desc">Monitor to stick the panel to</div>
+                      <div className="setting-title">{t('position.displayTitle')}</div>
+                      <div className="setting-desc">{t('position.displayDesc')}</div>
                     </div>
                     <div className="setting-pills">
                       {displays.length === 0 && <div className="pill disabled">Loading...</div>}
@@ -814,6 +809,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                           ? currentDisplay.id
                           : (settings.stickDisplayId ?? displays.find((disp) => disp.isPrimary)?.id ?? displays[0]?.id)
                         const isActive = activeDisplayId === d.id
+                        const displayName = d.isPrimary ? t('position.primaryDisplay') : d.name
                         return (
                           <button
                             key={d.id}
@@ -824,7 +820,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                               useStore.getState().notifyPositionChanged()
                             }}
                           >
-                            <div className="pill-name">{d.name}</div>
+                            <div className="pill-name">{displayName}</div>
                             <div className="pill-res">{d.resolution}</div>
                           </button>
                         )
@@ -833,12 +829,12 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                   </div>
 
                   {/* ── GROUP: Trigger Zone ──────────────────────────────── */}
-                  <div className="setting-group-label" style={{ marginTop: 20 }}>Trigger Zone</div>
+                  <div className="setting-group-label" style={{ marginTop: 20 }}>{t('position.triggerZone')}</div>
 
                   <div className="setting-row">
                     <div className="setting-info">
-                      <div className="setting-title">Edge location hint</div>
-                      <div className="setting-desc">Subtly illuminate beacon on screen edge when touching edge at wrong position</div>
+                      <div className="setting-title">{t('position.edgeLocationHintTitle')}</div>
+                      <div className="setting-desc">{t('position.edgeLocationHintDesc')}</div>
                     </div>
                     <Toggle
                       checked={settings.showEdgeLocationHint ?? true}
@@ -850,14 +846,14 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
 
                   <div className="setting-row vertical">
                     <div className="setting-info">
-                      <div className="setting-title">Edge trigger position</div>
-                      <div className="setting-desc">Placement of hover trigger strip relative to shelf</div>
+                      <div className="setting-title">{t('position.edgeTriggerPositionTitle')}</div>
+                      <div className="setting-desc">{t('position.edgeTriggerPositionDesc')}</div>
                     </div>
                     <div className="setting-pills">
                       {[
-                        { label: 'Top', val: 'top' as const },
-                        { label: 'Center', val: 'center' as const },
-                        { label: 'Bottom', val: 'bottom' as const }
+                        { label: t('position.top'), val: 'top' as const },
+                        { label: t('position.center'), val: 'center' as const },
+                        { label: t('position.bottom'), val: 'bottom' as const }
                       ].map((opt) => (
                         <button
                           key={opt.label}
@@ -878,14 +874,14 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
 
                   <div className="setting-row vertical">
                     <div className="setting-info">
-                      <div className="setting-title">Edge trigger height</div>
-                      <div className="setting-desc">Hover area size on the screen edge</div>
+                      <div className="setting-title">{t('position.hoverAreaSizeTitle')}</div>
+                      <div className="setting-desc">{t('position.hoverAreaSizeDesc')}</div>
                     </div>
                     <div className="setting-pills">
                       {[
-                        { label: 'Small', val: 0.25 },
-                        { label: 'Medium', val: 0.4 },
-                        { label: 'Large', val: 0.6 }
+                        { label: t('appearance.small'), val: 0.25 },
+                        { label: t('position.medium'), val: 0.4 },
+                        { label: t('appearance.large'), val: 0.6 }
                       ].map((opt) => (
                         <button
                           key={opt.label}
@@ -905,14 +901,14 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
 
                   <div className="setting-row vertical">
                     <div className="setting-info">
-                      <div className="setting-title">Edge trigger thickness</div>
-                      <div className="setting-desc">Physical thickness of the invisible trigger strip</div>
+                      <div className="setting-title">{t('position.edgeTriggerThicknessTitle')}</div>
+                      <div className="setting-desc">{t('position.edgeTriggerThicknessDesc')}</div>
                     </div>
                     <div className="setting-pills">
                       {[
-                        { label: 'Small', val: 3 },
-                        { label: 'Medium', val: 6 },
-                        { label: 'Large', val: 12 }
+                        { label: t('appearance.small'), val: 3 },
+                        { label: t('position.medium'), val: 6 },
+                        { label: t('appearance.large'), val: 12 }
                       ].map((opt) => (
                         <button
                           key={opt.label}
@@ -932,14 +928,14 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
 
                   <div className="setting-row vertical">
                     <div className="setting-info">
-                      <div className="setting-title">Panel height</div>
-                      <div className="setting-desc">Vertical size of the clipboard shelf</div>
+                      <div className="setting-title">{t('position.panelHeightTitle')}</div>
+                      <div className="setting-desc">{t('position.panelHeightDesc')}</div>
                     </div>
                     <div className="setting-pills">
                       {[
-                        { label: 'Small', val: 0.5 },
-                        { label: 'Medium', val: 0.65 },
-                        { label: 'Large', val: 0.8 }
+                        { label: t('appearance.small'), val: 0.5 },
+                        { label: t('position.medium'), val: 0.65 },
+                        { label: t('appearance.large'), val: 0.8 }
                       ].map((opt) => (
                         <button
                           key={opt.label}
@@ -969,12 +965,12 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                   transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                 >
                   {/* ── GROUP: Copy Indicator ────────────────────────────── */}
-                  <div className="setting-group-label">Copy Indicator</div>
+                  <div className="setting-group-label">{t('appearance.copyIndicatorTitle')}</div>
 
                   <div className="setting-row">
                     <div className="setting-info">
-                      <div className="setting-title">Copy indication</div>
-                      <div className="setting-desc">Show visual morph animation when content is copied</div>
+                      <div className="setting-title">{t('appearance.copyIndicatorTitle')}</div>
+                      <div className="setting-desc">{t('appearance.copyIndicatorDesc')}</div>
                     </div>
                     <Toggle
                       checked={settings.showCopyIndicator ?? true}
@@ -988,15 +984,9 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
 
                       <div className="setting-row">
                         <div className="setting-info">
-                          <div className="setting-title">Indicator style</div>
+                          <div className="setting-title">{t('appearance.indicatorStyleTitle')}</div>
                           <div className="setting-desc">
-                            {settings.copyIndicatorStyle === 'check'
-                              ? 'Active: Tick Icon'
-                              : settings.copyIndicatorStyle === 'copy'
-                              ? 'Active: Copy Icon'
-                              : settings.copyIndicatorStyle === 'sparkle'
-                              ? 'Active: Sparkle'
-                              : 'Active: Edge-Drop Logo'}
+                            {t('appearance.indicatorStyleDesc')}
                           </div>
                         </div>
                         
@@ -1053,7 +1043,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                               <div style={{ height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <LiquidOctopusLoader fillColor="#ffffff" glowColor="rgba(255, 255, 255, 0.85)" speed={1.2} />
                               </div>
-                              <div style={{ fontSize: 12, fontWeight: 600, color: '#ffffff' }}>Logo</div>
+                              <div style={{ fontSize: 12, fontWeight: 600, color: '#ffffff' }}>{t('appearance.logoStyle')}</div>
                             </div>
 
                             {/* Tick Card */}
@@ -1079,7 +1069,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                               <div style={{ height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <TickIndicatorIcon fillColor="#ffffff" glowColor="rgba(255, 255, 255, 0.85)" size={30} />
                               </div>
-                              <div style={{ fontSize: 12, fontWeight: 600, color: '#ffffff' }}>Tick</div>
+                              <div style={{ fontSize: 12, fontWeight: 600, color: '#ffffff' }}>{t('appearance.tickStyle')}</div>
                             </div>
 
                             {/* Copy Card */}
@@ -1105,7 +1095,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                               <div style={{ height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <CopyIndicatorIcon fillColor="#ffffff" glowColor="rgba(255, 255, 255, 0.85)" size={30} />
                               </div>
-                              <div style={{ fontSize: 12, fontWeight: 600, color: '#ffffff' }}>Copy</div>
+                              <div style={{ fontSize: 12, fontWeight: 600, color: '#ffffff' }}>{t('appearance.copyStyle')}</div>
                             </div>
 
                             {/* Sparkle Card */}
@@ -1131,7 +1121,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                               <div style={{ height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <SparkleIndicatorIcon fillColor="#ffffff" glowColor="rgba(255, 255, 255, 0.85)" size={30} />
                               </div>
-                              <div style={{ fontSize: 12, fontWeight: 600, color: '#ffffff' }}>Sparkle</div>
+                              <div style={{ fontSize: 12, fontWeight: 600, color: '#ffffff' }}>{t('appearance.sparkleStyle')}</div>
                             </div>
                           </div>
                         </motion.div>
@@ -1140,18 +1130,18 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                   )}
 
                   {/* ── GROUP: Typography ────────────────────────────────── */}
-                  <div className="setting-group-label" style={{ marginTop: 20 }}>Typography</div>
+                  <div className="setting-group-label" style={{ marginTop: 20 }}>{t('appearance.typography')}</div>
 
                   <div className="setting-row vertical">
                     <div className="setting-info">
-                      <div className="setting-title">Text size</div>
-                      <div className="setting-desc">Adjust UI typography scale across Edge-Drop</div>
+                      <div className="setting-title">{t('appearance.textSizeTitle')}</div>
+                      <div className="setting-desc">{t('appearance.textSizeDesc')}</div>
                     </div>
                     <div className="setting-pills">
                       {[
-                        { label: 'Small', val: 0.85 },
-                        { label: 'Normal', val: 1.0 },
-                        { label: 'Large', val: 1.15 }
+                        { label: t('appearance.small'), val: 0.85 },
+                        { label: t('appearance.normal'), val: 1.0 },
+                        { label: t('appearance.large'), val: 1.15 }
                       ].map((opt) => (
                         <button
                           key={opt.label}
@@ -1170,12 +1160,12 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                   <div className="setting-divider" />
 
                   {/* ── GROUP: Audio & Feedback ──────────────────────────── */}
-                  <div className="setting-group-label" style={{ marginTop: 20 }}>Audio & Feedback</div>
+                  <div className="setting-group-label" style={{ marginTop: 20 }}>{t('appearance.audioAndFeedback')}</div>
 
                   <div className="setting-row">
                     <div className="setting-info">
-                      <div className="setting-title">Sound effects</div>
-                      <div className="setting-desc">Tactile audio feedback for sliders, buttons, and switches</div>
+                      <div className="setting-title">{t('behaviour.soundEffectsTitle')}</div>
+                      <div className="setting-desc">{t('behaviour.soundEffectsDesc')}</div>
                     </div>
                     <Toggle
                       checked={settings.soundEffects ?? true}
@@ -1233,7 +1223,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                 }}
               >
                 <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: '#ffffff' }} />
-                <span>{updateDownloaded ? 'Restart to update below' : 'New update available below'}</span>
+                <span>{updateDownloaded ? t('behaviour.restartToUpdateBelow') : t('behaviour.newUpdateAvailableBelow')}</span>
                 <span style={{ fontSize: 11, marginLeft: 2 }}>↓</span>
               </motion.div>
             )}
@@ -1304,5 +1294,141 @@ function Toggle({
         }}
       />
     </button>
+  )
+}
+
+function LanguageDropdown() {
+  const { language, languages } = useTranslation()
+  const patch = useStore((s) => s.patchSettings)
+  const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement | null>(null)
+  const lastScrollTick = useRef<number>(0)
+
+  const selectedLang = languages.find((l) => l.code === (language || 'system')) || languages[0]
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    if (isOpen) {
+      window.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => window.removeEventListener('mousedown', handleClickOutside)
+  }, [isOpen])
+
+  return (
+    <div ref={dropdownRef} style={{ position: 'relative', width: '100%' }}>
+      <button
+        type="button"
+        onClick={() => {
+          playButtonClickSound()
+          setIsOpen(!isOpen)
+        }}
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          background: isOpen ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.05)',
+          color: '#ffffff',
+          border: isOpen ? '1px solid rgba(255, 255, 255, 0.22)' : '1px solid rgba(255, 255, 255, 0.12)',
+          borderRadius: 10,
+          padding: '8px 12px',
+          fontSize: 12.5,
+          fontWeight: 500,
+          outline: 'none',
+          cursor: 'pointer',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+          transition: 'all 0.15s ease'
+        }}
+      >
+        <span>{selectedLang.nativeName}</span>
+        <motion.span
+          animate={{ rotate: isOpen ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+          style={{ display: 'flex', alignItems: 'center', color: 'rgba(255, 255, 255, 0.6)' }}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </motion.span>
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 6, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 6, scale: 0.98 }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
+            onScroll={(e) => {
+              const tick = Math.floor(e.currentTarget.scrollTop / 28)
+              if (tick !== lastScrollTick.current) {
+                lastScrollTick.current = tick
+                playDialTickSound()
+              }
+            }}
+            style={{
+              position: 'absolute',
+              top: 'calc(100% + 6px)',
+              left: 0,
+              right: 0,
+              maxHeight: 200,
+              overflowY: 'auto',
+              background: '#121214',
+              border: '1px solid rgba(255, 255, 255, 0.14)',
+              borderRadius: 10,
+              padding: '4px',
+              boxShadow: '0 12px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05)',
+              zIndex: 100,
+              scrollbarWidth: 'none'
+            }}
+          >
+            {languages.map((lang) => {
+              const active = lang.code === (language || 'system')
+              return (
+                <button
+                  key={lang.code}
+                  type="button"
+                  onClick={() => {
+                    playButtonClickSound()
+                    patch({ language: lang.code })
+                    setIsOpen(false)
+                  }}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '7px 10px',
+                    borderRadius: 7,
+                    background: active ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
+                    color: active ? '#ffffff' : 'rgba(255, 255, 255, 0.8)',
+                    fontSize: 12,
+                    fontWeight: active ? 600 : 400,
+                    border: 'none',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'background 0.12s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!active) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.07)'
+                    playDialTickSound()
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!active) e.currentTarget.style.background = 'transparent'
+                  }}
+                >
+                  <span>{lang.nativeName}</span>
+                  {active && <span style={{ color: '#4caf50', fontSize: 13, fontWeight: 700 }}>✓</span>}
+                </button>
+              )
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
