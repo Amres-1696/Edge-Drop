@@ -19,20 +19,27 @@ export function PreviewFlyout({ isRight }: { isRight: boolean }) {
   
   const item = previewItemId ? items.find((i) => i.id === previewItemId) : null
 
+  const screenH = typeof window !== 'undefined' ? window.innerHeight : 800
+  const pFrac = settings.panelHeight || 0.6
+  const panelH = screenH * pFrac
+  const minY = panelH / 2
+  const maxY = screenH - panelH / 2
+  const vOffset = settings.verticalOffset ?? 0.5
+  const midY = Math.round(minY + vOffset * (maxY - minY))
+  const panelTop = midY - panelH / 2
+
   // The vertical center of the clicked item card, expressed as a % of the flyout height.
   // This anchors the transformOrigin so the flyout physically grows FROM and collapses
   // TO the exact item card — identical to macOS window minimize-to-dock.
   const originY = (() => {
     if (!previewItemRect) return '50%'
-    const panelHeightPx = (settings.panelHeight || 0.6) * window.innerHeight
-    const panelTop = (window.innerHeight - panelHeightPx) / 2
     const itemCenterY = previewItemRect.y + previewItemRect.height / 2
     const relY = itemCenterY - panelTop
-    const pct = Math.max(0, Math.min(100, (relY / panelHeightPx) * 100))
+    const pct = Math.max(0, Math.min(100, (relY / panelH) * 100))
     return `${pct}%`
   })()
 
-  const maxFlyoutHeight = `calc(${(settings.panelHeight || 0.6) * 100}vh - 24px)`
+  const maxFlyoutHeight = Math.max(100, panelH - 24)
 
   const [dragOver, setDragOver] = useState(false)
   const flyoutRef = useRef<HTMLDivElement | null>(null)
@@ -160,8 +167,8 @@ export function PreviewFlyout({ isRight }: { isRight: boolean }) {
       {item && (
         <div style={{
           position: 'absolute',
-          top: 0,
-          bottom: 0,
+          top: panelTop,
+          height: panelH,
           [isRight ? 'right' : 'left']: 'var(--panel-width)',
           marginLeft: isRight ? 0 : 12,
           marginRight: isRight ? 12 : 0,

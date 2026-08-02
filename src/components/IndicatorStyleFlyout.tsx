@@ -50,13 +50,22 @@ export function IndicatorStyleFlyout({ isRight }: { isRight: boolean }) {
     }
   }, [styleFlyoutOpen])
 
-  const maxFlyoutHeight = `calc(${(settings.panelHeight || 0.6) * 100}vh - 24px)`
+  const screenH = typeof window !== 'undefined' ? window.innerHeight : 800
+  const pFrac = settings.panelHeight || 0.6
+  const panelH = screenH * pFrac
+  const minY = panelH / 2
+  const maxY = screenH - panelH / 2
+  const vOffset = settings.verticalOffset ?? 0.5
+  const midY = Math.round(minY + vOffset * (maxY - minY))
+  const panelTop = midY - panelH / 2
+
+  const maxFlyoutHeight = Math.max(100, panelH - 24)
 
   return createPortal(
     <div style={{
       position: 'absolute',
-      top: 0,
-      bottom: 0,
+      top: panelTop,
+      height: panelH,
       [isRight ? 'right' : 'left']: 'var(--panel-width)',
       marginLeft: isRight ? 0 : 12,
       marginRight: isRight ? 12 : 0,
