@@ -11,7 +11,7 @@ import { loadSettings, saveSettings } from '../store/settings'
 import type { ClipboardItemDto, Settings } from '../../shared/types'
 import { MAX_STACK } from '../../shared/types'
 import { createId } from '../store/ids'
-import { nativeImage, BrowserWindow } from 'electron'
+import { nativeImage, BrowserWindow, powerMonitor } from 'electron'
 import { readFileSync } from 'node:fs'
 import { PATHS } from '../store/paths'
 import { prefetchFileIcons } from './drag'
@@ -20,6 +20,23 @@ import { runtime } from './config'
 const store = new ItemStore()
 const watcher = new ClipboardWatcher(600)
 let pruneTimer: ReturnType<typeof setInterval> | null = null
+let wakeTimer: ReturnType<typeof setTimeout> | null = null
+
+function handleSystemSleep(): void {
+  watcher.setPaused(true)
+}
+
+function handleSystemWake(): void {
+  watcher.resyncSignature()
+  watcher.setPaused(true)
+
+  if (wakeTimer !== null) clearTimeout(wakeTimer)
+  wakeTimer = setTimeout(() => {
+    wakeTimer = null
+    watcher.resyncSignature()
+    watcher.setPaused(loadSettings().incognito)
+  }, 1500)
+}
 
 /** Initialize persistence + start the clipboard watcher. */
 export function initState(): void {
@@ -47,6 +64,16 @@ export function initState(): void {
     pushState.items()
   })
   watcher.setPaused(loadSettings().incognito)
+
+  powerMonitor.removeAllListeners('suspend')
+  powerMonitor.removeAllListeners('lock-screen')
+  powerMonitor.removeAllListeners('resume')
+  powerMonitor.removeAllListeners('unlock-screen')
+
+  powerMonitor.on('suspend', handleSystemSleep)
+  powerMonitor.on('lock-screen', handleSystemSleep)
+  powerMonitor.on('resume', handleSystemWake)
+  powerMonitor.on('unlock-screen', handleSystemWake)
 
   // After a restart-clear, the watcher.start() seeds lastSig from the live
   // clipboard (correct). But if clearUnpinnedOnRestart removed items that are
