@@ -1302,6 +1302,7 @@ function LanguageDropdown() {
   const patch = useStore((s) => s.patchSettings)
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement | null>(null)
+  const listRef = useRef<HTMLDivElement | null>(null)
   const lastScrollTick = useRef<number>(0)
 
   const selectedLang = languages.find((l) => l.code === (language || 'system')) || languages[0]
@@ -1317,6 +1318,19 @@ function LanguageDropdown() {
     }
     return () => window.removeEventListener('mousedown', handleClickOutside)
   }, [isOpen])
+
+  useEffect(() => {
+    if (isOpen && listRef.current) {
+      const activeBtn = listRef.current.querySelector<HTMLButtonElement>('[data-active="true"]')
+      if (activeBtn) {
+        if (selectedLang.code === 'system') {
+          listRef.current.scrollTop = 0
+        } else {
+          listRef.current.scrollTop = Math.max(0, activeBtn.offsetTop - 4)
+        }
+      }
+    }
+  }, [isOpen, selectedLang.code])
 
   return (
     <div ref={dropdownRef} style={{ position: 'relative', width: '100%' }}>
@@ -1359,6 +1373,7 @@ function LanguageDropdown() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            ref={listRef}
             initial={{ opacity: 0, y: 6, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 6, scale: 0.98 }}
@@ -1392,6 +1407,7 @@ function LanguageDropdown() {
                 <button
                   key={lang.code}
                   type="button"
+                  data-active={active ? 'true' : 'false'}
                   onClick={() => {
                     playButtonClickSound()
                     patch({ language: lang.code })

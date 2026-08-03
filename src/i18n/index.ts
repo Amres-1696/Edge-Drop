@@ -25,6 +25,7 @@ export function getResolvedLanguage(settingLang?: string): string {
   if (navLang.startsWith('pt')) return 'pt'
   if (navLang.startsWith('ko')) return 'ko'
   if (navLang.startsWith('ar')) return 'ar'
+  if (navLang.startsWith('bn')) return 'bn'
   if (navLang.startsWith('tr')) return 'tr'
   if (navLang.startsWith('vi')) return 'vi'
   if (navLang.startsWith('pl')) return 'pl'
@@ -32,6 +33,15 @@ export function getResolvedLanguage(settingLang?: string): string {
   if (navLang.startsWith('sv')) return 'sv'
   if (navLang.startsWith('id')) return 'id'
   if (navLang.startsWith('uk')) return 'uk'
+  if (navLang.startsWith('el')) return 'el'
+  if (navLang.startsWith('cs')) return 'cs'
+  if (navLang.startsWith('ro')) return 'ro'
+  if (navLang.startsWith('hu')) return 'hu'
+  if (navLang.startsWith('da')) return 'da'
+  if (navLang.startsWith('fi')) return 'fi'
+  if (navLang.startsWith('th')) return 'th'
+  if (navLang.startsWith('he')) return 'he'
+  if (navLang.startsWith('no') || navLang.startsWith('nb') || navLang.startsWith('nn')) return 'no'
 
   return 'en'
 }
