@@ -4,7 +4,7 @@ import { useStore } from '../store/appStore'
 import type { DisplayInfo } from '../../shared/types'
 import { LiquidOctopusLoader } from './LiquidOctopusLoader'
 import { TickIndicatorIcon, CopyIndicatorIcon, SparkleIndicatorIcon } from './CopyIndicatorCurve'
-import { ChevronRightIcon, CloseIcon, LogOutIcon } from './icons'
+import { ChevronRightIcon, CloseIcon, LogOutIcon, StarIcon, KofiLogo, GithubOctocatLogo } from './icons'
 import { ChangelogView } from './ChangelogView'
 import { playDialTickSound, playToggleSound, playButtonClickSound } from '../lib/soundEffects'
 import { useTranslation } from '../i18n'
@@ -188,34 +188,41 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
         </button>
       </div>
 
-      {/* GitHub promo footer */}
+      {/* Support & GitHub Promo Footer */}
       <div className="setting-divider" style={{ marginTop: 16 }} />
 
-      <div className="github-promo">
-        <div className="github-promo-text">
-          {t('footer.githubPromo')}
+      <div className="support-promo">
+        <div className="support-promo-title">
+          {t('footer.supportPromo')}
         </div>
-        <button
-          className="github-promo-btn"
-          onClick={() => {
-            playButtonClickSound()
-            window.open('https://github.com/Deepender25/Edge-Drop', '_blank')
-          }}
-        >
-          <svg
-            className="star-icon"
-            viewBox="0 0 24 24"
-            width="14"
-            height="14"
-            fill="currentColor"
-            style={{ marginRight: 6 }}
+        <div className="support-buttons-group">
+          {/* Primary Feature Action: Ko-fi */}
+          <button
+            className="kofi-support-btn"
+            onClick={() => {
+              playButtonClickSound()
+              window.open('https://ko-fi.com/deepender', '_blank')
+            }}
           >
-            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-          </svg>
-          {t('footer.starOnGithub')}
-        </button>
+            <KofiLogo width={18} height={18} className="kofi-logo-icon" />
+            <span>{t('footer.supportOnKofi')}</span>
+          </button>
+
+          {/* Secondary Action: GitHub Star */}
+          <button
+            className="github-promo-btn"
+            onClick={() => {
+              playButtonClickSound()
+              window.open('https://github.com/Deepender25/Edge-Drop', '_blank')
+            }}
+          >
+            <GithubOctocatLogo width={14} height={14} className="github-octocat-icon" />
+            <span>{t('footer.starOnGithub')}</span>
+            <StarIcon width={13} height={13} className="star-icon" fill="#fbbf24" stroke="#fbbf24" style={{ marginLeft: 2 }} />
+          </button>
+        </div>
         <div className="app-version-footer">
-          {t('footer.version')} {currentVersion || '0.1.0'}
+          {t('footer.version')} {currentVersion || '0.2.5'}
         </div>
       </div>
     </>

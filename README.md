@@ -74,6 +74,31 @@ It is built for the developer and creative workflow where you constantly juggle 
 
 ---
 
+## Support & Sponsor
+
+<p align="center">
+  <strong>Edge-Drop is 100% free and open-source forever.</strong><br/>
+  If Edge-Drop speeds up your daily workflow, consider supporting development or starring the project on GitHub!
+</p>
+
+<p align="center">
+  <a href="https://ko-fi.com/deepender" target="_blank">
+    <img src="public/kofi-qr.png" alt="Scan or Click to Support on Ko-fi" width="180" style="border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://ko-fi.com/deepender" target="_blank">
+    <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Buy Me a Coffee on Ko-fi" height="36" />
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/Deepender25/Edge-Drop" target="_blank">
+    <img src="https://img.shields.io/github/stars/Deepender25/Edge-Drop?style=for-the-badge&logo=github&color=24292e" alt="Star on GitHub" height="36" />
+  </a>
+</p>
+
+---
+
 ## Quick Start
 
 ### Prerequisites
@@ -159,6 +184,26 @@ npm run build:store  # outputs an MSIX .appx for Microsoft Store submission
 - Auto-group multi-file drag-ins and multi-image copies into 3D card stacks (max 10)
 - **Preview Flyout Drag-to-Stack**: Drag any shelf item directly onto an open Preview Flyout to stack and merge them seamlessly
 - Expand stacks with a single click on the Expand action button or Preview Flyout; drag a sub-item to the screen edge to split it back out
+
+**Complete 30-Language Internationalization & Smart Selector**
+- **100% Native Localization**: Fully translated dictionaries for 30 global languages with 100% section & key coverage (`en`, `es`, `fr`, `de`, `it`, `pt`, `ru`, `ja`, `ko`, `zh-CN`, `zh-TW`, `hi`, `ar`, `bn`, `tr`, `vi`, `pl`, `nl`, `sv`, `id`, `uk`, `el`, `cs`, `ro`, `hu`, `da`, `fi`, `th`, `he`, `no`).
+- **Native Right-to-Left (RTL) Support**: Automatic text direction and layout mirror switching for Arabic (`ar`) and Hebrew (`he`).
+- **Auto-Scroll Language Viewport**: Language selector anchors `System Default (Auto)` at index 0 while auto-scrolling to bring the active selected language directly into view on open.
+- **Haptic Sound Feedback**: Integrated audio dial ticks (`playDialTickSound()`) during dropdown item hover and scroll.
+
+**Laptop Sleep/Wake Guard (`powerMonitor`)**
+- Native `powerMonitor` event handlers (`suspend`, `lock-screen`, `resume`, `unlock-screen`) pause clipboard polling on system sleep and re-seed the clipboard signature on wake.
+- Eliminates false Copy Indicator beacon flares when opening the laptop lid or unlocking the screen.
+
+**Customizable Text Size Scale Setting**
+- Select between **Small**, **Normal**, **Medium**, and **Large** typography scaling in Settings (`Appearance` tab), dynamically driving `--font-scale` across all components.
+
+**Multi-File Selection & Obsidian Glass Action Bar**
+- Tap-to-toggle multi-select mode in Preview Flyout with vector checkmarks (`✓`).
+- Integrated Obsidian Glass action bar for batch operations: Select All, Copy Selected, Paste Selected, Clear Selection.
+
+**Adaptive Battery Power Optimization**
+- Battery-aware cursor polling interval (`powerMonitor.isOnBatteryPower()`) reduces CPU draw and conserves laptop battery life.
 
 **UI / UX**
 - **macOS Segmented Control 5-Category Filter Suite**: Integrated 5-type filter bar (**`All`**, **`Text`**, **`Links`**, **`Images`**, **`Files`**) with a single persistent sliding spring indicator pill (`stiffness: 500`, `damping: 35`) and zero shape distortion.
@@ -304,3 +349,9 @@ npm run build:store  # build Windows AppX package for Microsoft Store
 ## License
 
 Apache License 2.0 — see [LICENSE](LICENSE). Commercial and non-commercial use, modification, and distribution all permitted with attribution.
+
+---
+
+<p align="center">
+  <sub>Support Edge-Drop on <a href="https://ko-fi.com/deepender" target="_blank">Ko-fi ☕</a> &nbsp;·&nbsp; Star on <a href="https://github.com/Deepender25/Edge-Drop" target="_blank">GitHub ⭐</a></sub>
+</p>

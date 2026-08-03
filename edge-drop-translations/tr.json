@@ -243,6 +243,8 @@
     "quitDesc": "Uygulamayı kapat ve arka plan işlemini durdur",
     "starOnGithub": "GitHub'da Yıldızla",
     "githubPromo": "Edge-Drop'u beğendiyseniz, lütfen GitHub'da projeye yıldız vermeyi düşünün!",
-    "version": "Sürüm"
+    "version": "Sürüm",
+    "supportPromo": "Edge-Drop %100 ücretsiz ve açık kaynaklıdır. Günlük iş akışınıza yardımcı oluyorsa, daha da geliştirilmesine destek olmayı düşünebilirsiniz!",
+    "supportOnKofi": "Ko-fi üzerinden destek ol"
   }
 }

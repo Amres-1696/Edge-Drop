@@ -243,6 +243,8 @@
     "quitDesc": "關閉應用程式並停止背景處理程序",
     "starOnGithub": "在 GitHub 上加星",
     "githubPromo": "如果您喜歡 Edge-Drop，請在 GitHub 上為專案加星！",
-    "version": "版本"
+    "version": "版本",
+    "supportPromo": "Edge-Drop 完全免費且開源。如果它能幫助提升您的日常工作效率，歡迎支持開發，讓它變得更好！",
+    "supportOnKofi": "在 Ko-fi 上支持"
   }
 }

@@ -243,6 +243,8 @@
     "quitDesc": "Anwendung schließen und Hintergrundprozess stoppen",
     "starOnGithub": "Auf GitHub markieren",
     "githubPromo": "Wenn Ihnen Edge-Drop gefällt, geben Sie dem Projekt bitte einen Stern auf GitHub!",
-    "version": "Version"
+    "version": "Version",
+    "supportPromo": "Edge-Drop ist 100 % kostenlos und Open Source. Wenn es deinen Arbeitsalltag erleichtert, unterstütze gerne die Entwicklung, damit es noch besser wird!",
+    "supportOnKofi": "Auf Ko-fi unterstützen"
   }
 }

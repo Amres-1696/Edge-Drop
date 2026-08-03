@@ -1,3 +1,6 @@
+// Auto-generated 30-language translation dictionary index.
+// Built from edge-drop-translations/*.json
+
 export interface TranslationKeys {
   filters: {
     all: string
@@ -244,174 +247,83 @@ export interface TranslationKeys {
     starOnGithub: string
     githubPromo: string
     version: string
+    supportPromo: string
+    supportOnKofi: string
   }
 }
 
+export type LanguageCode =
+  | 'system'
+  | 'en'
+  | 'es'
+  | 'fr'
+  | 'de'
+  | 'it'
+  | 'pt'
+  | 'ru'
+  | 'ja'
+  | 'ko'
+  | 'zh-CN'
+  | 'zh-TW'
+  | 'hi'
+  | 'ar'
+  | 'bn'
+  | 'tr'
+  | 'vi'
+  | 'pl'
+  | 'nl'
+  | 'sv'
+  | 'id'
+  | 'uk'
+  | 'el'
+  | 'cs'
+  | 'ro'
+  | 'hu'
+  | 'da'
+  | 'fi'
+  | 'th'
+  | 'he'
+  | 'no'
+
 export interface LanguageMeta {
-  code: string
-  name: string
+  code: LanguageCode
   nativeName: string
+  flag: string
   rtl?: boolean
 }
 
 export const LANGUAGES: LanguageMeta[] = [
-  {
-    "code": "system",
-    "name": "System Default",
-    "nativeName": "System Default (Auto)"
-  },
-  {
-    "code": "en",
-    "name": "English",
-    "nativeName": "English (US)"
-  },
-  {
-    "code": "es",
-    "name": "Spanish",
-    "nativeName": "Español"
-  },
-  {
-    "code": "fr",
-    "name": "French",
-    "nativeName": "Français"
-  },
-  {
-    "code": "de",
-    "name": "German",
-    "nativeName": "Deutsch"
-  },
-  {
-    "code": "it",
-    "name": "Italian",
-    "nativeName": "Italiano"
-  },
-  {
-    "code": "pt",
-    "name": "Portuguese",
-    "nativeName": "Português"
-  },
-  {
-    "code": "ru",
-    "name": "Russian",
-    "nativeName": "Русский"
-  },
-  {
-    "code": "ja",
-    "name": "Japanese",
-    "nativeName": "日本語"
-  },
-  {
-    "code": "ko",
-    "name": "Korean",
-    "nativeName": "한국어"
-  },
-  {
-    "code": "zh-CN",
-    "name": "Chinese (Simplified)",
-    "nativeName": "简体中文"
-  },
-  {
-    "code": "zh-TW",
-    "name": "Chinese (Traditional)",
-    "nativeName": "繁體中文"
-  },
-  {
-    "code": "hi",
-    "name": "Hindi",
-    "nativeName": "हिन्दी"
-  },
-  {
-    "code": "ar",
-    "name": "Arabic",
-    "nativeName": "العربية",
-    "rtl": true
-  },
-  {
-    "code": "bn",
-    "name": "Bengali",
-    "nativeName": "বাংলা"
-  },
-  {
-    "code": "tr",
-    "name": "Turkish",
-    "nativeName": "Türkçe"
-  },
-  {
-    "code": "vi",
-    "name": "Vietnamese",
-    "nativeName": "Tiếng Việt"
-  },
-  {
-    "code": "pl",
-    "name": "Polish",
-    "nativeName": "Polski"
-  },
-  {
-    "code": "nl",
-    "name": "Dutch",
-    "nativeName": "Nederlands"
-  },
-  {
-    "code": "sv",
-    "name": "Swedish",
-    "nativeName": "Svenska"
-  },
-  {
-    "code": "id",
-    "name": "Indonesian",
-    "nativeName": "Bahasa Indonesia"
-  },
-  {
-    "code": "uk",
-    "name": "Ukrainian",
-    "nativeName": "Українська"
-  },
-  {
-    "code": "el",
-    "name": "Greek",
-    "nativeName": "Ελληνικά"
-  },
-  {
-    "code": "cs",
-    "name": "Czech",
-    "nativeName": "Čeština"
-  },
-  {
-    "code": "ro",
-    "name": "Romanian",
-    "nativeName": "Română"
-  },
-  {
-    "code": "hu",
-    "name": "Hungarian",
-    "nativeName": "Magyar"
-  },
-  {
-    "code": "da",
-    "name": "Danish",
-    "nativeName": "Dansk"
-  },
-  {
-    "code": "fi",
-    "name": "Finnish",
-    "nativeName": "Suomi"
-  },
-  {
-    "code": "th",
-    "name": "Thai",
-    "nativeName": "ไทย"
-  },
-  {
-    "code": "he",
-    "name": "Hebrew",
-    "nativeName": "עברית",
-    "rtl": true
-  },
-  {
-    "code": "no",
-    "name": "Norwegian",
-    "nativeName": "Norsk"
-  }
+  { code: 'system', nativeName: 'System Default', flag: '🌐' },
+  { code: 'en', nativeName: 'English', flag: '🇺🇸' },
+  { code: 'es', nativeName: 'Español', flag: '🇪🇸' },
+  { code: 'fr', nativeName: 'Français', flag: '🇫🇷' },
+  { code: 'de', nativeName: 'Deutsch', flag: '🇩🇪' },
+  { code: 'it', nativeName: 'Italiano', flag: '🇮🇹' },
+  { code: 'pt', nativeName: 'Português', flag: '🇵🇹' },
+  { code: 'ru', nativeName: 'Русский', flag: '🇷🇺' },
+  { code: 'ja', nativeName: '日本語', flag: '🇯🇵' },
+  { code: 'ko', nativeName: '한국어', flag: '🇰🇷' },
+  { code: 'zh-CN', nativeName: '简体中文', flag: '🇨🇳' },
+  { code: 'zh-TW', nativeName: '繁體中文', flag: '🇹🇼' },
+  { code: 'hi', nativeName: 'हिन्दी', flag: '🇮🇳' },
+  { code: 'ar', nativeName: 'العربية', flag: '🇸🇦', rtl: true },
+  { code: 'bn', nativeName: 'বাংলা', flag: '🇧🇩' },
+  { code: 'tr', nativeName: 'Türkçe', flag: '🇹🇷' },
+  { code: 'vi', nativeName: 'Tiếng Việt', flag: '🇻🇳' },
+  { code: 'pl', nativeName: 'Polski', flag: '🇵🇱' },
+  { code: 'nl', nativeName: 'Nederlands', flag: '🇳🇱' },
+  { code: 'sv', nativeName: 'Svenska', flag: '🇸🇪' },
+  { code: 'id', nativeName: 'Bahasa Indonesia', flag: '🇮🇩' },
+  { code: 'uk', nativeName: 'Українська', flag: '🇺🇦' },
+  { code: 'el', nativeName: 'Ελληνικά', flag: '🇬🇷' },
+  { code: 'cs', nativeName: 'Čeština', flag: '🇨🇿' },
+  { code: 'ro', nativeName: 'Română', flag: '🇷🇴' },
+  { code: 'hu', nativeName: 'Magyar', flag: '🇭🇺' },
+  { code: 'da', nativeName: 'Dansk', flag: '🇩🇰' },
+  { code: 'fi', nativeName: 'Suomi', flag: '🇫🇮' },
+  { code: 'th', nativeName: 'ไทย', flag: '🇹🇭' },
+  { code: 'he', nativeName: 'עברית', flag: '🇮🇱', rtl: true },
+  { code: 'no', nativeName: 'Norsk', flag: '🇳🇴' }
 ]
 
 export const en: TranslationKeys = {
@@ -659,7 +571,9 @@ export const en: TranslationKeys = {
     "quitDesc": "Close application and stop background process",
     "starOnGithub": "Star on GitHub",
     "githubPromo": "If you like Edge-Drop, please consider starring the project on GitHub!",
-    "version": "Version"
+    "version": "Version",
+    "supportPromo": "Edge-Drop is 100% free & open-source. If it helps your daily workflow, consider supporting development to make it even better!",
+    "supportOnKofi": "Support on Ko-fi"
   }
 }
 
@@ -908,7 +822,9 @@ export const es: TranslationKeys = {
     "quitDesc": "Cerrar la aplicación y detener el proceso en segundo plano",
     "starOnGithub": "Estrella en GitHub",
     "githubPromo": "Si te gusta Edge-Drop, ¡considera darle una estrella en GitHub!",
-    "version": "Versión"
+    "version": "Versión",
+    "supportPromo": "Edge-Drop es 100 % gratuito y de código abierto. Si te ayuda en tu trabajo diario, considera apoyar su desarrollo para hacerlo aún mejor.",
+    "supportOnKofi": "Apoyar en Ko-fi"
   }
 }
 
@@ -1157,7 +1073,9 @@ export const fr: TranslationKeys = {
     "quitDesc": "Fermer l'application et arrêter le processus en arrière-plan",
     "starOnGithub": "Étoile sur GitHub",
     "githubPromo": "Si vous aimez Edge-Drop, pensez à mettre une étoile au projet sur GitHub !",
-    "version": "Version"
+    "version": "Version",
+    "supportPromo": "Edge-Drop est 100 % gratuit et open source. S'il améliore votre flux de travail quotidien, pensez à soutenir son développement pour le rendre encore meilleur !",
+    "supportOnKofi": "Soutenir sur Ko-fi"
   }
 }
 
@@ -1406,7 +1324,9 @@ export const de: TranslationKeys = {
     "quitDesc": "Anwendung schließen und Hintergrundprozess stoppen",
     "starOnGithub": "Auf GitHub markieren",
     "githubPromo": "Wenn Ihnen Edge-Drop gefällt, geben Sie dem Projekt bitte einen Stern auf GitHub!",
-    "version": "Version"
+    "version": "Version",
+    "supportPromo": "Edge-Drop ist 100 % kostenlos und Open Source. Wenn es deinen Arbeitsalltag erleichtert, unterstütze gerne die Entwicklung, damit es noch besser wird!",
+    "supportOnKofi": "Auf Ko-fi unterstützen"
   }
 }
 
@@ -1655,7 +1575,9 @@ export const it: TranslationKeys = {
     "quitDesc": "Chiudi l'applicazione e ferma il processo in background",
     "starOnGithub": "Metti stella su GitHub",
     "githubPromo": "Se ti piace Edge-Drop, valuta di mettere una stella al progetto su GitHub!",
-    "version": "Versione"
+    "version": "Versione",
+    "supportPromo": "Edge-Drop è completamente gratuito e open source. Se ti aiuta nel tuo lavoro quotidiano, valuta di supportarne lo sviluppo per renderlo ancora migliore!",
+    "supportOnKofi": "Supporta su Ko-fi"
   }
 }
 
@@ -1904,7 +1826,9 @@ export const pt: TranslationKeys = {
     "quitDesc": "Fechar aplicativo e parar processo em segundo plano",
     "starOnGithub": "Dar estrela no GitHub",
     "githubPromo": "Se você gosta do Edge-Drop, considere dar uma estrela no projeto no GitHub!",
-    "version": "Versão"
+    "version": "Versão",
+    "supportPromo": "O Edge-Drop é 100% gratuito e de código aberto. Se ele ajuda no seu fluxo de trabalho diário, considere apoiar o desenvolvimento para torná-lo ainda melhor!",
+    "supportOnKofi": "Apoiar no Ko-fi"
   }
 }
 
@@ -2153,7 +2077,9 @@ export const ru: TranslationKeys = {
     "quitDesc": "Закрыть приложение и остановить фоновый процесс",
     "starOnGithub": "Поставить звезду на GitHub",
     "githubPromo": "Если вам нравится Edge-Drop, пожалуйста, поставьте звёзду проекту на GitHub!",
-    "version": "Версия"
+    "version": "Версия",
+    "supportPromo": "Edge-Drop полностью бесплатный и с открытым исходным кодом. Если он помогает вам в повседневной работе, поддержите разработку, чтобы сделать его ещё лучше!",
+    "supportOnKofi": "Поддержать на Ko-fi"
   }
 }
 
@@ -2402,7 +2328,9 @@ export const ja: TranslationKeys = {
     "quitDesc": "アプリを閉じてバックグラウンドプロセスを停止",
     "starOnGithub": "GitHub でスター",
     "githubPromo": "Edge-Drop を気に入っていただけたら、GitHub でスターをよろしくお願いします！",
-    "version": "バージョン"
+    "version": "バージョン",
+    "supportPromo": "Edge-Drop は100%無料のオープンソースです。日々の作業に役立っているなら、さらに良くするために開発を応援していただけると嬉しいです！",
+    "supportOnKofi": "Ko-fiで支援する"
   }
 }
 
@@ -2651,11 +2579,13 @@ export const ko: TranslationKeys = {
     "quitDesc": "응용 프로그램을 닫고 백그라운드 프로세스 중지",
     "starOnGithub": "GitHub에서 별표",
     "githubPromo": "Edge-Drop이 마음에 드시면 GitHub에서 프로젝트에 별표를 고려해 주세요!",
-    "version": "버전"
+    "version": "버전",
+    "supportPromo": "Edge-Drop은 100% 무료 오픈소스입니다. 일상적인 작업에 도움이 된다면, 더 나은 앱을 만들 수 있도록 개발을 후원해 주세요!",
+    "supportOnKofi": "Ko-fi에서 후원하기"
   }
 }
 
-export const zhCN: TranslationKeys = {
+export const zh_CN: TranslationKeys = {
   "filters": {
     "all": "全部",
     "text": "文本",
@@ -2900,11 +2830,13 @@ export const zhCN: TranslationKeys = {
     "quitDesc": "关闭应用并停止后台进程",
     "starOnGithub": "在 GitHub 上加星",
     "githubPromo": "如果您喜欢 Edge-Drop，请在 GitHub 上为项目加星！",
-    "version": "版本"
+    "version": "版本",
+    "supportPromo": "Edge-Drop 完全免费且开源。如果它能帮助提升您的日常工作效率，欢迎支持开发，让它变得更好！",
+    "supportOnKofi": "在 Ko-fi 上支持"
   }
 }
 
-export const zhTW: TranslationKeys = {
+export const zh_TW: TranslationKeys = {
   "filters": {
     "all": "全部",
     "text": "文字",
@@ -3149,7 +3081,9 @@ export const zhTW: TranslationKeys = {
     "quitDesc": "關閉應用程式並停止背景處理程序",
     "starOnGithub": "在 GitHub 上加星",
     "githubPromo": "如果您喜歡 Edge-Drop，請在 GitHub 上為專案加星！",
-    "version": "版本"
+    "version": "版本",
+    "supportPromo": "Edge-Drop 完全免費且開源。如果它能幫助提升您的日常工作效率，歡迎支持開發，讓它變得更好！",
+    "supportOnKofi": "在 Ko-fi 上支持"
   }
 }
 
@@ -3398,7 +3332,9 @@ export const hi: TranslationKeys = {
     "quitDesc": "एप्लिकेशन बंद करें और बैकग्राउंड प्रक्रिया रोकें",
     "starOnGithub": "GitHub पर स्टार दें",
     "githubPromo": "यदि आपको Edge-Drop पसंद आता है, तो कृपया GitHub पर प्रोजेक्ट को स्टार देने पर विचार करें!",
-    "version": "संस्करण"
+    "version": "संस्करण",
+    "supportPromo": "Edge-Drop 100% मुफ़्त और ओपन-सोर्स है। यदि यह आपके रोज़मर्रा के काम को आसान बनाता है, तो इसे और बेहतर बनाने के लिए विकास का समर्थन करने पर विचार करें!",
+    "supportOnKofi": "Ko-fi पर समर्थन करें"
   }
 }
 
@@ -3647,7 +3583,9 @@ export const ar: TranslationKeys = {
     "quitDesc": "إغلاق التطبيق وإيقاف عملية الخلفية",
     "starOnGithub": "نجمة على GitHub",
     "githubPromo": "إذا أحببت Edge-Drop، يُرجى النظر في تمييز المشروع بنجمة على GitHub!",
-    "version": "الإصدار"
+    "version": "الإصدار",
+    "supportPromo": "Edge-Drop مجاني ومفتوح المصدر بالكامل. إذا كان يساعدك في سير عملك اليومي، ففكر في دعم تطويره ليصبح أفضل!",
+    "supportOnKofi": "ادعم عبر Ko-fi"
   }
 }
 
@@ -3896,7 +3834,9 @@ export const bn: TranslationKeys = {
     "quitDesc": "অ্যাপ্লিকেশন বন্ধ করুন এবং ব্যাকগ্রাউন্ড প্রক্রিয়া বন্ধ করুন",
     "starOnGithub": "GitHub-এ তারা দিন",
     "githubPromo": "আপনি যদি Edge-Drop পছন্দ করেন, তবে GitHub-এ প্রকল্পে তারা দেওয়ার কথা বিবেচনা করুন!",
-    "version": "সংস্করণ"
+    "version": "সংস্করণ",
+    "supportPromo": "Edge-Drop ১০০% বিনামূল্যে এবং ওপেন-সোর্স। এটি যদি আপনার দৈনন্দিন কাজকে সহজ করে, তাহলে এটিকে আরও উন্নত করতে উন্নয়নে সহায়তা করার কথা বিবেচনা করুন!",
+    "supportOnKofi": "Ko-fi-এ সহায়তা করুন"
   }
 }
 
@@ -4145,7 +4085,9 @@ export const tr: TranslationKeys = {
     "quitDesc": "Uygulamayı kapat ve arka plan işlemini durdur",
     "starOnGithub": "GitHub'da Yıldızla",
     "githubPromo": "Edge-Drop'u beğendiyseniz, lütfen GitHub'da projeye yıldız vermeyi düşünün!",
-    "version": "Sürüm"
+    "version": "Sürüm",
+    "supportPromo": "Edge-Drop %100 ücretsiz ve açık kaynaklıdır. Günlük iş akışınıza yardımcı oluyorsa, daha da geliştirilmesine destek olmayı düşünebilirsiniz!",
+    "supportOnKofi": "Ko-fi üzerinden destek ol"
   }
 }
 
@@ -4394,7 +4336,9 @@ export const vi: TranslationKeys = {
     "quitDesc": "Đóng ứng dụng và dừng quy trình nền",
     "starOnGithub": "Đánh sao trên GitHub",
     "githubPromo": "Nếu bạn thích Edge-Drop, hãy cân nhắc đánh sao cho dự án trên GitHub!",
-    "version": "Phiên bản"
+    "version": "Phiên bản",
+    "supportPromo": "Edge-Drop hoàn toàn miễn phí và mã nguồn mở. Nếu ứng dụng giúp ích cho công việc hằng ngày của bạn, hãy cân nhắc ủng hộ quá trình phát triển để ứng dụng ngày càng tốt hơn!",
+    "supportOnKofi": "Ủng hộ trên Ko-fi"
   }
 }
 
@@ -4643,7 +4587,9 @@ export const pl: TranslationKeys = {
     "quitDesc": "Zamknij aplikację i zatrzymaj proces w tle",
     "starOnGithub": "Daj gwiazdkę na GitHub",
     "githubPromo": "Jeśli lubisz Edge-Drop, rozważ dodanie gwiazdki projektowi na GitHub!",
-    "version": "Wersja"
+    "version": "Wersja",
+    "supportPromo": "Edge-Drop jest w 100% darmowy i otwartoźródłowy. Jeśli pomaga Ci w codziennej pracy, rozważ wsparcie jego rozwoju, aby był jeszcze lepszy!",
+    "supportOnKofi": "Wesprzyj na Ko-fi"
   }
 }
 
@@ -4892,7 +4838,9 @@ export const nl: TranslationKeys = {
     "quitDesc": "Applicatie sluiten en achtergrondproces stoppen",
     "starOnGithub": "Ster op GitHub",
     "githubPromo": "Als je Edge-Drop leuk vindt, overweeg dan om het project een ster te geven op GitHub!",
-    "version": "Versie"
+    "version": "Versie",
+    "supportPromo": "Edge-Drop is 100% gratis en open source. Als het je dagelijkse workflow makkelijker maakt, overweeg dan de ontwikkeling te steunen zodat het nog beter wordt!",
+    "supportOnKofi": "Steun op Ko-fi"
   }
 }
 
@@ -5141,7 +5089,9 @@ export const sv: TranslationKeys = {
     "quitDesc": "Stäng program och stoppa bakgrundsprocess",
     "starOnGithub": "Stjärnmärk på GitHub",
     "githubPromo": "Om du gillar Edge-Drop, överväg att stjärnmärka projektet på GitHub!",
-    "version": "Version"
+    "version": "Version",
+    "supportPromo": "Edge-Drop är 100 % gratis och med öppen källkod. Om det hjälper dig i ditt dagliga arbete kan du överväga att stödja utvecklingen så att det blir ännu bättre!",
+    "supportOnKofi": "Stöd på Ko-fi"
   }
 }
 
@@ -5390,7 +5340,9 @@ export const id: TranslationKeys = {
     "quitDesc": "Tutup aplikasi dan hentikan proses latar belakang",
     "starOnGithub": "Beri bintang di GitHub",
     "githubPromo": "Jika Anda menyukai Edge-Drop, harap pertimbangkan untuk memberi bintang pada proyek di GitHub!",
-    "version": "Versi"
+    "version": "Versi",
+    "supportPromo": "Edge-Drop 100% gratis dan bersifat open-source. Jika aplikasi ini membantu alur kerja harian Anda, pertimbangkan untuk mendukung pengembangannya agar menjadi lebih baik lagi!",
+    "supportOnKofi": "Dukung di Ko-fi"
   }
 }
 
@@ -5639,7 +5591,9 @@ export const uk: TranslationKeys = {
     "quitDesc": "Закрити додаток і зупинити фоновий процес",
     "starOnGithub": "Поставити зірку на GitHub",
     "githubPromo": "Якщо вам подобається Edge-Drop, будь ласка, поставте зірку проєкту на GitHub!",
-    "version": "Версія"
+    "version": "Версія",
+    "supportPromo": "Edge-Drop є повністю безкоштовним і відкритим. Якщо він допомагає вам у щоденній роботі, підтримайте його розвиток, щоб зробити його ще кращим!",
+    "supportOnKofi": "Підтримати на Ko-fi"
   }
 }
 
@@ -5888,7 +5842,9 @@ export const el: TranslationKeys = {
     "quitDesc": "Κλείσιμο εφαρμογής και διακοπή διεργασίας παρασκηνίου",
     "starOnGithub": "Αστέρι στο GitHub",
     "githubPromo": "Αν σας αρέσει το Edge-Drop, εξετάστε την δυνατότητα να ασφαλίσετε το έργο στο GitHub!",
-    "version": "Έκδοση"
+    "version": "Έκδοση",
+    "supportPromo": "Το Edge-Drop είναι 100% δωρεάν και ανοιχτού κώδικα. Αν σας βοηθά στην καθημερινή εργασία σας, σκεφτείτε να υποστηρίξετε την ανάπτυξή του ώστε να γίνει ακόμη καλύτερο!",
+    "supportOnKofi": "Υποστήριξη στο Ko-fi"
   }
 }
 
@@ -6137,7 +6093,9 @@ export const cs: TranslationKeys = {
     "quitDesc": "Zavřít aplikaci a zastavit proces na pozadí",
     "starOnGithub": "Ohvězdičkovat na GitHub",
     "githubPromo": "Pokud se vám Edge-Drop líbí, zvažte prosím ohvězdičkování projektu na GitHub!",
-    "version": "Verze"
+    "version": "Verze",
+    "supportPromo": "Edge-Drop je 100% zdarma a s otevřeným zdrojovým kódem. Pokud vám usnadňuje každodenní práci, zvažte podporu jeho vývoje, aby byl ještě lepší!",
+    "supportOnKofi": "Podpořit na Ko-fi"
   }
 }
 
@@ -6386,7 +6344,9 @@ export const ro: TranslationKeys = {
     "quitDesc": "Închide aplicația și oprește procesul din fundal",
     "starOnGithub": "Marchează cu stea pe GitHub",
     "githubPromo": "Dacă îți place Edge-Drop, te rugăm să iei în considerare marcarea cu stea a proiectului pe GitHub!",
-    "version": "Versiune"
+    "version": "Versiune",
+    "supportPromo": "Edge-Drop este 100% gratuit și open-source. Dacă îți este util în activitatea de zi cu zi, ia în considerare susținerea dezvoltării pentru a-l face și mai bun!",
+    "supportOnKofi": "Susține pe Ko-fi"
   }
 }
 
@@ -6635,7 +6595,9 @@ export const hu: TranslationKeys = {
     "quitDesc": "Alkalmazás bezárása és a háttérfolyamat leállítása",
     "starOnGithub": "Csillagozás a GitHubon",
     "githubPromo": "Ha tetszik az Edge-Drop, fontolja meg a projekt csillagozását a GitHubon!",
-    "version": "Verzió"
+    "version": "Verzió",
+    "supportPromo": "Az Edge-Drop 100%-ban ingyenes és nyílt forráskódú. Ha megkönnyíti a mindennapi munkádat, fontold meg a fejlesztés támogatását, hogy még jobb lehessen!",
+    "supportOnKofi": "Támogatás a Ko-fi oldalon"
   }
 }
 
@@ -6884,7 +6846,9 @@ export const da: TranslationKeys = {
     "quitDesc": "Luk applikation og stop baggrundsproces",
     "starOnGithub": "Giv stjerne på GitHub",
     "githubPromo": "Hvis du kan lide Edge-Drop, så overvej at give projektet en stjerne på GitHub!",
-    "version": "Version"
+    "version": "Version",
+    "supportPromo": "Edge-Drop er 100 % gratis og open source. Hvis det hjælper dig i din daglige arbejdsgang, kan du overveje at støtte udviklingen, så det bliver endnu bedre!",
+    "supportOnKofi": "Støt på Ko-fi"
   }
 }
 
@@ -7133,7 +7097,9 @@ export const fi: TranslationKeys = {
     "quitDesc": "Sulje sovellus ja pysäytä taustaprosessi",
     "starOnGithub": "Anna tähti GitHubissa",
     "githubPromo": "Jos pidät Edge-Dropista, harkitse projektin tähteyttä GitHubissa!",
-    "version": "Versio"
+    "version": "Versio",
+    "supportPromo": "Edge-Drop on 100 % ilmainen ja avoimen lähdekoodin ohjelmisto. Jos se helpottaa päivittäistä työnkulkuasi, harkitse kehityksen tukemista, jotta siitä tulee vielä parempi!",
+    "supportOnKofi": "Tue Ko-fi:ssa"
   }
 }
 
@@ -7382,7 +7348,9 @@ export const th: TranslationKeys = {
     "quitDesc": "ปิดแอปพลิเคชันและหยุดกระบวนการเบื้องหลัง",
     "starOnGithub": "ติดดาวบน GitHub",
     "githubPromo": "หากคุณชอบ Edge-Drop โปรดพิจารณาติดดาวให้โปรเจกต์บน GitHub!",
-    "version": "เวอร์ชัน"
+    "version": "เวอร์ชัน",
+    "supportPromo": "Edge-Drop ฟรี 100% และเป็นโอเพนซอร์ส หากแอปนี้ช่วยให้การทำงานประจำวันของคุณสะดวกขึ้น โปรดพิจารณาสนับสนุนการพัฒนาเพื่อให้ดียิ่งขึ้น!",
+    "supportOnKofi": "สนับสนุนผ่าน Ko-fi"
   }
 }
 
@@ -7631,7 +7599,9 @@ export const he: TranslationKeys = {
     "quitDesc": "סגור אפליקציה ועצור תהליך רקע",
     "starOnGithub": "כוכב ב-GitHub",
     "githubPromo": "אם אתה אוהב את Edge-Drop, אנא שקול לתת כוכב לפרויקט ב-GitHub!",
-    "version": "גרסה"
+    "version": "גרסה",
+    "supportPromo": "Edge-Drop הוא חינמי לחלוטין ובקוד פתוח. אם הוא עוזר לכם בעבודה היומיומית, שקלו לתמוך בפיתוח כדי להפוך אותו לטוב אפילו יותר!",
+    "supportOnKofi": "תמכו ב-Ko-fi"
   }
 }
 
@@ -7880,7 +7850,9 @@ export const no: TranslationKeys = {
     "quitDesc": "Lukk applikasjon og stopp bakgrunnsprosess",
     "starOnGithub": "Gi stjerne på GitHub",
     "githubPromo": "Hvis du liker Edge-Drop, vennligst vurder å gi prosjektet en stjerne på GitHub!",
-    "version": "Versjon"
+    "version": "Versjon",
+    "supportPromo": "Edge-Drop er 100 % gratis og åpen kildekode. Hvis det hjelper deg i den daglige arbeidsflyten, kan du vurdere å støtte utviklingen for å gjøre det enda bedre!",
+    "supportOnKofi": "Støtt på Ko-fi"
   }
 }
 
@@ -7894,8 +7866,8 @@ export const TRANSLATIONS: Record<string, TranslationKeys> = {
   'ru': ru,
   'ja': ja,
   'ko': ko,
-  'zh-CN': zhCN,
-  'zh-TW': zhTW,
+  'zh-CN': zh_CN,
+  'zh-TW': zh_TW,
   'hi': hi,
   'ar': ar,
   'bn': bn,

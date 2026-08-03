@@ -243,6 +243,8 @@
     "quitDesc": "Tutup aplikasi dan hentikan proses latar belakang",
     "starOnGithub": "Beri bintang di GitHub",
     "githubPromo": "Jika Anda menyukai Edge-Drop, harap pertimbangkan untuk memberi bintang pada proyek di GitHub!",
-    "version": "Versi"
+    "version": "Versi",
+    "supportPromo": "Edge-Drop 100% gratis dan bersifat open-source. Jika aplikasi ini membantu alur kerja harian Anda, pertimbangkan untuk mendukung pengembangannya agar menjadi lebih baik lagi!",
+    "supportOnKofi": "Dukung di Ko-fi"
   }
 }

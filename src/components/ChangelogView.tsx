@@ -17,9 +17,33 @@ interface ChangelogRelease {
 
 const CHANGELOG_DATA: ChangelogRelease[] = [
   {
+    version: 'v0.2.5',
+    date: 'Aug 03, 2026',
+    isLatest: true,
+    summary: 'Full 30-language localization with auto-scroll selector, powerMonitor sleep/wake protection, text size typography settings, and multi-file action bar.',
+    highlights: [
+      {
+        title: 'Complete 30-Language Localization & Smart Language Selector',
+        description: 'Implemented full translation dictionaries across 30 languages, added RTL layout support for Arabic and Hebrew, integrated audio haptics, and added auto-scrolling to position the selected language in the dropdown viewport.'
+      },
+      {
+        title: 'Laptop Sleep & Unlock Protection',
+        description: 'Eliminated false Copy Indicator activations when opening laptop lid or unlocking screen using native powerMonitor lifecycle handlers.'
+      },
+      {
+        title: 'Text Size Typography Scale Setting',
+        description: 'Added customizable typography scale settings (Small, Normal, Medium, Large) applying dynamic font scaling across the app.'
+      },
+      {
+        title: 'Multi-File Selection & Preview Action Bar',
+        description: 'Added tap-to-toggle multi-file selection with a batch action bar (Select All, Copy Selected, Paste Selected, Clear Selection).'
+      }
+    ]
+  },
+  {
     version: 'v0.2.0',
     date: 'Jul 26, 2026',
-    isLatest: true,
+    isLatest: false,
     summary: 'Silent background auto-updater, direct web link launcher, dedicated Pinned items deck, and interactive controls.',
     highlights: [
       {

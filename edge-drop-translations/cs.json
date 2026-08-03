@@ -243,6 +243,8 @@
     "quitDesc": "Zavřít aplikaci a zastavit proces na pozadí",
     "starOnGithub": "Ohvězdičkovat na GitHub",
     "githubPromo": "Pokud se vám Edge-Drop líbí, zvažte prosím ohvězdičkování projektu na GitHub!",
-    "version": "Verze"
+    "version": "Verze",
+    "supportPromo": "Edge-Drop je 100% zdarma a s otevřeným zdrojovým kódem. Pokud vám usnadňuje každodenní práci, zvažte podporu jeho vývoje, aby byl ještě lepší!",
+    "supportOnKofi": "Podpořit na Ko-fi"
   }
 }

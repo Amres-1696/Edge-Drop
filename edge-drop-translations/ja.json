@@ -243,6 +243,8 @@
     "quitDesc": "アプリを閉じてバックグラウンドプロセスを停止",
     "starOnGithub": "GitHub でスター",
     "githubPromo": "Edge-Drop を気に入っていただけたら、GitHub でスターをよろしくお願いします！",
-    "version": "バージョン"
+    "version": "バージョン",
+    "supportPromo": "Edge-Drop は100%無料のオープンソースです。日々の作業に役立っているなら、さらに良くするために開発を応援していただけると嬉しいです！",
+    "supportOnKofi": "Ko-fiで支援する"
   }
 }
