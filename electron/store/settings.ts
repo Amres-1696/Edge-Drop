@@ -25,7 +25,7 @@ function merge(base: Settings, patch: Partial<Settings>): Settings {
     out.triggerAlignment = 'center'
   }
   if (typeof out.language !== 'string' || !out.language.trim()) {
-    out.language = 'system'
+    out.language = 'zh-CN'
   }
   return out
 }

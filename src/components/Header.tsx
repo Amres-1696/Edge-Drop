@@ -1,12 +1,14 @@
 /** Panel header: title + settings toggle. */
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useStore } from '../store/appStore'
 import { GearIcon, CloseIcon, InfoIcon } from './icons'
 import { playButtonClickSound } from '../lib/soundEffects'
 
 import { useTranslation } from '../i18n'
+import { CELL_SPRING, CROSSFADE_SPRING, INSTANT } from '../lib/motion'
 
 export function Header() {
+  const systemReduced = useReducedMotion()
   const { t } = useTranslation()
   const setSettingsOpen = useStore((s) => s.setSettingsOpen)
   const settingsOpen = useStore((s) => s.settingsOpen)
@@ -14,6 +16,7 @@ export function Header() {
   const settingsSubView = useStore((s) => s.settingsSubView)
   const setSettingsSubView = useStore((s) => s.setSettingsSubView)
   const settings = useStore((s) => s.settings)
+  const reduced = systemReduced || settings.reduceMotion
   const patchSettings = useStore((s) => s.patchSettings)
   const currentVersion = useStore((s) => s.currentVersion)
 
@@ -73,7 +76,7 @@ export function Header() {
             <motion.div
               initial={false}
               animate={{ x: activeIndex * 41 }}
-              transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+              transition={reduced ? INSTANT : CELL_SPRING}
               style={{
                 position: 'absolute',
                 left: 3,
@@ -211,7 +214,18 @@ export function Header() {
             position: 'relative'
           }}
         >
-          {settingsOpen ? <CloseIcon /> : <GearIcon />}
+          <AnimatePresence initial={false} mode="wait">
+            <motion.span
+              key={settingsOpen ? 'close' : 'gear'}
+              className="micro-icon-slot"
+              initial={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.82, rotate: settingsOpen ? -35 : 35 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.86, rotate: settingsOpen ? 28 : -28 }}
+              transition={reduced ? INSTANT : CROSSFADE_SPRING}
+            >
+              {settingsOpen ? <CloseIcon /> : <GearIcon />}
+            </motion.span>
+          </AnimatePresence>
           {!settingsOpen && (updateInfo?.downloaded || ((settings.autoUpdates ?? true) && updateInfo?.hasUpdate)) && (
             <span
               style={{

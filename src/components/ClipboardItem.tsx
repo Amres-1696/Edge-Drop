@@ -15,7 +15,7 @@
  * the parent list (layout/AnimatePresence), so this component stays presentational.
  */
 import { memo, useState, useCallback, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import type { ClipboardItemDto } from '../../shared/types'
 import { MAX_STACK } from '../../shared/types'
 import type { DragRequest } from '../../shared/types'
@@ -28,7 +28,8 @@ import { CopyIcon, FileKindIcon, ImageIcon, LinkIcon, PinIcon, PinFillIcon, Tras
 import '../styles/item.css'
 
 import { tryPaste } from '../lib/tryPaste'
-import { t } from '../i18n'
+import { useTranslation } from '../i18n'
+import { ARRIVE_EASE, CELL_SPRING, CROSSFADE_SPRING, INSTANT, LEAVE_EASE } from '../lib/motion'
 
 interface Props {
   item: ClipboardItemDto
@@ -43,6 +44,10 @@ interface Props {
 /* ------------------------------------------------------------------ */
 
 function ClipboardItemBase({ item }: Props) {
+  const { t } = useTranslation()
+  const systemReduced = useReducedMotion()
+  const appReduced = useStore((s) => s.settings.reduceMotion)
+  const reduced = systemReduced || appReduced
   const copy = useStore.getState().copy
   const paste = useStore.getState().paste
   const togglePin = useStore.getState().togglePin
@@ -50,6 +55,7 @@ function ClipboardItemBase({ item }: Props) {
   const setInternalDragReq = useStore.getState().setInternalDragReq
   const startDrag = useDragOut()
   const [copied, setCopied] = useState(false)
+  const [copyOrigin, setCopyOrigin] = useState({ x: 0, y: 0 })
   const [expanded, setExpanded] = useState(false)
 
   
@@ -63,6 +69,14 @@ function ClipboardItemBase({ item }: Props) {
 
   const onCopy = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
+    const card = e.currentTarget.closest('.item')?.getBoundingClientRect()
+    if (card) {
+      const pointerTriggered = e.detail > 0
+      setCopyOrigin({
+        x: pointerTriggered ? Math.max(0, Math.min(card.width, e.clientX - card.left)) : card.width / 2,
+        y: pointerTriggered ? Math.max(0, Math.min(card.height, e.clientY - card.top)) : card.height / 2
+      })
+    }
     playButtonClickSound()
     copy(item.id)
     setCopied(true)
@@ -112,32 +126,33 @@ function ClipboardItemBase({ item }: Props) {
   return (
     <motion.div
       layout="position"
-      initial={open ? { opacity: 0, scale: 0.96, y: 6 } : false}
+      initial={open ? (reduced ? { opacity: 0 } : { opacity: 0, scale: 0.97, y: 8 }) : false}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95, y: -4, transition: { duration: 0.12, ease: [0.32, 0, 0.67, 0] } }}
+      exit={reduced
+        ? { opacity: 0, transition: INSTANT }
+        : { opacity: 0, scale: 0.98, y: 5, transition: { duration: 0.14, ease: LEAVE_EASE } }}
+      whileHover={reduced ? undefined : { y: -2 }}
+      whileTap={reduced ? undefined : { y: 1, scale: 0.995 }}
       transition={{
-        layout: { type: 'spring', stiffness: 280, damping: 28, mass: 0.8 },
-        type: 'spring',
-        stiffness: 300,
-        damping: 30,
-        mass: 0.8,
-        restDelta: 0.001,
-        restSpeed: 0.001
+        layout: CELL_SPRING,
+        opacity: { duration: 0.22, ease: ARRIVE_EASE },
+        y: CELL_SPRING,
+        scale: CELL_SPRING
       }}
-      style={{ willChange: 'transform, opacity' }}
       className={`item${item.pinned ? ' pinned' : ''}${isBundle ? ' bundle' : ''}`}
     >
       {copied && (
         <motion.div
           key="copy-ripple"
-          initial={{ opacity: 0.75, scale: 0.2 }}
-          animate={{ opacity: 0, scale: 1.6 }}
-          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+          initial={reduced ? { opacity: 0.32 } : { opacity: 0.72, scale: 0.18 }}
+          animate={reduced ? { opacity: 0 } : { opacity: 0, scale: 1.55 }}
+          transition={reduced ? { duration: 0.12 } : { duration: 0.5, ease: 'linear' }}
           style={{
             position: 'absolute',
             inset: 0,
             borderRadius: 16,
-            background: 'radial-gradient(circle at center, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.08) 45%, transparent 75%)',
+            transformOrigin: `${copyOrigin.x}px ${copyOrigin.y}px`,
+            background: `radial-gradient(circle at ${copyOrigin.x}px ${copyOrigin.y}px, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.08) 44%, transparent 74%)`,
             pointerEvents: 'none',
             zIndex: 15
           }}
@@ -199,7 +214,7 @@ function ClipboardItemBase({ item }: Props) {
               </span>
             )}
             {item.data.kind === 'image' && <span>· {formatBytes(item.data.bytes)}</span>}
-            {copied && <span style={{ color: '#fff' }}>· copied</span>}
+            {copied && <span style={{ color: '#fff' }}>· {t('toast.copiedToClipboard')}</span>}
           </div>
         </div>
 
@@ -237,7 +252,24 @@ function ClipboardItemBase({ item }: Props) {
             e.currentTarget.blur()
             onCopy(e)
           }}>
-            <CopyIcon />
+            <span className="micro-icon-slot">
+              <AnimatePresence initial={false} mode="wait">
+                <motion.span
+                  key={copied ? 'copied' : 'copy'}
+                  className="micro-icon-slot"
+                  initial={reduced ? { opacity: 0 } : { opacity: 0, y: 3, scale: 0.72 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={reduced ? { opacity: 0 } : { opacity: 0, y: -3, scale: 0.78 }}
+                  transition={reduced ? INSTANT : CROSSFADE_SPRING}
+                >
+                  {copied ? (
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <polyline points="5 12 10 17 19 7" />
+                    </svg>
+                  ) : <CopyIcon />}
+                </motion.span>
+              </AnimatePresence>
+            </span>
           </button>
           {item.data.kind === 'text' && item.data.isUrl && (
             <button
@@ -351,8 +383,7 @@ function BundleFluidPreview({
   onRemove: () => void
   onCollapse: (e?: React.MouseEvent) => void
 }) {
-
-
+  const { t } = useTranslation()
 
   if (item.data.kind === 'image-collection') {
     const more = item.data.images.length - 1
@@ -615,6 +646,8 @@ function BundleFluidPreview({
 /* ------------------------------------------------------------------ */
 
 function Preview({ item }: { item: ClipboardItemDto }) {
+  const { t } = useTranslation()
+
   switch (item.data.kind) {
     case 'text':
       if (item.data.isUrl) {
@@ -700,6 +733,7 @@ function Preview({ item }: { item: ClipboardItemDto }) {
 /* ------------------------------------------------------------------ */
 
 function KindBadge({ item }: { item: ClipboardItemDto }) {
+  const { t } = useTranslation()
   switch (item.data.kind) {
     case 'text':
       if (item.data.isUrl)

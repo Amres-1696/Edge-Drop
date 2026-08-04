@@ -166,7 +166,7 @@ export interface Settings {
   fontSizeScale?: number
   /** When true, automatically checks for and downloads app updates in background. Default: true. */
   autoUpdates?: boolean
-  /** Active UI language code ('system' | 'en' | 'es' | 'fr' | 'de' | ...). Default: 'system'. */
+  /** Active UI language code ('system' | 'en' | 'es' | 'fr' | 'de' | ...). Chinese build default: 'zh-CN'. */
   language?: string
 }
 
@@ -198,7 +198,7 @@ export const DEFAULT_SETTINGS: Settings = {
   hoverActivation: true,
   fontSizeScale: 1.0,
   autoUpdates: true,
-  language: 'system'
+  language: 'zh-CN'
 }
 
 

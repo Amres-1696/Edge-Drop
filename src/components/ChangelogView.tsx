@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useStore } from '../store/appStore'
 import { useTranslation } from '../i18n'
+import { ZH_CN_CHANGELOG } from '../i18n/changelog.zh-CN'
 
 interface HighlightItem {
   title: string
@@ -219,21 +220,31 @@ const CHANGELOG_DATA: ChangelogRelease[] = [
 ]
 
 export function ChangelogView() {
-  const { t } = useTranslation()
+  const { t, resolvedLang } = useTranslation()
   const currentVersion = useStore((s) => s.currentVersion)
-  const [releases, setReleases] = useState<ChangelogRelease[]>(CHANGELOG_DATA)
+  const [releases, setReleases] = useState<ChangelogRelease[]>(() =>
+    resolvedLang === 'zh-CN' ? ZH_CN_CHANGELOG : CHANGELOG_DATA
+  )
 
   useEffect(() => {
+    if (resolvedLang === 'zh-CN') {
+      setReleases(ZH_CN_CHANGELOG)
+      return
+    }
+
+    let cancelled = false
+    setReleases(CHANGELOG_DATA)
     window.edge.getReleases()
       .then((fetched) => {
-        if (Array.isArray(fetched) && fetched.length > 0) {
+        if (!cancelled && Array.isArray(fetched) && fetched.length > 0) {
           setReleases(fetched)
         }
       })
       .catch((err) => {
         console.warn('Failed to load live GitHub releases:', err)
       })
-  }, [])
+    return () => { cancelled = true }
+  }, [resolvedLang])
 
   return (
     <div style={{

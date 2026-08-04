@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useStore } from '../store/appStore'
 import type { DisplayInfo } from '../../shared/types'
 import { LiquidOctopusLoader } from './LiquidOctopusLoader'
@@ -9,12 +9,15 @@ import { ChangelogView } from './ChangelogView'
 import { playDialTickSound, playToggleSound, playButtonClickSound } from '../lib/soundEffects'
 import { useTranslation } from '../i18n'
 import '../styles/settings.css'
+import { CELL_SPRING, INSTANT } from '../lib/motion'
 
 type SettingsTab = 'behaviour' | 'position' | 'appearance'
 
 export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: boolean }) {
-  const { t } = useTranslation()
+  const systemReduced = useReducedMotion()
+  const { t, resolvedLang } = useTranslation()
   const settings = useStore((s) => s.settings)
+  const reduced = systemReduced || settings.reduceMotion
 
   const TABS: { id: SettingsTab; label: string }[] = [
     { id: 'behaviour',  label: t('tabs.behaviour') },
@@ -233,10 +236,10 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
       {settingsSubView === 'changelog' ? (
         <motion.div
           key="changelog-view"
-          initial={{ opacity: 0, x: 12 }}
+          initial={reduced ? false : { opacity: 0, x: 12 }}
           animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -12 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 36, mass: 0.6 }}
+          exit={reduced ? { opacity: 0 } : { opacity: 0, x: -12 }}
+          transition={reduced ? INSTANT : { type: 'spring', stiffness: 400, damping: 36, mass: 0.6 }}
           style={{ width: '100%', height: '100%', overflowY: 'auto', overflowX: 'hidden' }}
         >
           <ChangelogView />
@@ -244,10 +247,10 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
       ) : (
         <motion.div
           key="main-settings"
-          initial={{ opacity: 0, x: -12 }}
+          initial={reduced ? false : { opacity: 0, x: -12 }}
           animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: 12 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 36, mass: 0.6 }}
+          exit={reduced ? { opacity: 0 } : { opacity: 0, x: 12 }}
+          transition={reduced ? INSTANT : { type: 'spring', stiffness: 400, damping: 36, mass: 0.6 }}
           style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}
         >
           {/* ── Stationary Fixed Header (Tab Selector) ────────────────── */}
@@ -262,6 +265,13 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                     className={`settings-tab-btn${active ? ' active' : ''}`}
                     onClick={() => handleTabSwitch(tab.id)}
                   >
+                    {active && (
+                      <motion.span
+                        layoutId="settings-active-tab"
+                        className="settings-tab-indicator"
+                        transition={reduced ? INSTANT : CELL_SPRING}
+                      />
+                    )}
                     <span className="settings-tab-text">{tab.label}</span>
                   </button>
                 )
@@ -277,10 +287,10 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
               {activeTab === 'behaviour' && (
                 <motion.div
                   key="tab-behaviour"
-                  initial={{ opacity: 0, scale: 0.98, y: 4 }}
+                  initial={reduced ? false : { opacity: 0, scale: 0.98, y: 4 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.98, y: -4 }}
-                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.98, y: -4 }}
+                  transition={reduced ? INSTANT : { duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                 >
                   {/* ── GROUP: Behaviour ─────────────────────────────────── */}
                   <div className="setting-group-label">{t('tabs.behaviour')}</div>
@@ -488,8 +498,8 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                             {checkState.status === 'checking' && (
                               <div style={{ fontSize: 12.5, color: 'rgba(255, 255, 255, 0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '6px 0' }}>
                                 <motion.span
-                                  animate={{ rotate: 360 }}
-                                  transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
+                                  animate={reduced ? { rotate: 0 } : { rotate: 360 }}
+                                  transition={reduced ? INSTANT : { repeat: Infinity, duration: 0.8, ease: 'linear' }}
                                   style={{
                                     display: 'inline-block',
                                     width: 13,
@@ -579,8 +589,8 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                             {checkState.status === 'downloading' && (
                               <div style={{ fontSize: 12.5, color: 'rgba(255, 255, 255, 0.9)', display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0' }}>
                                 <motion.span
-                                  animate={{ rotate: 360 }}
-                                  transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
+                                  animate={reduced ? { rotate: 0 } : { rotate: 360 }}
+                                  transition={reduced ? INSTANT : { repeat: Infinity, duration: 0.8, ease: 'linear' }}
                                   style={{
                                     display: 'inline-block',
                                     width: 13,
@@ -680,10 +690,10 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
               {activeTab === 'position' && (
                 <motion.div
                   key="tab-position"
-                  initial={{ opacity: 0, scale: 0.98, y: 4 }}
+                  initial={reduced ? false : { opacity: 0, scale: 0.98, y: 4 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.98, y: -4 }}
-                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.98, y: -4 }}
+                  transition={reduced ? INSTANT : { duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                 >
                   {/* ── GROUP: Position ──────────────────────────────────── */}
                   <div className="setting-group-label">{t('tabs.position')}</div>
@@ -809,7 +819,9 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                       <div className="setting-desc">{t('position.displayDesc')}</div>
                     </div>
                     <div className="setting-pills">
-                      {displays.length === 0 && <div className="pill disabled">Loading...</div>}
+                      {displays.length === 0 && (
+                        <div className="pill disabled">{resolvedLang === 'zh-CN' ? '正在加载…' : 'Loading…'}</div>
+                      )}
                       {displays.map((d) => {
                         const currentDisplay = displays.find((disp) => disp.isCurrent)
                         const activeDisplayId = currentDisplay
@@ -966,10 +978,10 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
               {activeTab === 'appearance' && (
                 <motion.div
                   key="tab-appearance"
-                  initial={{ opacity: 0, scale: 0.98, y: 4 }}
+                  initial={reduced ? false : { opacity: 0, scale: 0.98, y: 4 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.98, y: -4 }}
-                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.98, y: -4 }}
+                  transition={reduced ? INSTANT : { duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                 >
                   {/* ── GROUP: Copy Indicator ────────────────────────────── */}
                   <div className="setting-group-label">{t('appearance.copyIndicatorTitle')}</div>
@@ -1000,7 +1012,9 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                         <button
                           type="button"
                           className={`icon-btn style-preview-toggle-btn ${isFlyoutActive ? 'active' : ''}`}
-                          title={isFlyoutActive ? 'Close Style Selector' : 'Open Indicator Style Selector'}
+                          title={isFlyoutActive
+                            ? `${t('header.close')} · ${t('appearance.indicatorStyleTitle')}`
+                            : t('appearance.indicatorStyleTitle')}
                           onClick={() => {
                             playButtonClickSound()
                             handleToggleFlyout()
@@ -1012,10 +1026,10 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
 
                       {isTutorial && localInlineOpen && (
                         <motion.div
-                          initial={{ opacity: 0, height: 0 }}
+                          initial={reduced ? false : { opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.22, ease: 'easeOut' }}
+                          transition={reduced ? INSTANT : { duration: 0.22, ease: 'easeOut' }}
                           style={{ overflow: 'hidden', marginTop: 12, marginBottom: 8 }}
                         >
                           <div style={{
@@ -1195,13 +1209,13 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
             {showScrollUpdateBadge && (
               <motion.div
                 key="scroll-update-badge"
-                initial={{ opacity: 0, y: 12, scale: 0.9 }}
+                initial={reduced ? false : { opacity: 0, y: 12, scale: 0.9 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 12, scale: 0.9 }}
-                transition={{ type: 'spring', stiffness: 450, damping: 30 }}
+                exit={reduced ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.9 }}
+                transition={reduced ? INSTANT : { type: 'spring', stiffness: 450, damping: 30 }}
                 onClick={() => {
                   playButtonClickSound()
-                  updateBannerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+                  updateBannerRef.current?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'nearest' })
                 }}
                 style={{
                   position: 'absolute',
@@ -1250,6 +1264,10 @@ function Toggle({
   onChange: (v: boolean) => void
   disabled?: boolean
 }) {
+  const systemReduced = useReducedMotion()
+  const appReduced = useStore((s) => s.settings.reduceMotion)
+  const reduced = systemReduced || appReduced
+
   return (
     <button
       type="button"
@@ -1273,7 +1291,7 @@ function Toggle({
         cursor: disabled ? 'not-allowed' : 'pointer',
         padding: 0,
         outline: 'none',
-        transition: 'background 0.22s ease, border-color 0.22s ease',
+        transition: reduced ? 'none' : 'background 0.22s ease, border-color 0.22s ease',
         boxShadow: !disabled && checked ? '0 0 12px rgba(255, 255, 255, 0.25)' : 'none',
         opacity: disabled ? 0.45 : 1
       }}
@@ -1285,7 +1303,7 @@ function Toggle({
           x: checked ? 18 : 2,
           backgroundColor: checked ? '#000000' : '#ffffff'
         }}
-        transition={{
+        transition={reduced ? INSTANT : {
           type: 'spring',
           stiffness: 600,
           damping: 35
@@ -1305,6 +1323,9 @@ function Toggle({
 }
 
 function LanguageDropdown() {
+  const systemReduced = useReducedMotion()
+  const appReduced = useStore((s) => s.settings.reduceMotion)
+  const reduced = systemReduced || appReduced
   const { language, languages } = useTranslation()
   const patch = useStore((s) => s.patchSettings)
   const [isOpen, setIsOpen] = useState(false)
@@ -1362,13 +1383,13 @@ function LanguageDropdown() {
           outline: 'none',
           cursor: 'pointer',
           boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
-          transition: 'all 0.15s ease'
+          transition: reduced ? 'none' : 'all 0.15s ease'
         }}
       >
         <span>{selectedLang.nativeName}</span>
         <motion.span
           animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.2 }}
+          transition={reduced ? INSTANT : { duration: 0.2 }}
           style={{ display: 'flex', alignItems: 'center', color: 'rgba(255, 255, 255, 0.6)' }}
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1381,10 +1402,10 @@ function LanguageDropdown() {
         {isOpen && (
           <motion.div
             ref={listRef}
-            initial={{ opacity: 0, y: 6, scale: 0.98 }}
+            initial={reduced ? false : { opacity: 0, y: 6, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 6, scale: 0.98 }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
+            exit={reduced ? { opacity: 0 } : { opacity: 0, y: 6, scale: 0.98 }}
+            transition={reduced ? INSTANT : { duration: 0.15, ease: 'easeOut' }}
             onScroll={(e) => {
               const tick = Math.floor(e.currentTarget.scrollTop / 28)
               if (tick !== lastScrollTick.current) {
@@ -1434,7 +1455,7 @@ function LanguageDropdown() {
                     border: 'none',
                     cursor: 'pointer',
                     textAlign: 'left',
-                    transition: 'background 0.12s ease'
+                    transition: reduced ? 'none' : 'background 0.12s ease'
                   }}
                   onMouseEnter={(e) => {
                     if (!active) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.07)'

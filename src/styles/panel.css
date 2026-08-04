@@ -211,7 +211,6 @@
   text-transform: uppercase;
   color: #a1a1aa;
   margin: 16px 6px 8px;
-  -webkit-font-smoothing: antialiased;
 }
 .section-label:first-child {
   margin-top: 4px;
@@ -332,7 +331,6 @@
   position: relative;
   z-index: 1;
   background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.6));
-  -webkit-font-smoothing: antialiased;
 }
 .footer .count {
   font-size: calc(12.5px * var(--font-scale, 1));
@@ -343,6 +341,17 @@
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
+}
+.count-value {
+  display: inline-flex;
+  align-items: baseline;
+  white-space: nowrap;
+}
+.count-number {
+  display: inline-block;
+  min-width: 1ch;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 .footer .spacer {
   flex: 1;

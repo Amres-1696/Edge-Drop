@@ -24,12 +24,9 @@ import { existsSync, createReadStream } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { resolveStoredImage } from './imageProtocol'
 
-// Edge-Drop renders a small, mostly static transparent panel. Chromium's GPU
-// process costs substantially more memory (~150–250 MB) than the iGPU compositing
-// savings are worth for such a simple UI. Software compositing keeps the process
-// count and RAM footprint minimal without meaningfully affecting visual quality.
-// Electron requires this call before the ready event.
-app.disableHardwareAcceleration()
+// Keep Chromium hardware acceleration enabled. On Windows, forcing software
+// compositing for a transparent BrowserWindow softens text, especially at
+// fractional display scales such as 125% and 150%.
 
 // Restrict the renderer to a single webContents and forbid remote module usage.
 app.enableSandbox()
@@ -114,9 +111,10 @@ app.whenReady().then(() => {
   // Reflect settings immediately.
   let settings = loadSettings()
   if (!settings.tutorialCompleted) {
-    // When onboarding is active (initial launch or reset tutorial), reset language to system default so onboarding always begins in System Default
-    if (settings.language !== 'system') {
-      settings = saveSettings({ language: 'system' })
+    // The Chinese distribution always starts onboarding in Simplified Chinese;
+    // users can still choose any of the upstream languages from Settings.
+    if (settings.language !== 'zh-CN') {
+      settings = saveSettings({ language: 'zh-CN' })
     }
     setTimeout(() => {
       createOnboardingWindow()

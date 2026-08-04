@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useStore } from '../store/appStore'
 import { formatBytes, formatImageDisplayName } from '../lib/format'
 import { getFileKind } from '../lib/fileType'
@@ -11,13 +11,16 @@ import { tryPaste } from '../lib/tryPaste'
 import { playButtonClickSound, playToggleSound } from '../lib/soundEffects'
 
 import { useTranslation } from '../i18n'
+import { INSTANT } from '../lib/motion'
 
 export function PreviewFlyout({ isRight }: { isRight: boolean }) {
+  const systemReduced = useReducedMotion()
   const { t } = useTranslation()
   const previewItemId = useStore((s) => s.previewItemId)
   const items = useStore((s) => s.items)
   const previewItemRect = useStore((s) => s.previewItemRect)
   const settings = useStore((s) => s.settings)
+  const reduced = systemReduced || settings.reduceMotion
   const adaptiveSpring = useAdaptiveSpring()
   
   const item = previewItemId ? items.find((i) => i.id === previewItemId) : null
@@ -186,10 +189,10 @@ export function PreviewFlyout({ isRight }: { isRight: boolean }) {
             key={item.id}
             className="preview-flyout"
             data-preview-flyout="true"
-            initial={{ opacity: 0, scale: 0.88, y: 8 }}
+            initial={reduced ? false : { opacity: 0, scale: 0.88, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.88, y: 8 }}
-            transition={{
+            exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.88, y: 8 }}
+            transition={reduced ? INSTANT : {
               ...adaptiveSpring,
               opacity: { type: 'tween', duration: 0.16, ease: 'easeOut' },
               y: { type: 'spring', stiffness: 420, damping: 36, mass: 0.65, restDelta: 0.001 }
@@ -209,8 +212,7 @@ export function PreviewFlyout({ isRight }: { isRight: boolean }) {
               boxShadow: dragOver ? '0 0 35px rgba(76, 175, 80, 0.3)' : '0 20px 40px rgba(0,0,0,0.5)',
               pointerEvents: 'auto',
               transformOrigin: `${isRight ? '100%' : '0%'} ${originY}`,
-              willChange: 'transform, opacity',
-              transition: 'background 0.2s ease, border 0.2s ease, box-shadow 0.2s ease',
+              transition: reduced ? 'none' : 'background 0.2s ease, border 0.2s ease, box-shadow 0.2s ease',
               position: 'relative'
             }}
           >
@@ -430,6 +432,7 @@ function QuickActionButton({
   activeColor?: string
   solidDark?: boolean
 }) {
+  const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
 
   const handleClick = async (e: React.MouseEvent) => {
@@ -448,7 +451,7 @@ function QuickActionButton({
 
   return (
     <button
-      title={copied ? 'Copied!' : title}
+      title={copied ? t('toast.copiedToClipboard') : title}
       onClick={handleClick}
       style={{
         width: 28,
@@ -505,13 +508,15 @@ function SelectionBadge({
   isSelected: boolean
   onToggle: (e: React.MouseEvent) => void
 }) {
+  const { t, resolvedLang } = useTranslation()
+
   return (
     <div
       onClick={(e) => {
         e.stopPropagation()
         onToggle(e)
       }}
-      title={isSelected ? 'Deselect item' : 'Select item'}
+      title={itemSelectionTitle(isSelected, resolvedLang, t)}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -555,7 +560,7 @@ function PreviewContent({
   selectedKeys?: Set<string>
   onToggleSelectKey?: (key: string, e?: React.MouseEvent) => void
 }) {
-  const { t } = useTranslation()
+  const { t, resolvedLang } = useTranslation()
   const startDrag = useDragOut()
 
   if (item.data.kind === 'text') {
@@ -646,7 +651,7 @@ function PreviewContent({
           />
         </div>
         {item.data.imageId && (
-          <img src={`edgelocal://${item.data.imageId}`} alt="preview" style={{ width: '100%', maxHeight: '65vh', objectFit: 'contain', borderRadius: 8 }} draggable={false} />
+      <img src={`edgelocal://${item.data.imageId}`} alt="" style={{ width: '100%', maxHeight: '65vh', objectFit: 'contain', borderRadius: 8 }} draggable={false} />
         )}
         <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontFamily: SYS_FONT, letterSpacing: '0.02em' }}>
           {item.data.width} × {item.data.height} · {formatBytes(item.data.bytes)}
@@ -682,7 +687,9 @@ function PreviewContent({
                   tryPaste(() => window.edge.pasteSubitem({ id: item.id, imageId: img.imageId }))
                 }
               }}
-              title={selectedKeys && selectedKeys.size > 0 ? (isSelected ? 'Click to deselect' : 'Click to select') : 'Click to paste image · Drag to move'}
+              title={selectedKeys && selectedKeys.size > 0
+                ? itemSelectionTitle(isSelected, resolvedLang, t)
+                : t('flyout.clickToPasteDrag')}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -836,7 +843,9 @@ function PreviewContent({
                     tryPaste(() => window.edge.pasteSubitem({ id: item.id, paths: [p] }))
                   }
                 }}
-                title={selectedKeys && selectedKeys.size > 0 ? (isSelected ? 'Click to deselect' : 'Click to select') : `Click to paste "${fileName}" · Drag to move`}
+                title={selectedKeys && selectedKeys.size > 0
+                  ? itemSelectionTitle(isSelected, resolvedLang, t)
+                  : `${t('flyout.clickToPasteDrag')} · ${fileName}`}
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
@@ -861,13 +870,13 @@ function PreviewContent({
 
                 <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 3, display: 'flex', alignItems: 'center', gap: 4 }}>
                   <QuickActionButton
-                    title="Copy File"
+                    title={t('flyout.copyFile')}
                     icon={CopyIcon}
                     onClick={() => window.edge.copySubitem({ id: item.id, paths: [p] })}
                     solidDark={true}
                   />
                   <button
-                    title="Open location in Explorer"
+                    title={t('flyout.openInExplorer')}
                     onClick={(e) => {
                       e.stopPropagation()
                       window.edge.revealFile(p)
@@ -968,7 +977,9 @@ function PreviewContent({
                   tryPaste(() => window.edge.pasteSubitem({ id: item.id, paths: [p] }))
                 }
               }}
-              title={selectedKeys && selectedKeys.size > 0 ? (isSelected ? 'Click to deselect' : 'Click to select') : `Click to paste "${fileName}" · Drag to move`}
+              title={selectedKeys && selectedKeys.size > 0
+                ? itemSelectionTitle(isSelected, resolvedLang, t)
+                : `${t('flyout.clickToPasteDrag')} · ${fileName}`}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -1015,12 +1026,12 @@ function PreviewContent({
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
                   <QuickActionButton
-                    title="Copy File"
+                    title={t('flyout.copyFile')}
                     icon={CopyIcon}
                     onClick={() => window.edge.copySubitem({ id: item.id, paths: [p] })}
                   />
                   <button
-                    title="Open location in Explorer"
+                    title={t('flyout.openInExplorer')}
                     onClick={(e) => {
                       e.stopPropagation()
                       window.edge.revealFile(p)
@@ -1060,4 +1071,13 @@ function PreviewContent({
   }
 
   return null
+}
+
+function itemSelectionTitle(
+  isSelected: boolean,
+  language: string,
+  translate: (path: string, params?: Record<string, string | number>) => string
+): string {
+  if (language === 'zh-CN') return isSelected ? '取消选择' : '选择'
+  return isSelected ? translate('flyout.deselectAll') : translate('flyout.selectAll')
 }

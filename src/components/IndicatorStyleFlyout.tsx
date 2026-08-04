@@ -7,7 +7,7 @@
  *   - Clean spring exit/entry matching PreviewFlyout
  */
 import { useRef, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useStore } from '../store/appStore'
 import { LiquidOctopusLoader } from './LiquidOctopusLoader'
 import { TickIndicatorIcon, CopyIndicatorIcon, SparkleIndicatorIcon } from './CopyIndicatorCurve'
@@ -16,12 +16,15 @@ import { playButtonClickSound } from '../lib/soundEffects'
 import { createPortal } from 'react-dom'
 import { useAdaptiveSpring } from '../hooks/useAdaptiveSpring'
 import { useTranslation } from '../i18n'
+import { INSTANT } from '../lib/motion'
 
 export function IndicatorStyleFlyout({ isRight }: { isRight: boolean }) {
+  const systemReduced = useReducedMotion()
   const { t } = useTranslation()
   const styleFlyoutOpen = useStore((s) => s.styleFlyoutOpen)
   const setStyleFlyoutOpen = useStore((s) => s.setStyleFlyoutOpen)
   const settings = useStore((s) => s.settings)
+  const reduced = systemReduced || settings.reduceMotion
   const patch = useStore((s) => s.patchSettings)
   const adaptiveSpring = useAdaptiveSpring()
 
@@ -89,10 +92,10 @@ export function IndicatorStyleFlyout({ isRight }: { isRight: boolean }) {
             key="indicator-style-flyout"
             className="preview-flyout"
             data-preview-flyout="true"
-            initial={{ opacity: 0, scale: 0.88, y: 8 }}
+            initial={reduced ? false : { opacity: 0, scale: 0.88, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.88, y: 8 }}
-            transition={{
+            exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.88, y: 8 }}
+            transition={reduced ? INSTANT : {
               ...adaptiveSpring,
               opacity: { type: 'tween', duration: 0.16, ease: 'easeOut' },
               y: { type: 'spring', stiffness: 420, damping: 36, mass: 0.65, restDelta: 0.001 }
@@ -109,8 +112,7 @@ export function IndicatorStyleFlyout({ isRight }: { isRight: boolean }) {
               boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)',
               pointerEvents: 'auto',
               transformOrigin: `${isRight ? '100%' : '0%'} 50%`,
-              willChange: 'transform, opacity',
-              transition: 'background 0.2s ease, border 0.2s ease, box-shadow 0.2s ease',
+              transition: reduced ? 'none' : 'background 0.2s ease, border 0.2s ease, box-shadow 0.2s ease',
               position: 'relative',
               padding: 14
             }}

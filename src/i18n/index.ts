@@ -95,6 +95,7 @@ export function useTranslation() {
   if (g.document && g.document.documentElement) {
     const isRtl = resolvedLang === 'ar' || resolvedLang === 'he'
     g.document.documentElement.dir = isRtl ? 'rtl' : 'ltr'
+    g.document.documentElement.lang = resolvedLang
   }
 
   return {

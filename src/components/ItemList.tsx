@@ -8,7 +8,7 @@
  * Drag-in awareness: sets `dragActive` on the store while OS files are being
  * dragged over the panel so the edge-hover hook knows not to close mid-drag.
  */
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useRef, useEffect, useLayoutEffect, useState } from 'react'
 import { useStore } from '../store/appStore'
 import { useFilteredItems } from '../hooks/useFilteredItems'
@@ -18,8 +18,12 @@ import { ChevronDownIcon, PinFillIcon } from './icons'
 import { playExpandSound } from '../lib/soundEffects'
 
 import { useTranslation } from '../i18n'
+import { ARRIVE_EASE, INSTANT, LEAVE_EASE, SMALL_SPRING } from '../lib/motion'
 
 export function ItemList() {
+  const systemReduced = useReducedMotion()
+  const appReduced = useStore((s) => s.settings.reduceMotion)
+  const reduced = systemReduced || appReduced
   const { t } = useTranslation()
   const { pinned, recent } = useFilteredItems()
   const query = useStore((s) => s.query)
@@ -217,8 +221,14 @@ export function ItemList() {
                   <span className="pinned-count-badge">{pinned.length}</span>
                 </div>
                 <div className="pinned-header-right">
-                  <button className="act bundle-collapse-btn" type="button" aria-label="Toggle pinned section">
-                    <ChevronDownIcon style={{ transform: pinnedCollapsed ? 'rotate(0deg)' : 'rotate(180deg)', transition: 'transform 0.22s ease' }} />
+                  <button className="act bundle-collapse-btn" type="button" aria-label={pinnedCollapsed ? t('item.expandPinned') : t('item.collapsePinned')}>
+                    <motion.span
+                      className="micro-icon-slot"
+                      animate={{ rotate: pinnedCollapsed ? 0 : 180 }}
+                      transition={reduced ? INSTANT : SMALL_SPRING}
+                    >
+                      <ChevronDownIcon />
+                    </motion.span>
                   </button>
                 </div>
               </div>
@@ -229,7 +239,10 @@ export function ItemList() {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                    transition={reduced ? INSTANT : {
+                      height: { duration: 0.28, ease: ARRIVE_EASE },
+                      opacity: { duration: pinnedCollapsed ? 0.12 : 0.18, ease: pinnedCollapsed ? LEAVE_EASE : ARRIVE_EASE }
+                    }}
                     style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 8, marginTop: 6 }}
                   >
                     {pinned.map((it) => (
@@ -257,9 +270,10 @@ export function ItemList() {
       <AnimatePresence>
         {showScrollTop && (
           <motion.button
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            initial={reduced ? false : { opacity: 0, scale: 0.8, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.8, y: 20 }}
+            transition={reduced ? INSTANT : SMALL_SPRING}
             className="scroll-top-btn"
             onClick={scrollToTop}
             title={t('item.scrollToTop')}

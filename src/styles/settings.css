@@ -13,8 +13,6 @@
   overflow-x: hidden;
   padding: 4px var(--pad) 28px;
   scrollbar-width: none;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
 }
 
 .settings-scroll-list::-webkit-scrollbar {
@@ -54,7 +52,6 @@
   cursor: pointer;
   outline: none;
   transition: color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
-  -webkit-font-smoothing: antialiased;
   letter-spacing: 0.01em;
   white-space: nowrap;
   overflow: hidden;
@@ -68,8 +65,8 @@
 .settings-tab-btn.active {
   color: #000000;
   font-weight: 600;
-  background: #ffffff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.40);
+  background: transparent;
+  box-shadow: none;
 }
 
 .settings-tab-indicator {
@@ -213,9 +210,6 @@
   cursor: pointer;
   margin: 6px 0 2px 0;
   transition: background 0.15s ease;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  transform: translateZ(0);
 }
 
 .setting-range-input::-webkit-slider-thumb {
@@ -317,7 +311,6 @@
   border: none;
   cursor: pointer;
   transition: all 0.15s ease;
-  -webkit-font-smoothing: antialiased;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -449,9 +442,6 @@
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s ease;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  transform: translateZ(0);
   -webkit-background-clip: padding-box;
   background-clip: padding-box;
 }
@@ -513,9 +503,6 @@
   box-shadow: 0 2px 10px rgba(255, 94, 91, 0.25);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  transform: translateZ(0);
 }
 
 .kofi-support-btn:hover {

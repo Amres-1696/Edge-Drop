@@ -34,9 +34,9 @@ body {
   color: var(--text-primary);
   background: transparent;
   overflow: hidden;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: auto;
+  -moz-osx-font-smoothing: auto;
+  text-rendering: auto;
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   user-select: none;
   -webkit-user-select: none;
@@ -50,17 +50,10 @@ body {
    re-enable dragging explicitly. */
 /* High-Definition Vector & Image Anti-Aliasing */
 img,
-svg,
 canvas,
 video {
   image-rendering: smooth;
   shape-rendering: geometricPrecision;
-  text-rendering: optimizeLegibility;
-}
-
-svg {
-  transform: translateZ(0);
-  backface-visibility: hidden;
 }
 
 svg path,
@@ -91,8 +84,6 @@ svg polygon {
 .copy-curve-container,
 .bundle-stack-card,
 .style-card {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   -webkit-background-clip: padding-box;
   background-clip: padding-box;
 }
@@ -114,6 +105,18 @@ button {
   background: none;
   border: none;
   cursor: pointer;
+}
+
+.micro-icon-slot {
+  display: inline-grid;
+  place-items: center;
+  line-height: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within {
+    scroll-behavior: auto;
+  }
 }
 
 input {

@@ -6,13 +6,17 @@
  * auto-dismisses on a timer (see appStore.pushToast) and can also be swiped
  * away by clicking it.
  */
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useStore } from '../store/appStore'
 
 import { useTranslation } from '../i18n'
+import { ARRIVE_EASE, INSTANT, LEAVE_EASE } from '../lib/motion'
 
 export function ToastStack() {
-  const { t } = useTranslation()
+  const systemReduced = useReducedMotion()
+  const appReduced = useStore((s) => s.settings.reduceMotion)
+  const reduced = systemReduced || appReduced
+  const { t, resolvedLang } = useTranslation()
   const toasts = useStore((s) => s.toasts)
   const dismiss = useStore((s) => s.dismissToast)
 
@@ -23,10 +27,12 @@ export function ToastStack() {
           <motion.button
             key={toastMsg.id}
             className={`toast ${toastMsg.tone === 'error' ? 'toast-error' : 'toast-info'}`}
-            initial={{ opacity: 0, y: 16, scale: 0.96 }}
+            initial={reduced ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.96 }}
-            transition={{ type: 'spring', stiffness: 500, damping: 40, mass: 0.5, restDelta: 0.001, restSpeed: 0.001 }}
+            exit={reduced
+              ? { opacity: 0, transition: INSTANT }
+              : { opacity: 0, y: 8, scale: 0.98, transition: { duration: 0.15, ease: LEAVE_EASE } }}
+            transition={reduced ? INSTANT : { duration: 0.22, ease: ARRIVE_EASE }}
             onClick={() => dismiss(toastMsg.id)}
             title={t('header.close')}
           >
@@ -37,10 +43,29 @@ export function ToastStack() {
                 <line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
             )}
-            <span>{toastMsg.message}</span>
+            <span>{localizeToastMessage(toastMsg.message, resolvedLang)}</span>
           </motion.button>
         ))}
       </AnimatePresence>
     </div>
   )
+}
+
+function localizeToastMessage(message: string, language: string): string {
+  if (language !== 'zh-CN') return message
+
+  const split = message.match(/^Split into (\d+) stacks \(max 10 each\)$/)
+  if (split) return `已拆分为 ${split[1]} 个集合（每个最多 10 项）`
+
+  const messages: Record<string, string> = {
+    'An image collection can hold a maximum of 10 items': '图片集合最多可容纳 10 项',
+    'A folder bundle can hold a maximum of 10 files': '文件集合最多可容纳 10 个文件',
+    'Images can only be grouped with other images': '图片只能与其他图片组合',
+    'Files can only be grouped with other files': '文件只能与其他文件组合',
+    'Text and links cannot be grouped together': '文本和链接不能组合',
+    'Collection is full (10 max)': '集合已满（最多 10 项）',
+    'Cannot combine different item types': '无法组合不同类型的项目'
+  }
+
+  return messages[message] ?? message
 }

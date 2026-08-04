@@ -122,7 +122,7 @@ export function Onboarding() {
         borderBottom: '1px solid #262626'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <img src={logoUrl} alt="Edge-Drop Logo" style={{ width: '28px', height: '28px' }} />
+          <img src={logoUrl} alt="Edge-Drop 标志" style={{ width: '28px', height: '28px' }} />
           <span style={{ fontWeight: 700, fontSize: '16px', letterSpacing: '-0.02em' }}>Edge-Drop</span>
         </div>
         <button

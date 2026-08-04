@@ -7,7 +7,7 @@
  * edge. When closed, the whole blade sits off-screen so the window stays
  * transparent and click-through.
  */
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useEffect, useRef, useState, useMemo } from 'react'
 import { useStore } from '../store/appStore'
 import { PANEL_LEAVE_EVENT, PANEL_ENTER_EVENT } from '../hooks/useEdgeHover'
@@ -22,8 +22,10 @@ import { CopyIndicatorCurve } from './CopyIndicatorCurve'
 import { useFilteredItems } from '../hooks/useFilteredItems'
 
 import { useTranslation } from '../i18n'
+import { CELL_SPRING, CROSSFADE_SPRING, INSTANT } from '../lib/motion'
 
 export function Panel() {
+  const systemReduced = useReducedMotion()
   const { t } = useTranslation()
   const open = useStore((s) => s.open)
   const { pinned, recent } = useFilteredItems()
@@ -45,6 +47,7 @@ export function Panel() {
   }
 
   const settings = useStore((s) => s.settings)
+  const reduced = systemReduced || settings.reduceMotion
   const settingsOpen = useStore((s) => s.settingsOpen)
   const setSettingsOpen = useStore((s) => s.setSettingsOpen)
   const setQuery = useStore((s) => s.setQuery)
@@ -58,20 +61,22 @@ export function Panel() {
   }, [open, setSettingsOpen, setQuery])
 
   const screenH = typeof window !== 'undefined' ? window.innerHeight : 800
+  const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1
+  const snapToDevicePixel = (value: number) => Math.round(value * dpr) / dpr
   const pFrac = settings.panelHeight || 0.6
-  const panelH = screenH * pFrac
+  const panelH = snapToDevicePixel(screenH * pFrac)
   const minY = panelH / 2
   const maxY = screenH - panelH / 2
   const vOffset = settings.verticalOffset ?? 0.5
-  const midY = Math.round(minY + vOffset * (maxY - minY))
-  const topOffset = `${midY}px`
+  const midY = minY + vOffset * (maxY - minY)
+  const topOffset = `${snapToDevicePixel(midY - panelH / 2)}px`
 
   // The actual pixel height of the trigger zone on the left edge
   const triggerHeightPx = Math.round(window.innerHeight * settings.hotZoneHeight)
   const halfTrigger = Math.round(triggerHeightPx / 2)
 
   // The height of the complete pop-up panel
-  const panelHeightStr = `${(settings.panelHeight || 0.6) * 100}vh`
+  const panelHeightStr = `${panelH}px`
 
   const setDragActive = useStore((s) => s.setDragActive)
   const setInternalDragReq = useStore((s) => s.setInternalDragReq)
@@ -219,12 +224,10 @@ export function Panel() {
   let originY = 0.5
   if (isRight) {
     containerStyle.top = topOffset
-    containerStyle.y = '-50%'
     containerStyle.right = 0
     originX = 1
   } else {
     containerStyle.top = topOffset
-    containerStyle.y = '-50%'
     containerStyle.left = 0
   }
   containerStyle.originX = originX
@@ -264,14 +267,16 @@ export function Panel() {
       <CopyIndicatorCurve />
       <motion.div
         className={containerClass}
-        initial={{ scaleX: 0.93, scaleY: 0.96, opacity: 0.98 }}
+        initial={reduced ? false : { scaleX: 0.93, scaleY: 0.96, opacity: 0.98 }}
         onDragEnter={onDragEnter}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
         style={containerStyle}
         animate={
-          open
+          reduced
+            ? INSTANT
+            : open
             ? { scaleX: 1, scaleY: 1, opacity: 1 }
             : { scaleX: 0.96, scaleY: 0.97, opacity: 0.98 }
         }
@@ -297,7 +302,7 @@ export function Panel() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.28 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.15, ease: 'easeInOut' }}
+              transition={reduced ? INSTANT : { duration: 0.15, ease: 'easeInOut' }}
               style={{
                 position: 'absolute',
                 top: insetTop,
@@ -353,10 +358,10 @@ export function Panel() {
             {settingsOpen ? (
               <motion.div
                 key="settings"
-                initial={{ opacity: 0, x: isRight ? -8 : 8 }}
+                initial={reduced ? false : { opacity: 0, x: isRight ? -8 : 8 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: isRight ? 8 : -8 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 36, mass: 0.6 }}
+                exit={reduced ? { opacity: 0 } : { opacity: 0, x: isRight ? 8 : -8 }}
+                transition={reduced ? INSTANT : { type: 'spring', stiffness: 400, damping: 36, mass: 0.6 }}
                 style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}
               >
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 18, background: 'linear-gradient(to bottom, #000000, transparent)', pointerEvents: 'none', zIndex: 10 }} />
@@ -366,10 +371,10 @@ export function Panel() {
             ) : (
               <motion.div
                 key="list"
-                initial={{ opacity: 0, x: isRight ? 8 : -8 }}
+                initial={reduced ? false : { opacity: 0, x: isRight ? 8 : -8 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: isRight ? -8 : 8 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 36, mass: 0.6 }}
+                exit={reduced ? { opacity: 0 } : { opacity: 0, x: isRight ? -8 : 8 }}
+                transition={reduced ? INSTANT : { type: 'spring', stiffness: 400, damping: 36, mass: 0.6 }}
                 style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}
               >
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 18, background: 'linear-gradient(to bottom, #000000, transparent)', pointerEvents: 'none', zIndex: 10 }} />
@@ -377,20 +382,34 @@ export function Panel() {
                 <ItemList />
                 <div className="footer" style={{ position: 'relative' }}>
                   <div style={{ position: 'absolute', top: -18, left: 0, right: 0, height: 18, background: 'linear-gradient(to top, #000000, transparent)', pointerEvents: 'none', zIndex: 10 }} />
-                  <span className="count">
-                    {filteredCount} {t('item.items')}
+                  <span className="count count-value" aria-live="polite">
+                    <AnimatePresence initial={false} mode="popLayout">
+                      <motion.span
+                        key={filteredCount}
+                        initial={reduced ? { opacity: 0 } : { opacity: 0, y: filteredCount > 0 ? 5 : -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={reduced ? { opacity: 0 } : { opacity: 0, y: -5 }}
+                        transition={reduced ? INSTANT : CROSSFADE_SPRING}
+                        className="count-number"
+                      >
+                        {filteredCount}
+                      </motion.span>
+                    </AnimatePresence>
+                    &nbsp;{t('item.items')}
                   </span>
                   <div className="spacer" />
-                  <button 
+                  <motion.button
                     className="text-btn danger"
                     onClick={handleClear} 
                     disabled={filteredCount === 0} 
                     title={isFiltered ? t('item.clear') : t('item.clear')} 
                     style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                    whileTap={filteredCount === 0 || reduced ? undefined : { y: 1, scale: 0.98 }}
+                    transition={reduced ? INSTANT : CELL_SPRING}
                   >
                     <TrashIcon width={14} height={14} />
                     <span>{t('item.clear')}</span>
-                  </button>
+                  </motion.button>
                 </div>
               </motion.div>
             )}
@@ -425,6 +444,9 @@ function getTutorialText(step: number): string {
 */
 
 function DropOverlay() {
+  const systemReduced = useReducedMotion()
+  const appReduced = useStore((s) => s.settings.reduceMotion)
+  const reduced = systemReduced || appReduced
   const { t } = useTranslation()
   const dragActive = useStore((s) => s.dragActive)
   const internalDragReq = useStore((s) => s.internalDragReq)
@@ -433,10 +455,10 @@ function DropOverlay() {
     <AnimatePresence>
       {dragActive && !internalDragReq && (
         <motion.div
-          initial={{ opacity: 0 }}
+          initial={reduced ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+          transition={reduced ? INSTANT : { duration: 0.2 }}
           style={{
             position: 'absolute',
             inset: 0,
@@ -488,6 +510,9 @@ function DropOverlay() {
 }
 
 function SplitDropZone({ isRight = false }: { isRight?: boolean }) {
+  const systemReduced = useReducedMotion()
+  const appReduced = useStore((s) => s.settings.reduceMotion)
+  const reduced = systemReduced || appReduced
   const internalDragReq = useStore((s) => s.internalDragReq)
   const isSubitemDragging = !!(
     internalDragReq &&
@@ -513,10 +538,10 @@ function SplitDropZone({ isRight = false }: { isRight?: boolean }) {
           onDragOver={(e) => e.preventDefault()}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
-          initial={{ opacity: 0, x: isRight ? 15 : -15 }}
+          initial={reduced ? false : { opacity: 0, x: isRight ? 15 : -15 }}
           animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: isRight ? 15 : -15 }}
-          transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+          exit={reduced ? { opacity: 0 } : { opacity: 0, x: isRight ? 15 : -15 }}
+          transition={reduced ? INSTANT : { type: 'spring', stiffness: 350, damping: 25 }}
           style={{
             left: isRight ? 'auto' : 0,
             right: isRight ? 0 : 'auto',
