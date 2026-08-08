@@ -14,7 +14,7 @@
  * clamped preview; file items list names or bundle badge. Motion is handled by
  * the parent list (layout/AnimatePresence), so this component stays presentational.
  */
-import { memo, useState, useCallback, useEffect } from 'react'
+import { memo, useState, useCallback, useEffect, forwardRef } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import type { ClipboardItemDto } from '../../shared/types'
 import { MAX_STACK } from '../../shared/types'
@@ -44,7 +44,7 @@ interface Props {
 /* Main item card                                                      */
 /* ------------------------------------------------------------------ */
 
-function ClipboardItemBase({ item }: Props) {
+const ClipboardItemBase = forwardRef<HTMLDivElement, Props>(({ item }, ref) => {
   const { t } = useTranslation()
   const systemReduced = useReducedMotion()
   const appReduced = useStore((s) => s.settings.reduceMotion)
@@ -161,6 +161,7 @@ function ClipboardItemBase({ item }: Props) {
 
   return (
     <motion.div
+      ref={ref}
       layout="position"
       initial={open ? (reduced ? { opacity: 0 } : { opacity: 0, scale: 0.97, y: 8 }) : false}
       animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -170,7 +171,7 @@ function ClipboardItemBase({ item }: Props) {
       whileHover={reduced ? undefined : { y: -2 }}
       whileTap={reduced ? undefined : { y: 1, scale: 0.995 }}
       transition={{
-        layout: CELL_SPRING,
+        layout: reduced ? INSTANT : { duration: 0.22, ease: ARRIVE_EASE },
         opacity: { duration: 0.22, ease: ARRIVE_EASE },
         y: CELL_SPRING,
         scale: CELL_SPRING
@@ -356,7 +357,7 @@ function ClipboardItemBase({ item }: Props) {
       </div>
     </motion.div>
   )
-}
+})
 
 // Bundle expand/collapse — all blur removed; opacity+y+scale composite trivially.
 const containerVariants = {

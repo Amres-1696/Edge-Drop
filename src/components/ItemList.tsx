@@ -205,8 +205,10 @@ export function ItemList() {
       ) : (
         <>
           {pinned.length > 0 && (
-            <section className="pinned-section">
-              <div 
+            <motion.section layout={!reduced} transition={reduced ? INSTANT : { duration: 0.22, ease: ARRIVE_EASE }} className="pinned-section">
+              <motion.div 
+                layout={!reduced}
+                transition={reduced ? INSTANT : { duration: 0.22, ease: ARRIVE_EASE }}
                 className={`section-label pinned-header-interactive ${pinnedCollapsed ? 'is-collapsed' : ''}`}
                 onClick={() => {
                   const next = !pinnedCollapsed
@@ -231,38 +233,42 @@ export function ItemList() {
                     </motion.span>
                   </button>
                 </div>
-              </div>
+              </motion.div>
               <AnimatePresence initial={false}>
                 {!pinnedCollapsed && (
                   <motion.div
                     key="pinned-items-container"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={reduced ? INSTANT : {
-                      height: { duration: 0.28, ease: ARRIVE_EASE },
-                      opacity: { duration: pinnedCollapsed ? 0.12 : 0.18, ease: pinnedCollapsed ? LEAVE_EASE : ARRIVE_EASE }
-                    }}
-                    style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 8, marginTop: 6 }}
+                    layout={!reduced}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={reduced ? INSTANT : { duration: 0.22, ease: ARRIVE_EASE }}
+                    style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 6 }}
                   >
-                    {pinned.map((it) => (
-                      <ClipboardItemCard key={it.id} item={it} />
-                    ))}
+                    <AnimatePresence initial={false}>
+                      {pinned.map((it) => (
+                        <ClipboardItemCard key={it.id} item={it} />
+                      ))}
+                    </AnimatePresence>
                   </motion.div>
                 )}
               </AnimatePresence>
-            </section>
+            </motion.section>
           )}
 
           {recent.length > 0 && (
-            <section>
-              {pinned.length > 0 && <div className="section-label">{t('item.recent')}</div>}
+            <motion.section layout={!reduced} transition={reduced ? INSTANT : { duration: 0.22, ease: ARRIVE_EASE }} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {pinned.length > 0 && (
+                <motion.div layout={!reduced} transition={reduced ? INSTANT : { duration: 0.22, ease: ARRIVE_EASE }} className="section-label">
+                  {t('item.recent')}
+                </motion.div>
+              )}
               <AnimatePresence initial={false}>
                 {recent.map((it) => (
                   <ClipboardItemCard key={it.id} item={it} />
                 ))}
               </AnimatePresence>
-            </section>
+            </motion.section>
           )}
         </>
       )}
