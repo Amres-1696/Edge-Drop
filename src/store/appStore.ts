@@ -8,7 +8,7 @@
  */
 import { create } from 'zustand'
 import { edge } from '../lib/edge'
-import type { ClipboardItemDto, Settings, DragRequest } from '../../shared/types'
+import type { ClipboardItemDto, Settings, DragRequest, RecordView, WorkspaceMode } from '../../shared/types'
 import { DEFAULT_SETTINGS } from '../../shared/types'
 
 let flareTimer: ReturnType<typeof setTimeout> | null = null
@@ -29,6 +29,18 @@ interface AppState {
   query: string
   typeFilter: import('../../shared/types').TypeFilter
   setTypeFilter: (filter: import('../../shared/types').TypeFilter) => void
+  workspaceMode: WorkspaceMode
+  setWorkspaceMode: (mode: WorkspaceMode) => void
+  recordView: RecordView
+  setRecordView: (view: RecordView) => void
+  recordQuery: string
+  setRecordQuery: (query: string) => void
+  searchExpanded: boolean
+  setSearchExpanded: (expanded: boolean) => void
+  recordComposerOpen: boolean
+  setRecordComposerOpen: (open: boolean) => void
+  editingNoteId: string | null
+  setEditingNoteId: (id: string | null) => void
   /** Whether the panel blade is expanded. */
   open: boolean
   /** Settings sheet visibility. */
@@ -112,6 +124,34 @@ export const useStore = create<AppState>((set, get) => ({
   query: '',
   typeFilter: 'all',
   setTypeFilter: (typeFilter) => set({ typeFilter }),
+  workspaceMode: (() => {
+    try { return (globalThis as any).localStorage?.getItem('edge_drop_workspace') === 'records' ? 'records' : 'clipboard' }
+    catch { return 'clipboard' }
+  })(),
+  setWorkspaceMode: (workspaceMode) => {
+    try { (globalThis as any).localStorage?.setItem('edge_drop_workspace', workspaceMode) } catch { /* renderer storage unavailable */ }
+    set({
+      workspaceMode,
+      query: '',
+      recordQuery: '',
+      searchExpanded: false,
+      recordComposerOpen: false,
+      editingNoteId: null,
+      previewItemId: null,
+      previewItemRect: null
+    })
+    edge.setPreviewMode(false)
+  },
+  recordView: 'notes',
+  setRecordView: (recordView) => set({ recordView, recordQuery: '', recordComposerOpen: false, editingNoteId: null }),
+  recordQuery: '',
+  setRecordQuery: (recordQuery) => set({ recordQuery }),
+  searchExpanded: false,
+  setSearchExpanded: (searchExpanded) => set({ searchExpanded }),
+  recordComposerOpen: false,
+  setRecordComposerOpen: (recordComposerOpen) => set({ recordComposerOpen }),
+  editingNoteId: null,
+  setEditingNoteId: (editingNoteId) => set({ editingNoteId }),
   open: false,
   settingsOpen: false,
   settingsSubView: 'main',
@@ -252,7 +292,7 @@ export const useStore = create<AppState>((set, get) => ({
       // NOTE: Do NOT reset styleFlyoutOpen here — closePanel() handles the
       // sequencing so the flyout exit animation completes before the panel closes.
       // Only reset previewItemId so the normal preview flyout clears correctly.
-      set({ previewItemId: null, previewItemRect: null })
+      set({ previewItemId: null, previewItemRect: null, query: '', recordQuery: '', searchExpanded: false, recordComposerOpen: false })
       edge.setPreviewMode(false)
     }
   },

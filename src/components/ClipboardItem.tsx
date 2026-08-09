@@ -20,6 +20,7 @@ import type { ClipboardItemDto } from '../../shared/types'
 import { MAX_STACK } from '../../shared/types'
 import type { DragRequest } from '../../shared/types'
 import { useStore } from '../store/appStore'
+import { useRecordStore } from '../store/recordStore'
 import { useDragOut } from '../hooks/useDragOut'
 import { basename, formatBytes, previewText, relativeTime, formatImageDisplayName } from '../lib/format'
 import { getFileKind } from '../lib/fileType'
@@ -57,6 +58,13 @@ function ClipboardItemBase({ item }: Props) {
   const [copied, setCopied] = useState(false)
   const [copyOrigin, setCopyOrigin] = useState({ x: 0, y: 0 })
   const [expanded, setExpanded] = useState(false)
+  const [recordFlash, setRecordFlash] = useState<'note' | 'todo' | null>(null)
+  const notes = useRecordStore((s) => s.notes)
+  const todos = useRecordStore((s) => s.todos)
+  const pendingRecord = useRecordStore((s) => s.pendingIds.has(item.id))
+  const convertClipboard = useRecordStore((s) => s.convertClipboard)
+  const existingNote = notes.find((note) => note.origin.clipboardItemId === item.id)
+  const existingTodo = todos.find((todo) => todo.origin.clipboardItemId === item.id)
 
   
   const open = useStore((s) => s.open)
@@ -66,6 +74,34 @@ function ClipboardItemBase({ item }: Props) {
 
   const isPreviewing = useStore((s) => s.previewItemId) === item.id
   const isBundle = (item.data.kind === 'files' && item.data.paths.length > 1) || item.data.kind === 'image-collection'
+
+  const suggestedRecordTitle = useCallback((target: 'note' | 'todo') => {
+    if (item.data.kind === 'image') return target === 'note' ? t('records.imageNoteTitle') : t('records.imageTodoTitle')
+    if (item.data.kind === 'image-collection') return t(target === 'note' ? 'records.imagesNoteTitle' : 'records.imagesTodoTitle', { count: item.data.images.length })
+    if (item.data.kind === 'files') return item.data.paths.length === 1
+      ? basename(item.data.paths[0])
+      : t(target === 'note' ? 'records.filesNoteTitle' : 'records.filesTodoTitle', { count: item.data.paths.length })
+    return target === 'note' ? t('records.untitledNote') : t('records.untitledTodo')
+  }, [item.data, t])
+
+  const onRecordAction = useCallback(async (target: 'note' | 'todo') => {
+    const existing = target === 'note' ? existingNote : existingTodo
+    if (existing) {
+      useStore.getState().setWorkspaceMode('records')
+      useStore.getState().setRecordView(target === 'note' ? 'notes' : 'todos')
+      if (target === 'note') useStore.getState().setEditingNoteId(existing.id)
+      return
+    }
+    const result = await convertClipboard({ itemId: item.id, target, suggestedTitle: suggestedRecordTitle(target) })
+    setRecordFlash(target)
+    window.setTimeout(() => setRecordFlash(null), 650)
+    useStore.getState().pushToast({
+      id: `record-convert-${Date.now()}`,
+      message: target === 'note' ? t('records.savedAsNote') : t('records.addedAsTodo'),
+      tone: 'info'
+    })
+    if (result.existing && target === 'note') useStore.getState().setEditingNoteId(result.recordId)
+  }, [convertClipboard, existingNote, existingTodo, item.id, suggestedRecordTitle, t])
 
   const onCopy = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
@@ -141,6 +177,9 @@ function ClipboardItemBase({ item }: Props) {
       }}
       className={`item${item.pinned ? ' pinned' : ''}${isBundle ? ' bundle' : ''}`}
     >
+      <AnimatePresence>
+        {recordFlash && <motion.div className="record-convert-flash" initial={reduced ? false : { opacity: .55, scale: .86 }} animate={{ opacity: 0, scale: 1.18 }} exit={{ opacity: 0 }} transition={reduced ? INSTANT : { duration: .55, ease: ARRIVE_EASE }} />}
+      </AnimatePresence>
       {copied && (
         <motion.div
           key="copy-ripple"
@@ -247,6 +286,22 @@ function ClipboardItemBase({ item }: Props) {
             }}
           >
             {isPreviewing ? <ContractIcon /> : <ExpandIcon />}
+          </button>
+          <button
+            className={`act record-action${existingNote ? ' active' : ''}`}
+            title={existingNote ? t('records.viewNote') : t('records.saveAsNote')}
+            disabled={pendingRecord}
+            onClick={(e) => { e.stopPropagation(); void onRecordAction('note') }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h6"/>{existingNote && <path d="m8 16 2 2 5-5" strokeWidth="2.2"/>}</svg>
+          </button>
+          <button
+            className={`act record-action${existingTodo ? ' active' : ''}`}
+            title={existingTodo ? t('records.viewTodo') : t('records.addAsTodo')}
+            disabled={pendingRecord}
+            onClick={(e) => { e.stopPropagation(); void onRecordAction('todo') }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="m8 12 2.5 2.5L16 9"/></svg>
           </button>
           <button className="act" title={t('item.copy')} onClick={(e) => {
             e.currentTarget.blur()

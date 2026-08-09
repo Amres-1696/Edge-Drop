@@ -20,6 +20,80 @@ export interface TranslationKeys {
     close: string
     whatsNew: string
   }
+  records?: {
+    workspaceClipboard: string
+    workspaceRecords: string
+    notes: string
+    todos: string
+    search: string
+    searchPlaceholder: string
+    newNote: string
+    newTodo: string
+    notePlaceholder: string
+    todoPlaceholder: string
+    noteComposerHint: string
+    save: string
+    add: string
+    pinned: string
+    recentlyEdited: string
+    characters: string
+    showMore: string
+    collapse: string
+    pin: string
+    unpin: string
+    delete: string
+    attachmentNote: string
+    noNotes: string
+    noNotesDesc: string
+    noTodos: string
+    noTodosDesc: string
+    noSearchResults: string
+    tryAnotherSearch: string
+    notesCount: string
+    autoSaveOn: string
+    justNow: string
+    minutesAgo: string
+    restoreTodo: string
+    completeTodo: string
+    noDueDate: string
+    completed: string
+    pending: string
+    detailsPlaceholder: string
+    overdue: string
+    today: string
+    upcoming: string
+    noDate: string
+    completedItems: string
+    pendingCount: string
+    keepHolding: string
+    holdToClear: string
+    noteDeleted: string
+    todoDeleted: string
+    undo: string
+    back: string
+    editNote: string
+    saving: string
+    saved: string
+    saveFailed: string
+    titlePlaceholder: string
+    bodyPlaceholder: string
+    lastEdited: string
+    imageNoteTitle: string
+    imageTodoTitle: string
+    imagesNoteTitle: string
+    imagesTodoTitle: string
+    filesNoteTitle: string
+    filesTodoTitle: string
+    untitledNote: string
+    untitledTodo: string
+    savedAsNote: string
+    addedAsTodo: string
+    viewNote: string
+    viewTodo: string
+    saveAsNote: string
+    addAsTodo: string
+    newItems: string
+  }
   behaviour: {
     languageTitle: string
     languageDesc: string
@@ -344,6 +418,80 @@ export const en: TranslationKeys = {
     "settings": "Settings",
     "close": "Close",
     "whatsNew": "What's New"
+  },
+  "records": {
+    "workspaceClipboard": "Clipboard",
+    "workspaceRecords": "Records",
+    "notes": "Notes",
+    "todos": "To-dos",
+    "search": "Search",
+    "searchPlaceholder": "Search here...",
+    "newNote": "New note",
+    "newTodo": "New to-do",
+    "notePlaceholder": "Write down an idea...",
+    "todoPlaceholder": "Add a to-do...",
+    "noteComposerHint": "Ctrl + Enter to save",
+    "save": "Save",
+    "add": "Add",
+    "pinned": "Pinned",
+    "recentlyEdited": "Recently edited",
+    "characters": "characters",
+    "showMore": "Show more",
+    "collapse": "Collapse",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "delete": "Delete",
+    "attachmentNote": "Attachment note",
+    "noNotes": "No notes yet",
+    "noNotesDesc": "Create a note or save something from the clipboard.",
+    "noTodos": "No to-dos yet",
+    "noTodosDesc": "Add a task or turn clipboard content into an action.",
+    "noSearchResults": "No results",
+    "tryAnotherSearch": "Try another keyword or clear search.",
+    "notesCount": "notes",
+    "autoSaveOn": "Auto-save on",
+    "justNow": "Just now",
+    "minutesAgo": "min ago",
+    "restoreTodo": "Restore to-do",
+    "completeTodo": "Complete to-do",
+    "noDueDate": "No due date",
+    "completed": "Completed",
+    "pending": "Pending",
+    "detailsPlaceholder": "Add details...",
+    "overdue": "Overdue",
+    "today": "Today",
+    "upcoming": "Upcoming",
+    "noDate": "No date",
+    "completedItems": "Completed",
+    "pendingCount": "open",
+    "keepHolding": "Keep holding...",
+    "holdToClear": "Hold to clear",
+    "noteDeleted": "Note deleted",
+    "todoDeleted": "To-do deleted",
+    "undo": "Undo",
+    "back": "Back",
+    "editNote": "Edit note",
+    "saving": "Saving...",
+    "saved": "Auto-saved",
+    "saveFailed": "Save failed",
+    "titlePlaceholder": "Title",
+    "bodyPlaceholder": "Start writing...",
+    "lastEdited": "Last edited",
+    "imageNoteTitle": "Image note",
+    "imageTodoTitle": "Review image",
+    "imagesNoteTitle": "{count} images",
+    "imagesTodoTitle": "Review {count} images",
+    "filesNoteTitle": "{count} file references",
+    "filesTodoTitle": "Process {count} files",
+    "untitledNote": "Untitled note",
+    "untitledTodo": "Untitled to-do",
+    "savedAsNote": "Saved as note",
+    "addedAsTodo": "Added as to-do",
+    "viewNote": "View note",
+    "viewTodo": "View to-do",
+    "saveAsNote": "Save as note",
+    "addAsTodo": "Add as to-do",
+    "newItems": "New items"
   },
   "behaviour": {
     "languageTitle": "Language",
@@ -2603,6 +2751,80 @@ export const zh_CN: TranslationKeys = {
     "settings": "设置",
     "close": "关闭",
     "whatsNew": "新功能"
+  },
+  "records": {
+    "workspaceClipboard": "剪贴板",
+    "workspaceRecords": "记录",
+    "notes": "备忘",
+    "todos": "待办",
+    "search": "搜索",
+    "searchPlaceholder": "搜索当前内容…",
+    "newNote": "新建备忘",
+    "newTodo": "新建待办",
+    "notePlaceholder": "写下一个想法…",
+    "todoPlaceholder": "添加一项待办…",
+    "noteComposerHint": "Ctrl + Enter 保存",
+    "save": "保存",
+    "add": "添加",
+    "pinned": "置顶",
+    "recentlyEdited": "最近编辑",
+    "characters": "字",
+    "showMore": "展开",
+    "collapse": "收起",
+    "pin": "置顶",
+    "unpin": "取消置顶",
+    "delete": "删除",
+    "attachmentNote": "附件备忘",
+    "noNotes": "还没有备忘",
+    "noNotesDesc": "新建一条备忘，或从剪贴板保存内容。",
+    "noTodos": "还没有待办",
+    "noTodosDesc": "添加一项任务，或把剪贴板内容变成行动。",
+    "noSearchResults": "没有找到结果",
+    "tryAnotherSearch": "换个关键词，或清空搜索后重试。",
+    "notesCount": "条备忘",
+    "autoSaveOn": "自动保存已开启",
+    "justNow": "刚刚",
+    "minutesAgo": "分钟前",
+    "restoreTodo": "恢复待办",
+    "completeTodo": "完成待办",
+    "noDueDate": "无截止日期",
+    "completed": "已完成",
+    "pending": "未完成",
+    "detailsPlaceholder": "添加详情…",
+    "overdue": "已逾期",
+    "today": "今天",
+    "upcoming": "即将到来",
+    "noDate": "无日期",
+    "completedItems": "已完成事项",
+    "pendingCount": "项未完成",
+    "keepHolding": "继续按住…",
+    "holdToClear": "按住清理",
+    "noteDeleted": "备忘已删除",
+    "todoDeleted": "待办已删除",
+    "undo": "撤销",
+    "back": "返回",
+    "editNote": "编辑备忘",
+    "saving": "正在保存…",
+    "saved": "已自动保存",
+    "saveFailed": "保存失败",
+    "titlePlaceholder": "标题",
+    "bodyPlaceholder": "开始记录…",
+    "lastEdited": "最后编辑",
+    "imageNoteTitle": "图片备忘",
+    "imageTodoTitle": "查看图片",
+    "imagesNoteTitle": "{count} 张图片",
+    "imagesTodoTitle": "处理 {count} 张图片",
+    "filesNoteTitle": "{count} 个文件引用",
+    "filesTodoTitle": "处理 {count} 个文件",
+    "untitledNote": "未命名备忘",
+    "untitledTodo": "未命名待办",
+    "savedAsNote": "已保存为备忘",
+    "addedAsTodo": "已添加为待办",
+    "viewNote": "查看备忘",
+    "viewTodo": "查看待办",
+    "saveAsNote": "保存为备忘",
+    "addAsTodo": "添加为待办",
+    "newItems": "有新记录"
   },
   "behaviour": {
     "languageTitle": "语言",

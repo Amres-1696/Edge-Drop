@@ -105,5 +105,35 @@ export default function App() {
     document.documentElement.style.setProperty('--font-scale', String(scale))
   }, [settings.reduceMotion, settings.fontSizeScale])
 
+  // Context shortcuts stay renderer-local so they never collide with the
+  // existing global Alt+C panel shortcut owned by Electron main.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const state = useStore.getState()
+      if (!state.open || state.settingsOpen) return
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f') {
+        event.preventDefault()
+        state.setSearchExpanded(true)
+        return
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'n' && state.workspaceMode === 'records') {
+        event.preventDefault()
+        state.setRecordComposerOpen(true)
+        return
+      }
+      if (event.key === 'Escape') {
+        if (state.editingNoteId) state.setEditingNoteId(null)
+        else if (state.recordComposerOpen) state.setRecordComposerOpen(false)
+        else if (state.searchExpanded) {
+          state.setQuery('')
+          state.setRecordQuery('')
+          state.setSearchExpanded(false)
+        }
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
   return <Panel />
 }

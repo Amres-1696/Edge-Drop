@@ -1,0 +1,165 @@
+/* Notes & todos — colorless, narrow-panel workspace with Interior-style motion. */
+.workspace-header {
+  flex: 0 0 auto;
+  min-height: 78px;
+  padding: 6px 10px 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  position: relative;
+  z-index: 30;
+  background: #000;
+}
+.workspace-header.settings-header-compact { min-height: 40px; padding-top: 4px; }
+.workspace-top-row, .workspace-sub-row { display: flex; align-items: center; width: 100%; min-width: 0; }
+.workspace-top-row { min-height: 32px; gap: 4px; }
+.workspace-sub-row { min-height: 29px; }
+.workspace-header-actions { margin-left: auto; display: flex; align-items: center; gap: 4px; }
+.settings-header-title { padding-left: 6px; color: rgba(255,255,255,.58); font-size: calc(12px * var(--font-scale, 1)); font-weight: 600; }
+.workspace-header .icon-btn { position: relative; flex: 0 0 32px; width: 32px; height: 32px; border-radius: 9px; }
+.workspace-header .icon-btn.active { background: rgba(255,255,255,.1); color: white; }
+.header-unread-dot, .header-update-dot { position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 50%; background: white; border: 1.5px solid #000; }
+.header-update-dot { background: #82d894; }
+
+.workspace-switch {
+  width: 142px;
+  height: 30px;
+  padding: 3px;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 999px;
+  background: rgba(255,255,255,.035);
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+.workspace-switch-pill {
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 67px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.16);
+  border: 1px solid rgba(255,255,255,.2);
+  box-shadow: 0 3px 10px rgba(0,0,0,.35), inset 0 1px rgba(255,255,255,.18);
+}
+.workspace-switch button { position: relative; z-index: 1; border-radius: 999px; color: rgba(255,255,255,.54); font-size: calc(10.5px * var(--font-scale, 1)); font-weight: 560; white-space: nowrap; }
+.workspace-switch button.active { color: white; }
+
+.expanding-search { margin-left: auto; width: 32px; height: 32px; display: flex; align-items: center; overflow: hidden; border: 1px solid transparent; border-radius: 10px; transition: width .28s cubic-bezier(.18,1.1,.35,1), background .18s, border-color .18s; }
+.expanding-search.open { width: 116px; background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.1); }
+.expanding-search .icon-btn { flex: 0 0 31px; }
+.expanding-search input { min-width: 0; width: 82px; padding: 0 7px 0 0; border: 0; outline: 0; background: transparent; color: white; font-size: calc(10px * var(--font-scale, 1)); }
+.expanding-search input::placeholder { color: rgba(255,255,255,.36); }
+
+.contextual-filters {
+  position: relative; display: flex; gap: 2px; align-items: center; padding: 2px 3px; margin-left: 0;
+  border: 1px solid rgba(255,255,255,.08); border-radius: 999px; background: rgba(255,255,255,.035);
+}
+.contextual-filters .filter-slide-pill { position: absolute; z-index: 0; left: 3px; top: 2px; width: 39px; height: 22px; border-radius: 999px; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.2); box-shadow: inset 0 1px rgba(255,255,255,.16); pointer-events: none; }
+.contextual-filters .filter-chip { position: relative; z-index: 1; width: 39px; height: 22px; border-radius: 999px; color: rgba(255,255,255,.55); font-size: calc(9.5px * var(--font-scale, 1)); white-space: nowrap; }
+.contextual-filters .filter-chip.active { color: white; font-weight: 600; }
+
+.records-segmented { position: relative; display: grid; grid-template-columns: repeat(2, 52px); height: 29px; padding: 3px; border: 1px solid rgba(255,255,255,.08); border-radius: 999px; background: rgba(255,255,255,.035); }
+.records-segmented-pill { position: absolute; left: 3px; top: 3px; width: 49px; height: 21px; border-radius: 999px; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.19); }
+.records-segmented button { position: relative; z-index: 1; border-radius: 999px; font-size: calc(10px * var(--font-scale, 1)); color: rgba(255,255,255,.52); }
+.records-segmented button.active { color: white; font-weight: 600; }
+.records-add-btn { margin-left: auto; width: 29px; height: 29px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.12); border-radius: 9px; background: rgba(255,255,255,.065); color: rgba(255,255,255,.78); transition: background .18s, border-color .18s; }
+.records-add-btn:hover, .records-add-btn.active { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.23); color: white; }
+
+.records-shell, .records-view-slot { flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+.records-list { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 8px 10px 18px; scrollbar-width: none; }
+.records-list::-webkit-scrollbar { display: none; }
+.record-section-label { margin: 11px 5px 7px; display: flex; align-items: center; gap: 7px; color: rgba(255,255,255,.35); font-size: calc(9px * var(--font-scale, 1)); letter-spacing: .09em; text-transform: uppercase; }
+.record-section-label::after { content: ''; height: 1px; flex: 1; background: rgba(255,255,255,.06); }
+.record-section-heading { width: 100%; margin: 7px 0 5px; padding: 7px 5px; display: flex; align-items: center; gap: 7px; border-radius: 8px; color: rgba(255,255,255,.42); font-size: calc(9.5px * var(--font-scale, 1)); }
+.record-section-heading:hover { background: rgba(255,255,255,.04); }
+.record-section-heading b { padding: 2px 6px; border-radius: 999px; background: rgba(255,255,255,.07); font-size: 9px; color: rgba(255,255,255,.55); }
+.record-section-heading svg { margin-left: auto; transition: transform .24s cubic-bezier(.18,1.1,.35,1); }
+.record-section-heading.open svg { transform: rotate(180deg); }
+.record-collapsible { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .25s cubic-bezier(.2,.8,.2,1); }
+.record-collapsible.open { grid-template-rows: 1fr; }
+.record-collapsible > div { overflow: hidden; }
+
+.record-card { position: relative; margin-bottom: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,.075); border-radius: 15px; background: rgba(255,255,255,.04); transition: background .18s, border-color .18s, box-shadow .2s; }
+.record-card:hover, .record-card:focus-within { background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.15); box-shadow: 0 9px 25px rgba(0,0,0,.28), inset 0 1px rgba(255,255,255,.07); }
+.record-card-main { width: 100%; display: flex; align-items: flex-start; gap: 10px; padding: 12px 13px; text-align: left; }
+.note-record-mark { width: 3px; height: 31px; flex: 0 0 3px; border-radius: 99px; background: rgba(255,255,255,.36); }
+.record-copy, .todo-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: stretch; text-align: left; }
+.record-title { color: rgba(255,255,255,.9); font-size: calc(11.5px * var(--font-scale, 1)); font-weight: 620; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.record-preview { margin-top: 5px; color: rgba(255,255,255,.52); font-size: calc(10px * var(--font-scale, 1)); line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-wrap; }
+.record-preview.expanded { display: block; -webkit-line-clamp: unset; }
+.record-meta { margin-top: 8px; display: flex; justify-content: space-between; gap: 8px; color: rgba(255,255,255,.3); font: calc(8.5px * var(--font-scale, 1))/1.25 ui-monospace, monospace; }
+.record-card-actions { display: flex; gap: 5px; padding: 0 9px 9px; justify-content: flex-end; }
+.record-card-actions button, .todo-details button { padding: 5px 8px; border: 1px solid rgba(255,255,255,.08); border-radius: 8px; background: rgba(255,255,255,.04); color: rgba(255,255,255,.5); font-size: calc(9px * var(--font-scale, 1)); }
+.record-card-actions button:hover, .todo-details button:hover { background: rgba(255,255,255,.11); color: white; }
+.record-card-actions .danger:hover, .todo-details .danger:hover { color: #ff9b9b; }
+
+.record-attachments { display: flex; align-items: center; gap: 5px; margin-top: 7px; overflow: hidden; }
+.record-image-thumb { width: 34px; height: 28px; border-radius: 7px; overflow: hidden; display: grid; place-items: center; background: rgba(255,255,255,.07); color: rgba(255,255,255,.35); font: 7px ui-monospace; }
+.record-image-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.record-file-chip { max-width: 145px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 4px 7px; border: 1px solid rgba(255,255,255,.08); border-radius: 7px; color: rgba(255,255,255,.5); background: rgba(255,255,255,.035); font-size: 8.5px; }
+.record-file-chip.missing { color: rgba(255,170,170,.67); border-style: dashed; }
+.record-more-attachments { color: rgba(255,255,255,.36); font-size: 9px; }
+
+.record-composer { margin: 3px 10px 5px; padding: 9px; overflow: hidden; border: 1px solid rgba(255,255,255,.13); border-radius: 13px; background: rgba(255,255,255,.055); }
+.record-composer textarea { width: 100%; min-height: 54px; resize: none; border: 0; outline: 0; background: transparent; color: white; font-size: calc(10.5px * var(--font-scale, 1)); line-height: 1.55; }
+.record-composer > div { margin-top: 5px; display: flex; align-items: center; color: rgba(255,255,255,.28); font-size: 8px; }
+.record-composer button { margin-left: auto; padding: 5px 9px; border-radius: 7px; background: white; color: #000; font-size: 9px; font-weight: 650; }
+.record-composer button:disabled { opacity: .3; cursor: default; }
+.todo-composer { display: flex; align-items: center; gap: 7px; }
+.todo-composer input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: white; font-size: calc(10.5px * var(--font-scale, 1)); }
+
+.todo-main-row { display: flex; align-items: flex-start; gap: 9px; padding: 12px; }
+.todo-check { flex: 0 0 19px; width: 19px; height: 19px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.28); border-radius: 7px; color: #000; transition: background .2s, border-color .2s; }
+.todo-check[aria-pressed='true'] { background: rgba(255,255,255,.9); border-color: white; }
+.todo-check svg { width: 12px; height: 12px; }
+.todo-record-card.completed .record-title { color: rgba(255,255,255,.3); text-decoration: line-through; text-decoration-color: rgba(255,255,255,.28); }
+.todo-record-card.completed .record-preview { color: rgba(255,255,255,.25); }
+.todo-details { overflow: hidden; padding: 0 10px 10px 40px; }
+.todo-details textarea { width: 100%; min-height: 48px; resize: vertical; padding: 7px 8px; outline: 0; border: 1px solid rgba(255,255,255,.08); border-radius: 8px; background: rgba(0,0,0,.28); color: rgba(255,255,255,.7); font-size: 9.5px; }
+.todo-details > div { margin-top: 6px; display: flex; align-items: center; gap: 5px; }
+.todo-details input[type='date'] { min-width: 0; flex: 1; color-scheme: dark; padding: 4px 6px; border: 1px solid rgba(255,255,255,.08); border-radius: 7px; background: rgba(255,255,255,.04); color: rgba(255,255,255,.58); font-size: 8.5px; }
+
+.records-footer { flex: 0 0 43px; position: relative; display: flex; align-items: center; padding: 0 13px; border-top: 1px solid rgba(255,255,255,.055); color: rgba(255,255,255,.32); font-size: calc(9px * var(--font-scale, 1)); background: #000; }
+.records-footer::before { content: ''; position: absolute; left: 0; right: 0; bottom: 100%; height: 15px; background: linear-gradient(to top,#000,transparent); pointer-events: none; }
+.records-footer b { color: rgba(255,255,255,.72); }
+.records-footer > span:last-child, .records-footer > button { margin-left: auto; }
+.hold-clear { position: relative; overflow: hidden; padding: 6px 8px; border-radius: 8px; color: rgba(255,255,255,.43); font-size: 8.5px; }
+.hold-clear::before { content: ''; position: absolute; inset: 0; z-index: -1; width: 0; background: rgba(255,255,255,.14); }
+.hold-clear.holding::before { width: 100%; transition: width .85s linear; }
+.hold-clear:disabled { opacity: .25; cursor: default; }
+
+.record-empty { flex: 1; min-height: 280px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; }
+.record-empty-icon { width: 36px; height: 36px; display: grid; place-items: center; margin-bottom: 12px; border: 1px solid rgba(255,255,255,.1); border-radius: 12px; background: rgba(255,255,255,.04); color: rgba(255,255,255,.54); font-size: 18px; }
+.record-empty strong { font-size: calc(12px * var(--font-scale, 1)); color: rgba(255,255,255,.76); }
+.record-empty p { max-width: 200px; margin-top: 6px; color: rgba(255,255,255,.38); font-size: calc(9.5px * var(--font-scale, 1)); line-height: 1.55; }
+
+.record-undo-toast { position: absolute; z-index: 45; left: 50%; bottom: 51px; min-width: 185px; transform: translateX(-50%); padding: 9px 9px 9px 11px; display: flex; align-items: center; gap: 10px; border: 1px solid rgba(255,255,255,.13); border-radius: 12px; background: #171717; box-shadow: 0 17px 38px rgba(0,0,0,.55); color: rgba(255,255,255,.72); font-size: 9.5px; }
+.record-undo-toast button { margin-left: auto; padding: 4px 7px; border-radius: 7px; background: rgba(255,255,255,.1); color: white; }
+.record-convert-flash { position: absolute; inset: 0; z-index: 18; pointer-events: none; border: 1px solid rgba(255,255,255,.56); border-radius: 16px; box-shadow: inset 0 0 28px rgba(255,255,255,.08); }
+.actions .record-action:disabled { opacity: .35; cursor: wait; }
+.new-records-pill { position: absolute; z-index: 20; top: 5px; left: 50%; margin-left: -36px; min-width: 72px; padding: 6px 10px; border: 1px solid rgba(255,255,255,.15); border-radius: 999px; background: #191919; box-shadow: 0 8px 22px rgba(0,0,0,.48); color: rgba(255,255,255,.78); font-size: 8.5px; }
+
+.note-editor { position: absolute; z-index: 40; inset: 0; display: flex; flex-direction: column; background: #030303; }
+.note-editor > header { flex: 0 0 48px; display: flex; align-items: center; gap: 7px; padding: 0 10px; border-bottom: 1px solid rgba(255,255,255,.06); color: rgba(255,255,255,.52); font-size: 10px; }
+.note-editor > header button { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; }
+.note-editor > header button:hover { background: rgba(255,255,255,.07); color: white; }
+.note-save-state { margin-left: auto; display: flex; align-items: center; gap: 5px; color: rgba(255,255,255,.34); font-size: 8.5px; }
+.note-save-state i { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,.7); box-shadow: 0 0 7px rgba(255,255,255,.35); }
+.note-save-state.error { color: rgba(255,160,160,.78); }
+.note-save-state.error i { background: #ff9b9b; }
+.note-editor-body { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 16px 15px 10px; }
+.note-editor-body > input { border: 0; outline: 0; background: transparent; color: white; font-size: calc(17px * var(--font-scale, 1)); font-weight: 650; letter-spacing: -.02em; }
+.note-editor-body > textarea { flex: 1; min-height: 0; margin-top: 14px; resize: none; border: 0; outline: 0; background: transparent; color: rgba(255,255,255,.69); font-size: calc(11px * var(--font-scale, 1)); line-height: 1.75; }
+.note-editor > footer { flex: 0 0 34px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-top: 1px solid rgba(255,255,255,.055); color: rgba(255,255,255,.26); font-size: 8px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .expanding-search, .record-collapsible, .record-section-heading svg, .hold-clear::before { transition-duration: .01ms !important; }
+}
+:root[data-motion='reduce'] .expanding-search,
+:root[data-motion='reduce'] .record-collapsible,
+:root[data-motion='reduce'] .record-section-heading svg,
+:root[data-motion='reduce'] .hold-clear::before { transition-duration: .01ms !important; }

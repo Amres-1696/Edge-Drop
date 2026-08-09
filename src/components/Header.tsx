@@ -1,248 +1,174 @@
-/** Panel header: title + settings toggle. */
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { useEffect, useRef } from 'react'
 import { useStore } from '../store/appStore'
 import { GearIcon, CloseIcon, InfoIcon } from './icons'
 import { playButtonClickSound } from '../lib/soundEffects'
-
 import { useTranslation } from '../i18n'
 import { CELL_SPRING, CROSSFADE_SPRING, INSTANT } from '../lib/motion'
+
+const SearchIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" />
+  </svg>
+)
+
+const PlusIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+)
 
 export function Header() {
   const systemReduced = useReducedMotion()
   const { t } = useTranslation()
-  const setSettingsOpen = useStore((s) => s.setSettingsOpen)
-  const settingsOpen = useStore((s) => s.settingsOpen)
-  const updateInfo = useStore((s) => s.updateInfo)
-  const settingsSubView = useStore((s) => s.settingsSubView)
-  const setSettingsSubView = useStore((s) => s.setSettingsSubView)
+  const inputRef = useRef<HTMLInputElement>(null)
   const settings = useStore((s) => s.settings)
   const reduced = systemReduced || settings.reduceMotion
+  const settingsOpen = useStore((s) => s.settingsOpen)
+  const setSettingsOpen = useStore((s) => s.setSettingsOpen)
+  const settingsSubView = useStore((s) => s.settingsSubView)
+  const setSettingsSubView = useStore((s) => s.setSettingsSubView)
   const patchSettings = useStore((s) => s.patchSettings)
   const currentVersion = useStore((s) => s.currentVersion)
+  const updateInfo = useStore((s) => s.updateInfo)
+  const workspace = useStore((s) => s.workspaceMode)
+  const setWorkspace = useStore((s) => s.setWorkspaceMode)
+  const recordView = useStore((s) => s.recordView)
+  const setRecordView = useStore((s) => s.setRecordView)
+  const typeFilter = useStore((s) => s.typeFilter)
+  const setTypeFilter = useStore((s) => s.setTypeFilter)
+  const query = useStore((s) => workspace === 'clipboard' ? s.query : s.recordQuery)
+  const setQuery = useStore((s) => workspace === 'clipboard' ? s.setQuery : s.setRecordQuery)
+  const searchExpanded = useStore((s) => s.searchExpanded)
+  const setSearchExpanded = useStore((s) => s.setSearchExpanded)
+  const composerOpen = useStore((s) => s.recordComposerOpen)
+  const setComposerOpen = useStore((s) => s.setRecordComposerOpen)
 
-  const isChangelogUnread = settingsOpen && (
-    !settings.lastSeenChangelogVersion ||
-    (currentVersion && settings.lastSeenChangelogVersion !== currentVersion && settings.lastSeenChangelogVersion !== `v${currentVersion}`)
-  )
+  useEffect(() => {
+    if (searchExpanded) window.setTimeout(() => inputRef.current?.focus(), 120)
+  }, [searchExpanded])
 
-  const handleOpenChangelog = () => {
-    if (settingsSubView === 'changelog') {
+  const filters = [
+    ['all', t('filters.all')], ['text', t('filters.text')], ['links', t('filters.links')],
+    ['images', t('filters.images')], ['files', t('filters.files')]
+  ] as const
+  const activeFilterIndex = Math.max(0, filters.findIndex(([id]) => id === typeFilter))
+
+  const changelogUnread = settingsOpen && (!settings.lastSeenChangelogVersion ||
+    (currentVersion && settings.lastSeenChangelogVersion !== currentVersion && settings.lastSeenChangelogVersion !== `v${currentVersion}`))
+
+  const toggleSettings = () => {
+    playButtonClickSound()
+    if (settingsOpen) {
+      setSettingsOpen(false)
       setSettingsSubView('main')
-    } else {
+      return
+    }
+    const state = useStore.getState()
+    state.setPreviewItemId(null)
+    state.setStyleFlyoutOpen(false)
+    setSettingsOpen(true)
+  }
+
+  const openChangelog = () => {
+    playButtonClickSound()
+    if (settingsSubView === 'changelog') setSettingsSubView('main')
+    else {
       setSettingsSubView('changelog')
-      if (currentVersion) {
-        patchSettings({ lastSeenChangelogVersion: currentVersion })
-      }
+      if (currentVersion) void patchSettings({ lastSeenChangelogVersion: currentVersion })
     }
   }
 
-  const typeFilter = useStore((s) => s.typeFilter)
-  const setTypeFilter = useStore((s) => s.setTypeFilter)
-
-  const FILTERS: { id: import('../../shared/types').TypeFilter; label: string }[] = [
-    { id: 'all', label: t('filters.all') },
-    { id: 'text', label: t('filters.text') },
-    { id: 'links', label: t('filters.links') },
-    { id: 'images', label: t('filters.images') },
-    { id: 'files', label: t('filters.files') }
-  ]
-
-  const activeIndex = Math.max(0, FILTERS.findIndex((f) => f.id === typeFilter))
+  if (settingsOpen) {
+    return (
+      <header className="workspace-header settings-header-compact">
+        <div className="workspace-top-row">
+          <span className="settings-header-title">{settingsSubView === 'changelog' ? t('header.whatsNew') : t('header.settings')}</span>
+          <div className="workspace-header-actions">
+            <button className={`icon-btn${settingsSubView === 'changelog' ? ' active' : ''}`} title={t('header.whatsNew')} onClick={openChangelog}>
+              <InfoIcon width={16} height={16} />
+              {changelogUnread && <span className="header-unread-dot" />}
+            </button>
+            <button className="icon-btn active" title={t('header.close')} onClick={toggleSettings}>
+              <CloseIcon />
+            </button>
+          </div>
+        </div>
+      </header>
+    )
+  }
 
   return (
-    <div className="header" style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center', height: 40, padding: '0 14px 0 4px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4, paddingLeft: 2 }}>
-        {settingsOpen ? (
-          <span style={{ fontSize: 13, fontWeight: 600, color: '#8e8e93', letterSpacing: '0.01em', paddingLeft: 6 }}>
-            {settingsSubView === 'changelog' ? t('header.whatsNew') : t('header.settings')}
-          </span>
-        ) : (
-          <div 
-            className="filter-segmented-track" 
-            style={{ 
-              position: 'relative',
-              display: 'flex', 
-              alignItems: 'center', 
-              background: 'rgba(255, 255, 255, 0.05)', 
-              border: '1px solid rgba(255, 255, 255, 0.09)', 
-              borderRadius: 999, 
-              padding: '2px 3px', 
-              gap: 2, 
-              marginLeft: 2,
-              boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-            }}
-          >
-            {/* Single Persistent Sliding Pill Indicator */}
-            <motion.div
-              initial={false}
-              animate={{ x: activeIndex * 41 }}
-              transition={reduced ? INSTANT : CELL_SPRING}
-              style={{
-                position: 'absolute',
-                left: 3,
-                top: 2,
-                width: 39,
-                height: 22,
-                borderRadius: 999,
-                background: 'rgba(255, 255, 255, 0.16)',
-                border: '1px solid rgba(255, 255, 255, 0.22)',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25)',
-                pointerEvents: 'none',
-                zIndex: 0
-              }}
-            />
+    <header className="workspace-header">
+      <div className="workspace-top-row">
+        <div className="workspace-switch" data-mode={workspace}>
+          <motion.span
+            className="workspace-switch-pill"
+            animate={{ x: workspace === 'records' ? 70 : 0 }}
+            transition={reduced ? INSTANT : CELL_SPRING}
+          />
+          {(['clipboard', 'records'] as const).map((mode) => (
+            <button key={mode} className={workspace === mode ? 'active' : ''} onClick={() => {
+              playButtonClickSound(); setWorkspace(mode)
+            }}>
+              {mode === 'clipboard' ? t('records.workspaceClipboard') : t('records.workspaceRecords')}
+            </button>
+          ))}
+        </div>
 
-            {FILTERS.map((f) => {
-              const active = typeFilter === f.id
-              return (
-                <button
-                  key={f.id}
-                  type="button"
-                  className={`filter-chip${active ? ' active' : ''}`}
-                  onClick={() => {
-                    playButtonClickSound()
-                    setTypeFilter(f.id)
-                  }}
-                  style={{
-                    position: 'relative',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: 39,
-                    height: 22,
-                    padding: 0,
-                    fontSize: 10.5,
-                    fontWeight: active ? 600 : 500,
-                    color: active ? '#ffffff' : 'rgba(255, 255, 255, 0.65)',
-                    background: 'transparent',
-                    border: 'none',
-                    borderRadius: 999,
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                    transition: 'color 0.18s ease',
-                    zIndex: 1
-                  }}
-                >
-                  <span>{f.label}</span>
-                </button>
-              )
-            })}
-          </div>
-        )}
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-        {settingsOpen && (
-          <button
-            type="button"
-            className={`icon-btn${settingsSubView === 'changelog' ? ' active' : ''}`}
-            title={settingsSubView === 'changelog' ? t('tabs.behaviour') : t('header.whatsNew')}
-            onClick={() => {
-              playButtonClickSound()
-              handleOpenChangelog()
+        <div className={`expanding-search${searchExpanded ? ' open' : ''}`}>
+          <button className="icon-btn" title={t('records.search')} onClick={() => {
+            if (searchExpanded && !query) setSearchExpanded(false)
+            else setSearchExpanded(true)
+          }}><SearchIcon /></button>
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') { setQuery(''); setSearchExpanded(false) }
             }}
-            style={{
-              color: settingsSubView === 'changelog' ? '#ffffff' : 'rgba(255, 255, 255, 0.75)',
-              background: settingsSubView === 'changelog' ? 'rgba(255, 255, 255, 0.12)' : 'transparent',
-              border: 'none',
-              boxShadow: 'none',
-              flexShrink: 0,
-              cursor: 'pointer',
-              width: 32,
-              height: 32,
-              display: 'grid',
-              placeItems: 'center',
-              position: 'relative',
-              borderRadius: 8,
-              transition: 'all 0.15s ease'
-            }}
-          >
-            <InfoIcon width={16} height={16} />
-            {isChangelogUnread && (
-              <span
-                style={{
-                  position: 'absolute',
-                  top: 6,
-                  right: 6,
-                  width: 6,
-                  height: 6,
-                  borderRadius: '50%',
-                  backgroundColor: '#ffffff',
-                  boxShadow: '0 0 6px rgba(255, 255, 255, 0.6)',
-                  border: '1.5px solid #000000',
-                  pointerEvents: 'none'
-                }}
-              />
-            )}
-          </button>
-        )}
+            placeholder={t('records.searchPlaceholder')}
+            aria-label={t('records.search')}
+          />
+        </div>
 
-        <button
-          type="button"
-          className={`icon-btn${settingsOpen ? ' active' : ''}`}
-          title={settingsOpen ? t('header.close') : t('header.settings')}
-          onClick={() => {
-            playButtonClickSound()
-            if (settingsOpen) {
-              setSettingsOpen(false)
-              setSettingsSubView('main')
-              return
-            }
-            const state = useStore.getState()
-            const hasActiveFlyout = !!(state.previewItemId || state.styleFlyoutOpen)
-            if (hasActiveFlyout) {
-              state.setPreviewItemId(null)
-              state.setStyleFlyoutOpen(false)
-              setTimeout(() => {
-                useStore.getState().setSettingsOpen(true)
-              }, 220)
-            } else {
-              setSettingsOpen(true)
-            }
-          }}
-          style={{
-            color: '#ffffff',
-            background: 'transparent',
-            border: 'none',
-            boxShadow: 'none',
-            flexShrink: 0,
-            cursor: 'pointer',
-            width: 32,
-            height: 32,
-            display: 'grid',
-            placeItems: 'center',
-            position: 'relative'
-          }}
-        >
+        <button className="icon-btn" title={t('header.settings')} onClick={toggleSettings}>
           <AnimatePresence initial={false} mode="wait">
-            <motion.span
-              key={settingsOpen ? 'close' : 'gear'}
-              className="micro-icon-slot"
-              initial={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.82, rotate: settingsOpen ? -35 : 35 }}
-              animate={{ opacity: 1, scale: 1, rotate: 0 }}
-              exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.86, rotate: settingsOpen ? 28 : -28 }}
-              transition={reduced ? INSTANT : CROSSFADE_SPRING}
-            >
-              {settingsOpen ? <CloseIcon /> : <GearIcon />}
+            <motion.span key="gear" className="micro-icon-slot" initial={{ opacity: 0, scale: .85 }} animate={{ opacity: 1, scale: 1 }} transition={reduced ? INSTANT : CROSSFADE_SPRING}>
+              <GearIcon />
             </motion.span>
           </AnimatePresence>
-          {!settingsOpen && (updateInfo?.downloaded || ((settings.autoUpdates ?? true) && updateInfo?.hasUpdate)) && (
-            <span
-              style={{
-                position: 'absolute',
-                top: 5,
-                right: 5,
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                backgroundColor: '#4caf50',
-                border: '1.5px solid #000000',
-                pointerEvents: 'none'
-              }}
-            />
-          )}
+          {(updateInfo?.downloaded || ((settings.autoUpdates ?? true) && updateInfo?.hasUpdate)) && <span className="header-update-dot" />}
         </button>
       </div>
-    </div>
+
+      <div className="workspace-sub-row">
+        {workspace === 'clipboard' ? (
+          <div className="filter-segmented-track contextual-filters">
+            <motion.div className="filter-slide-pill" animate={{ x: activeFilterIndex * 41 }} transition={reduced ? INSTANT : CELL_SPRING} />
+            {filters.map(([id, label]) => (
+              <button key={id} className={`filter-chip${typeFilter === id ? ' active' : ''}`} onClick={() => {
+                playButtonClickSound(); setTypeFilter(id)
+              }}>{label}</button>
+            ))}
+          </div>
+        ) : (
+          <>
+            <div className="records-segmented">
+              <motion.span className="records-segmented-pill" animate={{ x: recordView === 'todos' ? 52 : 0 }} transition={reduced ? INSTANT : CELL_SPRING} />
+              {(['notes', 'todos'] as const).map((view) => (
+                <button key={view} className={recordView === view ? 'active' : ''} onClick={() => {
+                  playButtonClickSound(); setRecordView(view)
+                }}>{view === 'notes' ? t('records.notes') : t('records.todos')}</button>
+              ))}
+            </div>
+            <motion.button className={`records-add-btn${composerOpen ? ' active' : ''}`} title={recordView === 'notes' ? t('records.newNote') : t('records.newTodo')} whileTap={reduced ? undefined : { y: 1, scale: .94 }} onClick={() => setComposerOpen(!composerOpen)}>
+              <PlusIcon />
+            </motion.button>
+          </>
+        )}
+      </div>
+    </header>
   )
 }

@@ -13,6 +13,7 @@ import { useStore } from '../store/appStore'
 import { PANEL_LEAVE_EVENT, PANEL_ENTER_EVENT } from '../hooks/useEdgeHover'
 import { Header } from './Header'
 import { ItemList } from './ItemList'
+import { RecordsView } from './RecordsView'
 import { Settings } from './Settings'
 import { ToastStack } from './Toast'
 import { TrashIcon } from './icons'
@@ -49,6 +50,7 @@ export function Panel() {
   const settings = useStore((s) => s.settings)
   const reduced = systemReduced || settings.reduceMotion
   const settingsOpen = useStore((s) => s.settingsOpen)
+  const workspaceMode = useStore((s) => s.workspaceMode)
   const setSettingsOpen = useStore((s) => s.setSettingsOpen)
   const setQuery = useStore((s) => s.setQuery)
   const edgeHintActive = useStore((s) => s.edgeHintActive)
@@ -368,9 +370,9 @@ export function Panel() {
                 <Settings />
                 <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 18, background: 'linear-gradient(to top, #000000, transparent)', pointerEvents: 'none', zIndex: 10 }} />
               </motion.div>
-            ) : (
+            ) : workspaceMode === 'clipboard' ? (
               <motion.div
-                key="list"
+                key="clipboard-list"
                 initial={reduced ? false : { opacity: 0, x: isRight ? 8 : -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={reduced ? { opacity: 0 } : { opacity: 0, x: isRight ? -8 : 8 }}
@@ -412,12 +414,24 @@ export function Panel() {
                   </motion.button>
                 </div>
               </motion.div>
+            ) : (
+              <motion.div
+                key="records-list"
+                initial={reduced ? false : { opacity: 0, x: isRight ? 8 : -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={reduced ? { opacity: 0 } : { opacity: 0, x: isRight ? -8 : 8 }}
+                transition={reduced ? INSTANT : { type: 'spring', stiffness: 400, damping: 36, mass: 0.6 }}
+                style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}
+              >
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 14, background: 'linear-gradient(to bottom, #000000, transparent)', pointerEvents: 'none', zIndex: 10 }} />
+                <RecordsView />
+              </motion.div>
             )}
           </AnimatePresence>
-          <DropOverlay />
-          <SplitDropZone isRight={isRight} />
+          {workspaceMode === 'clipboard' && <DropOverlay />}
+          {workspaceMode === 'clipboard' && <SplitDropZone isRight={isRight} />}
         </div>
-        <PreviewFlyout isRight={isRight} />
+        {workspaceMode === 'clipboard' && <PreviewFlyout isRight={isRight} />}
         <IndicatorStyleFlyout isRight={isRight} />
       </motion.div>
     </div>
