@@ -24,6 +24,12 @@ import { existsSync, createReadStream } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { resolveStoredImage } from './imageProtocol'
 
+// Allow an isolated development profile to run beside an installed build.
+// Production never sets this variable, so release behavior and paths are unchanged.
+if (!app.isPackaged && process.env.EDGE_DROP_DEV_PROFILE) {
+  app.setPath('userData', process.env.EDGE_DROP_DEV_PROFILE)
+}
+
 // Keep Chromium hardware acceleration enabled. On Windows, forcing software
 // compositing for a transparent BrowserWindow softens text, especially at
 // fractional display scales such as 125% and 150%.
