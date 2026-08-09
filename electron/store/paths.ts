@@ -20,6 +20,10 @@ export const PATHS = {
   indexFile: () => join(root(), 'items.json'),
   /** Path to the settings JSON. */
   settingsFile: () => join(root(), 'settings.json'),
+  /** Encrypted notes/todos index. Kept separate from ephemeral clipboard history. */
+  recordsFile: () => join(root(), 'records.json'),
+  /** Images copied into long-lived records. */
+  recordAssetsDir: () => join(root(), 'record-assets'),
   /** Scratch dir for temp files handed to native drag-out. */
   tempDir: () => join(root(), 'temp'),
   /** App icon (used by window + native drag image). */
@@ -30,7 +34,7 @@ export const PATHS = {
 
 /** Idempotently create every directory the app needs. Safe to call repeatedly. */
 export function ensureDirs(): void {
-  for (const dir of [PATHS.imagesDir(), PATHS.tempDir()]) {
+  for (const dir of [PATHS.imagesDir(), PATHS.recordAssetsDir(), PATHS.tempDir()]) {
     mkdirSync(dir, { recursive: true })
   }
 }
