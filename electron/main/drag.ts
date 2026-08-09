@@ -20,7 +20,7 @@ import { join, extname } from 'node:path'
 import { PATHS } from '../store/paths'
 import type { DragRequest, ItemData } from '../../shared/types'
 import { getStore } from './state'
-import { getFileKind } from '../../src/lib/fileType'
+import { getFileKind } from '../../shared/fileType'
 
 interface ResvgInstance {
   render(): { asPng(): Buffer }
