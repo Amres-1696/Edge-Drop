@@ -260,13 +260,15 @@ const ClipboardItemBase = forwardRef<HTMLDivElement, Props>(({ item }, ref) => {
 
         <div 
           className="actions" 
-          onClick={(e) => e.stopPropagation()} 
+          onClick={(e) => { e.stopPropagation(); e.preventDefault(); }} 
           style={{ display: isBundle && expanded ? 'none' : undefined }}
         >
           <button
             className={`act${item.pinned ? ' active' : ''}`}
             title={item.pinned ? t('item.unpin') : t('item.pin')}
             onClick={(e) => {
+              e.stopPropagation()
+              e.preventDefault()
               e.currentTarget.blur()
               playToggleSound(!item.pinned)
               togglePin(item.id, !item.pinned)
@@ -279,6 +281,7 @@ const ClipboardItemBase = forwardRef<HTMLDivElement, Props>(({ item }, ref) => {
             title={isPreviewing ? t('header.close') : t('item.expand')}
             onClick={(e) => {
               e.stopPropagation()
+              e.preventDefault()
               e.currentTarget.blur()
               playCardExpandSound(!isPreviewing)
               const rect = e.currentTarget.closest('.item-main')?.getBoundingClientRect()
@@ -292,7 +295,7 @@ const ClipboardItemBase = forwardRef<HTMLDivElement, Props>(({ item }, ref) => {
             className={`act record-action${existingNote ? ' active' : ''}`}
             title={existingNote ? t('records.viewNote') : t('records.saveAsNote')}
             disabled={pendingRecord}
-            onClick={(e) => { e.stopPropagation(); void onRecordAction('note') }}
+            onClick={(e) => { e.stopPropagation(); e.preventDefault(); void onRecordAction('note') }}
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h6"/>{existingNote && <path d="m8 16 2 2 5-5" strokeWidth="2.2"/>}</svg>
           </button>
@@ -300,11 +303,13 @@ const ClipboardItemBase = forwardRef<HTMLDivElement, Props>(({ item }, ref) => {
             className={`act record-action${existingTodo ? ' active' : ''}`}
             title={existingTodo ? t('records.viewTodo') : t('records.addAsTodo')}
             disabled={pendingRecord}
-            onClick={(e) => { e.stopPropagation(); void onRecordAction('todo') }}
+            onClick={(e) => { e.stopPropagation(); e.preventDefault(); void onRecordAction('todo') }}
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="m8 12 2.5 2.5L16 9"/></svg>
           </button>
           <button className="act" title={t('item.copy')} onClick={(e) => {
+            e.stopPropagation()
+            e.preventDefault()
             e.currentTarget.blur()
             onCopy(e)
           }}>
@@ -333,6 +338,7 @@ const ClipboardItemBase = forwardRef<HTMLDivElement, Props>(({ item }, ref) => {
               title={t('flyout.openLink')}
               onClick={(e) => {
                 e.stopPropagation()
+                e.preventDefault()
                 e.currentTarget.blur()
                 playButtonClickSound()
                 window.open((item.data as any).text, '_blank')
@@ -346,6 +352,8 @@ const ClipboardItemBase = forwardRef<HTMLDivElement, Props>(({ item }, ref) => {
             className="act danger"
             title={t('item.delete')}
             onClick={(e) => {
+              e.stopPropagation()
+              e.preventDefault()
               e.currentTarget.blur()
               playDeleteSound()
               remove(item.id)
