@@ -60,6 +60,109 @@ export interface ClipboardItemDto extends Omit<ClipboardItem, 'data'> {
   | { kind: 'files'; paths: string[]; previews?: string[]; entries?: FileEntry[] }
 }
 
+/* ------------------------------------------------------------------ */
+/* Notes & todos                                                       */
+/* ------------------------------------------------------------------ */
+
+export type WorkspaceMode = 'clipboard' | 'records'
+export type RecordView = 'notes' | 'todos'
+export type RecordTarget = 'note' | 'todo'
+
+export interface RecordOrigin {
+  kind: 'manual' | 'clipboard'
+  clipboardItemId?: string
+  clipboardKind?: ItemKind
+  capturedAt?: number
+}
+
+export type RecordAttachment =
+  | {
+      kind: 'image'
+      assetId: string
+      width: number
+      height: number
+      bytes: number
+      ext?: string
+    }
+  | {
+      kind: 'file-reference'
+      path: string
+      name: string
+      ext: string
+      size: number
+      existedAtCreation: boolean
+    }
+
+export type RecordAttachmentDto =
+  | (Extract<RecordAttachment, { kind: 'image' }> & { preview?: string })
+  | (Extract<RecordAttachment, { kind: 'file-reference' }> & { available: boolean })
+
+export interface NoteRecord {
+  id: string
+  title: string
+  body: string
+  attachments: RecordAttachment[]
+  pinned: boolean
+  createdAt: number
+  updatedAt: number
+  origin: RecordOrigin
+}
+
+export interface TodoRecord {
+  id: string
+  title: string
+  details: string
+  attachments: RecordAttachment[]
+  status: 'pending' | 'completed'
+  dueAt?: number
+  completedAt?: number
+  createdAt: number
+  updatedAt: number
+  origin: RecordOrigin
+}
+
+export interface NoteRecordDto extends Omit<NoteRecord, 'attachments'> {
+  attachments: RecordAttachmentDto[]
+}
+
+export interface TodoRecordDto extends Omit<TodoRecord, 'attachments'> {
+  attachments: RecordAttachmentDto[]
+}
+
+export interface RecordsSnapshot {
+  notes: NoteRecordDto[]
+  todos: TodoRecordDto[]
+}
+
+export interface CreateNoteInput {
+  title: string
+  body?: string
+}
+
+export interface UpdateNoteInput {
+  title?: string
+  body?: string
+}
+
+export interface CreateTodoInput {
+  title: string
+  details?: string
+  dueAt?: number
+}
+
+export interface UpdateTodoInput {
+  title?: string
+  details?: string
+  dueAt?: number | null
+}
+
+export interface ConvertClipboardInput {
+  itemId: string
+  target: RecordTarget
+  /** Localized fallback used when the source has no meaningful text title. */
+  suggestedTitle?: string
+}
+
 /** Section the renderer groups items into. */
 export type ItemSection = 'pinned' | 'shelf'
 
