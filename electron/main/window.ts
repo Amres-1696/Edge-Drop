@@ -42,6 +42,7 @@ let mainWindow: BrowserWindow | null = null
 // detector window is deliberately no longer created at runtime.
 let detectorWindow: BrowserWindow | null = null
 let interactive = false
+let textInputActive = false
 export let previewActive = false
 
 export let currentHotZoneWidth = 3
@@ -93,9 +94,30 @@ export function setInteractive(value: boolean): void {
     // 'floating' (HWND_TOPMOST) can be pushed behind by fullscreen D3D/browser windows.
     mainWindow.setAlwaysOnTop(true, 'screen-saver')
   } else {
+    if (textInputActive) {
+      textInputActive = false
+      mainWindow.setFocusable(false)
+    }
     // Panel is closed: full click-through, no forwarding needed.
     mainWindow.setIgnoreMouseEvents(true, { forward: false })
     mainWindow.setAlwaysOnTop(true, 'screen-saver')
+  }
+}
+
+/**
+ * The shelf is normally deliberately non-focusable so copying/pasting never
+ * steals focus from the user's current application. Text editors are the one
+ * exception: while one is open we temporarily opt into keyboard focus, then
+ * restore the shelf's original no-focus behaviour when editing ends.
+ */
+export function setTextInputActive(active: boolean): void {
+  if (!mainWindow || mainWindow.isDestroyed() || active === textInputActive) return
+  textInputActive = active
+  mainWindow.setFocusable(active)
+  if (active) {
+    mainWindow.setIgnoreMouseEvents(false)
+    mainWindow.setAlwaysOnTop(true, 'screen-saver')
+    mainWindow.focus()
   }
 }
 

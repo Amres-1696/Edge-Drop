@@ -23,6 +23,7 @@
 import { useEffect, useRef } from 'react'
 import { edge } from '../lib/edge'
 import { useStore } from '../store/appStore'
+import { isIntentionalTextInputBlur, isTextInputModeActive } from './useTextInputMode'
 
 const TRIGGER_PX = 3    // leftmost px that count as "the edge"
 const DWELL_MS = 40      // cursor must linger this long to open
@@ -448,7 +449,7 @@ export function useEdgeHover(): void {
 
     // ── keyboard ───────────────────────────────────────────────────────────
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && useStore.getState().open) scheduleClose(0)
+      if (e.key === 'Escape' && useStore.getState().open && !isTextInputModeActive()) scheduleClose(0)
     }
 
     // ── window blur (Alt+Tab / OS focus stolen) ────────────────────────────
@@ -466,6 +467,7 @@ export function useEdgeHover(): void {
     const onWindowBlur = () => {
       const state = useStore.getState()
       if (!state.open) return
+      if (isIntentionalTextInputBlur()) return
       // Don't close during an external OS file drag — the drag surface may
       // temporarily shift focus to the OS drag-ghost or file manager.
       if (state.dragActive && !state.internalDragReq) return

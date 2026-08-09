@@ -85,6 +85,9 @@ export interface InvokeMap {
   /** Toggle whether the window is interactive (mouse-ignore). */
   'window:set-interactive': { args: [interactive: boolean]; result: void }
 
+  /** Temporarily let the panel take keyboard focus while editing text. */
+  'window:set-text-input-active': { args: [active: boolean]; result: void }
+
   /** Toggle whether the flyout preview is active (widens the window). */
   'window:set-preview-mode': { args: [active: boolean]; result: void }
 

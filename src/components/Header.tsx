@@ -1,10 +1,11 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { useStore } from '../store/appStore'
 import { GearIcon, CloseIcon, InfoIcon } from './icons'
 import { playButtonClickSound } from '../lib/soundEffects'
 import { useTranslation } from '../i18n'
 import { CELL_SPRING, CROSSFADE_SPRING, INSTANT } from '../lib/motion'
+import { useTextInputMode } from '../hooks/useTextInputMode'
 
 const SearchIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -44,9 +45,7 @@ export function Header() {
   const composerOpen = useStore((s) => s.recordComposerOpen)
   const setComposerOpen = useStore((s) => s.setRecordComposerOpen)
 
-  useEffect(() => {
-    if (searchExpanded) window.setTimeout(() => inputRef.current?.focus(), 120)
-  }, [searchExpanded])
+  useTextInputMode('header-search', searchExpanded, inputRef)
 
   const filters = [
     ['all', t('filters.all')], ['text', t('filters.text')], ['links', t('filters.links')],

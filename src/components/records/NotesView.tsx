@@ -5,6 +5,7 @@ import { useStore } from '../../store/appStore'
 import { useRecordStore } from '../../store/recordStore'
 import { useTranslation } from '../../i18n'
 import { ARRIVE_EASE, INSTANT, SMALL_SPRING } from '../../lib/motion'
+import { useTextInputMode } from '../../hooks/useTextInputMode'
 
 export function NotesView({ onDelete }: { onDelete: (id: string) => void }) {
   const systemReduced = useReducedMotion()
@@ -21,8 +22,11 @@ export function NotesView({ onDelete }: { onDelete: (id: string) => void }) {
   const [pinnedOpen, setPinnedOpen] = useState(true)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const listRef = useRef<HTMLDivElement>(null)
+  const composerRef = useRef<HTMLTextAreaElement>(null)
   const previousTopId = useRef<string | undefined>(notes[0]?.id)
   const [showNewPill, setShowNewPill] = useState(false)
+
+  useTextInputMode('note-composer', composerOpen, composerRef)
 
   useEffect(() => {
     const topId = notes[0]?.id
@@ -78,7 +82,7 @@ export function NotesView({ onDelete }: { onDelete: (id: string) => void }) {
       <AnimatePresence initial={false}>
         {composerOpen && (
           <motion.form className="record-composer" onSubmit={(e) => { e.preventDefault(); void submit() }} initial={reduced ? false : { opacity: 0, height: 0, y: -7 }} animate={{ opacity: 1, height: 'auto', y: 0 }} exit={{ opacity: 0, height: 0 }} transition={reduced ? INSTANT : { duration: .24, ease: ARRIVE_EASE }}>
-            <textarea autoFocus value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setComposerOpen(false); if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) void submit() }} placeholder={t('records.notePlaceholder')} />
+            <textarea ref={composerRef} value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setComposerOpen(false); if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) void submit() }} placeholder={t('records.notePlaceholder')} />
             <div><span>{t('records.noteComposerHint')}</span><button type="submit" disabled={!draft.trim()}>{t('records.save')}</button></div>
           </motion.form>
         )}

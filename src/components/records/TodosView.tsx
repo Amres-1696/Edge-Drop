@@ -6,6 +6,7 @@ import { useRecordStore } from '../../store/recordStore'
 import { useTranslation } from '../../i18n'
 import { ARRIVE_EASE, INSTANT, SMALL_SPRING } from '../../lib/motion'
 import { AttachmentStrip, RecordEmpty } from './NotesView'
+import { useTextInputMode } from '../../hooks/useTextInputMode'
 
 export function TodosView({ onDelete }: { onDelete: (id: string) => void }) {
   const systemReduced = useReducedMotion()
@@ -24,6 +25,9 @@ export function TodosView({ onDelete }: { onDelete: (id: string) => void }) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [holding, setHolding] = useState(false)
   const holdTimer = useRef<number | null>(null)
+  const composerRef = useRef<HTMLInputElement>(null)
+
+  useTextInputMode('todo-composer', composerOpen, composerRef)
 
   const filtered = useMemo(() => todos.filter((todo) => `${todo.title} ${todo.details} ${todo.attachments.map((a) => a.kind === 'file-reference' ? a.name : '').join(' ')}`.toLowerCase().includes(query)), [todos, query])
   const pending = filtered.filter((todo) => todo.status === 'pending')
@@ -77,7 +81,7 @@ export function TodosView({ onDelete }: { onDelete: (id: string) => void }) {
   return <>
     <AnimatePresence initial={false}>
       {composerOpen && <motion.form className="record-composer todo-composer" onSubmit={(e) => { e.preventDefault(); void submit() }} initial={reduced ? false : { opacity: 0, height: 0, y: -7 }} animate={{ opacity: 1, height: 'auto', y: 0 }} exit={{ opacity: 0, height: 0 }} transition={reduced ? INSTANT : { duration: .24, ease: ARRIVE_EASE }}>
-        <input autoFocus value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setComposerOpen(false) }} placeholder={t('records.todoPlaceholder')} />
+        <input ref={composerRef} value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setComposerOpen(false) }} placeholder={t('records.todoPlaceholder')} />
         <button type="submit" disabled={!draft.trim()}>{t('records.add')}</button>
       </motion.form>}
     </AnimatePresence>
@@ -101,8 +105,10 @@ function TodoDetails({ todo, onSave, onDelete, reduced }: { todo: TodoRecordDto;
   const { t } = useTranslation()
   const [details, setDetails] = useState(todo.details)
   const [date, setDate] = useState(todo.dueAt ? new Date(todo.dueAt).toISOString().slice(0, 10) : '')
+  const detailsRef = useRef<HTMLTextAreaElement>(null)
+  useTextInputMode(`todo-details-${todo.id}`, true, detailsRef)
   return <motion.div className="todo-details" initial={reduced ? false : { opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={reduced ? INSTANT : { duration: .22, ease: ARRIVE_EASE }}>
-    <textarea value={details} onChange={(e) => setDetails(e.target.value)} placeholder={t('records.detailsPlaceholder')} />
+    <textarea ref={detailsRef} value={details} onChange={(e) => setDetails(e.target.value)} placeholder={t('records.detailsPlaceholder')} />
     <div><input type="date" value={date} onChange={(e) => setDate(e.target.value)} /><button className="danger" onClick={onDelete}>{t('records.delete')}</button><button onClick={() => onSave({ details, dueAt: date ? new Date(`${date}T23:59:59`).getTime() : null })}>{t('records.save')}</button></div>
   </motion.div>
 }

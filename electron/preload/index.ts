@@ -124,6 +124,7 @@ const api = {
   updateSettings: (patch: Partial<InvokeResult<'settings:update'>>) =>
     invoke('settings:update', patch),
   setInteractive: (value: boolean) => invoke('window:set-interactive', value),
+  setTextInputActive: (active: boolean) => invoke('window:set-text-input-active', active),
   setPreviewMode: (active: boolean) => invoke('window:set-preview-mode', active),
   revealFile: (path: string) => invoke('file:reveal', path),
   minimizeWindow: () => invoke('window:minimize'),

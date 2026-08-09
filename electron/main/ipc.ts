@@ -14,7 +14,7 @@ import { filterValidPaths, isValidFilePath, isExistingFilePath } from './pathVal
 import { type InvokeMap, type InvokeChannel, type SendMap, type SendChannel } from '../../shared/ipc'
 import { getRecordStore, getStore, loadSettings, saveSettings, pushState, addFiles, getWatcher } from './state'
 import { getMainWindow } from './window'
-import { setInteractive, setHeartbeatPaused, setHotZoneWidth, repositionWindow, getDisplayListOptions, popUpAndRetract } from './window'
+import { setInteractive, setTextInputActive, setHeartbeatPaused, setHotZoneWidth, repositionWindow, getDisplayListOptions, popUpAndRetract } from './window'
 import { getOnboardingWindow } from './onboardingWindow'
 import { rebuildTrayMenu } from './tray'
 import { startDragOut, resolveDragData } from './drag'
@@ -586,6 +586,10 @@ export function registerIpc(): void {
 
   handle('window:set-interactive', (value) => {
     setInteractive(value)
+  })
+
+  handle('window:set-text-input-active', (active) => {
+    setTextInputActive(active)
   })
 
   handle('window:set-preview-mode', (active) => {

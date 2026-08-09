@@ -5,6 +5,7 @@ import { useRecordStore } from '../../store/recordStore'
 import { useTranslation } from '../../i18n'
 import { INSTANT, SMALL_SPRING } from '../../lib/motion'
 import { AttachmentStrip } from './NotesView'
+import { useTextInputMode } from '../../hooks/useTextInputMode'
 
 export function NoteEditor({ noteId, onClose }: { noteId: string | null; onClose: () => void }) {
   const systemReduced = useReducedMotion()
@@ -18,6 +19,9 @@ export function NoteEditor({ noteId, onClose }: { noteId: string | null; onClose
   const [dirty, setDirty] = useState(false)
   const [saved, setSaved] = useState(true)
   const timer = useRef<number | null>(null)
+  const titleRef = useRef<HTMLInputElement>(null)
+
+  useTextInputMode('note-editor', Boolean(note && noteId), titleRef)
 
   useEffect(() => {
     if (!note) return
@@ -64,7 +68,7 @@ export function NoteEditor({ noteId, onClose }: { noteId: string | null; onClose
     {note && noteId && <motion.section className="note-editor" initial={reduced ? false : { opacity: .7, x: '104%' }} animate={{ opacity: 1, x: 0 }} exit={reduced ? { opacity: 0 } : { opacity: .6, x: '104%' }} transition={reduced ? INSTANT : SMALL_SPRING}>
       <header><button onClick={() => void close()} aria-label={t('records.back')}><svg width="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6" /></svg></button><span>{t('records.editNote')}</span><span className={`note-save-state${saved ? '' : ' error'}`}><i />{savingId === note.id || dirty ? t('records.saving') : saved ? t('records.saved') : t('records.saveFailed')}</span></header>
       <div className="note-editor-body">
-        <input value={title} onChange={(e) => { setTitle(e.target.value); setDirty(true); setSaved(true) }} placeholder={t('records.titlePlaceholder')} />
+        <input ref={titleRef} value={title} onChange={(e) => { setTitle(e.target.value); setDirty(true); setSaved(true) }} placeholder={t('records.titlePlaceholder')} />
         <textarea value={body} onChange={(e) => { setBody(e.target.value); setDirty(true); setSaved(true) }} placeholder={t('records.bodyPlaceholder')} />
         <AttachmentStrip attachments={note.attachments} />
       </div>
