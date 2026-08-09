@@ -14,13 +14,49 @@
  * The temp files are cleaned up on the next app start (see cleanTemp).
  */
 import { app, nativeImage, type WebContents } from 'electron'
-import { Resvg } from '@resvg/resvg-js'
 import { copyFileSync, writeFileSync, existsSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { join, extname } from 'node:path'
 import { PATHS } from '../store/paths'
 import type { DragRequest, ItemData } from '../../shared/types'
 import { getStore } from './state'
 import { getFileKind } from '../../src/lib/fileType'
+
+interface ResvgInstance {
+  render(): { asPng(): Buffer }
+}
+
+type ResvgConstructor = new (
+  svg: string,
+  options?: { fitTo?: { mode: 'zoom'; value: number } }
+) => ResvgInstance
+
+const requireNative = createRequire(import.meta.url)
+let cachedResvg: ResvgConstructor | null | undefined
+
+/**
+ * Load the Windows native renderer only when a custom drag icon is needed.
+ * Keeping this optional prevents a missing native binding from blocking app startup,
+ * while packaged builds load the binding copied beside app.asar.
+ */
+function getResvgConstructor(): ResvgConstructor | null {
+  if (cachedResvg !== undefined) return cachedResvg
+
+  try {
+    if (app.isPackaged) {
+      const nativePath = join(process.resourcesPath, 'resvg', 'resvgjs.win32-x64-msvc.node')
+      cachedResvg = requireNative(nativePath).Resvg as ResvgConstructor
+    } else {
+      const packageName = ['@resvg', 'resvg-js'].join('/')
+      cachedResvg = requireNative(packageName).Resvg as ResvgConstructor
+    }
+  } catch (error: any) {
+    cachedResvg = null
+    logDrag(`Resvg unavailable; using transparent drag icon: ${error?.message || error}`)
+  }
+
+  return cachedResvg
+}
 
 /**
  * Resolve a DragRequest into concrete ItemData.
@@ -286,6 +322,8 @@ function createFileStackDragIcon(paths: string[]): Electron.NativeImage {
 
   try {
     logDrag(`createFileStackDragIcon calling Resvg for count=${count}`)
+    const Resvg = getResvgConstructor()
+    if (!Resvg) return getFileDragIcon()
     const resvg = new Resvg(svg, { fitTo: { mode: 'zoom', value: 3 } })
     const pngData = resvg.render().asPng()
     const img = nativeImage.createFromBuffer(pngData, { scaleFactor: 3 })
@@ -362,6 +400,8 @@ function createTextDragIcon(text: string): Electron.NativeImage {
   </svg>`
 
   try {
+    const Resvg = getResvgConstructor()
+    if (!Resvg) return getFileDragIcon()
     const resvg = new Resvg(svg, { fitTo: { mode: 'zoom', value: 2 } })
     const pngData = resvg.render().asPng()
     const img = nativeImage.createFromBuffer(pngData, { scaleFactor: 2 })

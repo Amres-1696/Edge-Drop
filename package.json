@@ -33,6 +33,16 @@
       "resources/**/*",
       "package.json"
     ],
+    "extraResources": [
+      {
+        "from": "node_modules/@koromix/koffi-win32-x64/win32_x64/koffi.node",
+        "to": "koffi/win32_x64/koffi.node"
+      },
+      {
+        "from": "node_modules/@resvg/resvg-js-win32-x64-msvc/resvgjs.win32-x64-msvc.node",
+        "to": "resvg/resvgjs.win32-x64-msvc.node"
+      }
+    ],
     "publish": {
       "provider": "github",
       "owner": "Deepender25",
