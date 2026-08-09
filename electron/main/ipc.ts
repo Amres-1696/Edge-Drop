@@ -634,6 +634,15 @@ function on<C extends SendChannel>(
 }
 
 export function registerSendListeners(): void {
+  on('note:save-draft', (_sender, id, patch) => {
+    try {
+      getRecordStore().updateNote(id, patch)
+      pushState.records()
+    } catch (error) {
+      console.error('[IPC] note:save-draft failed:', error)
+    }
+  })
+
   on('item:start-drag', (sender, req) => {
     console.log('[IPC] item:start-drag req=', JSON.stringify(req))
     const data = resolveDragData(req)

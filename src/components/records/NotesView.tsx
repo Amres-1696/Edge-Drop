@@ -134,9 +134,10 @@ export function NotesView({ onDelete }: { onDelete: (id: string) => void }) {
 }
 
 export function AttachmentStrip({ attachments }: { attachments: RecordAttachmentDto[] }) {
+  const { t } = useTranslation()
   if (attachments.length === 0) return null
   return <span className="record-attachments">{attachments.slice(0, 3).map((attachment, index) => attachment.kind === 'image'
-    ? <span className="record-image-thumb" key={`${attachment.assetId}-${index}`}>{attachment.preview ? <img src={attachment.preview} alt="" /> : 'IMG'}</span>
+    ? <span className="record-image-thumb" key={`${attachment.assetId}-${index}`}>{attachment.preview ? <img src={attachment.preview} alt="" /> : t('records.imageFallback')}</span>
     : <span className={`record-file-chip${attachment.available ? '' : ' missing'}`} key={`${attachment.path}-${index}`}>{attachment.available ? '↗' : '!'} {attachment.name}</span>)}
     {attachments.length > 3 && <span className="record-more-attachments">+{attachments.length - 3}</span>}
   </span>

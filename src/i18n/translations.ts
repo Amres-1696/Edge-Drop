@@ -45,6 +45,7 @@ export interface TranslationKeys {
     copied: string
     noteCopied: string
     copyFailed: string
+    imageFallback: string
     delete: string
     attachmentNote: string
     noNotes: string
@@ -448,6 +449,7 @@ export const en: TranslationKeys = {
     "copied": "Copied",
     "noteCopied": "Note copied",
     "copyFailed": "Could not copy note",
+    "imageFallback": "Image",
     "delete": "Delete",
     "attachmentNote": "Attachment note",
     "noNotes": "No notes yet",
@@ -2785,6 +2787,7 @@ export const zh_CN: TranslationKeys = {
     "copied": "已复制",
     "noteCopied": "笔记已复制",
     "copyFailed": "复制笔记失败",
+    "imageFallback": "图",
     "delete": "删除",
     "attachmentNote": "附件笔记",
     "noNotes": "还没有笔记",

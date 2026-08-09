@@ -27,6 +27,7 @@ export interface EdgeApi {
   updateNote: (id: string, patch: UpdateNoteInput) => Promise<RecordsSnapshot>
   setNotePinned: (id: string, pinned: boolean) => Promise<RecordsSnapshot>
   copyNote: (id: string) => Promise<boolean>
+  saveNoteDraft: (id: string, patch: UpdateNoteInput) => void
   createTodo: (input: CreateTodoInput) => Promise<RecordsSnapshot>
   updateTodo: (id: string, patch: UpdateTodoInput) => Promise<RecordsSnapshot>
   setTodoCompleted: (id: string, completed: boolean) => Promise<RecordsSnapshot>

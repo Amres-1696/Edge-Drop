@@ -99,7 +99,7 @@ function inferredTitle(item: ClipboardItem, suggestedTitle?: string): string {
   const text = sourceText(item)
   if (text) return firstNonEmptyLine(text)
   if (item.data.kind === 'files' && item.data.paths.length === 1) return basename(item.data.paths[0])
-  return suggestedTitle?.trim() || 'Untitled'
+  return suggestedTitle?.trim() || '未命名'
 }
 
 export function createNoteDraft(item: ClipboardItem, now: number, suggestedTitle?: string): NoteDraft {

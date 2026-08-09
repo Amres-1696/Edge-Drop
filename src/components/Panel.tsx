@@ -219,7 +219,7 @@ export function Panel() {
     position: 'absolute',
     zIndex: 10,
     pointerEvents: open ? 'auto' : 'none',
-    transition: 'clip-path 0.44s cubic-bezier(0.175, 0.885, 0.32, 1.08)'
+    transition: reduced ? 'none' : 'clip-path 0.44s cubic-bezier(0.175, 0.885, 0.32, 1.08)'
   }
 
   let originX = 0

@@ -162,7 +162,7 @@ export class RecordStore {
     const now = this.now()
     const note: NoteRecord = {
       id: this.idFactory(),
-      title: cleanTitle(input.title) || 'Untitled',
+      title: cleanTitle(input.title) || '未命名笔记',
       body: cleanBody(input.body ?? ''),
       attachments: [],
       pinned: false,
@@ -179,7 +179,7 @@ export class RecordStore {
     const now = this.now()
     const todo: TodoRecord = {
       id: this.idFactory(),
-      title: cleanTitle(input.title) || 'Untitled',
+      title: cleanTitle(input.title) || '未命名待办',
       details: cleanBody(input.details ?? ''),
       attachments: [],
       status: 'pending',

@@ -152,9 +152,10 @@ export function useEdgeHover(): void {
       }, 180)
     }
 
-    const closePanel = () => {
+    const closePanel = (allowWhileEditing = false) => {
       const state = useStore.getState()
       if (!state.open) return
+      if (!allowWhileEditing && isTextInputModeActive()) return
       if (state.sliderActive) return
       if (state.dragActive && !state.internalDragReq) return
 
@@ -188,7 +189,7 @@ export function useEdgeHover(): void {
       closePanelNow()
     }
 
-    const scheduleClose = (delay = GRACE_MS) => {
+    const scheduleClose = (delay = GRACE_MS, allowWhileEditing = false) => {
       const state = useStore.getState()
       if (state.sliderActive) return
       if (state.dragActive && !state.internalDragReq) return
@@ -204,7 +205,10 @@ export function useEdgeHover(): void {
         effectiveDelay = PREVIEW_CLOSE_STAY_MS
       }
 
-      graceTimer = window.setTimeout(closePanel, effectiveDelay)
+      graceTimer = window.setTimeout(() => {
+        graceTimer = undefined
+        closePanel(allowWhileEditing)
+      }, effectiveDelay)
     }
 
     const cancelClose = () => {
@@ -471,7 +475,7 @@ export function useEdgeHover(): void {
       // Don't close during an external OS file drag — the drag surface may
       // temporarily shift focus to the OS drag-ghost or file manager.
       if (state.dragActive && !state.internalDragReq) return
-      scheduleClose(400)
+      scheduleClose(400, true)
     }
 
     // ── OS file drag awareness ─────────────────────────────────────────────

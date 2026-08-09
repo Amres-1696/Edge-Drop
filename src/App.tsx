@@ -15,6 +15,7 @@ import { useRecordStore } from './store/recordStore'
 import { edge } from './lib/edge'
 import { applyReduceMotion } from './lib/theme'
 import { useEdgeHover } from './hooks/useEdgeHover'
+import { flushActiveNoteEditor } from './lib/activeNoteEditor'
 
 export default function App() {
   const hydrate = useStore((s) => s.hydrate)
@@ -72,9 +73,12 @@ export default function App() {
       }
     })
     const offOpenSettings = edge.onOpenSettings(() => {
-      useStore.getState().setOpen(true)
-      useStore.getState().setSettingsOpen(true)
-      edge.setInteractive(true)
+      void (async () => {
+        if (!(await flushActiveNoteEditor())) return
+        useStore.getState().setOpen(true)
+        useStore.getState().setSettingsOpen(true)
+        edge.setInteractive(true)
+      })()
     })
     const offTutorialStep = edge.onTutorialStep((step) => {
       useStore.getState().setTutorialStep(step)
@@ -122,7 +126,7 @@ export default function App() {
         return
       }
       if (event.key === 'Escape') {
-        if (state.editingNoteId) state.setEditingNoteId(null)
+        if (state.editingNoteId) return
         else if (state.recordComposerOpen) state.setRecordComposerOpen(false)
         else if (state.searchExpanded) {
           state.setQuery('')

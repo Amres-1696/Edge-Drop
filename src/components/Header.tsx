@@ -6,6 +6,7 @@ import { playButtonClickSound } from '../lib/soundEffects'
 import { useTranslation } from '../i18n'
 import { CELL_SPRING, CROSSFADE_SPRING, INSTANT } from '../lib/motion'
 import { useTextInputMode } from '../hooks/useTextInputMode'
+import { flushActiveNoteEditor } from '../lib/activeNoteEditor'
 
 const SearchIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -56,17 +57,32 @@ export function Header() {
   const changelogUnread = settingsOpen && (!settings.lastSeenChangelogVersion ||
     (currentVersion && settings.lastSeenChangelogVersion !== currentVersion && settings.lastSeenChangelogVersion !== `v${currentVersion}`))
 
-  const toggleSettings = () => {
+  const toggleSettings = async () => {
     playButtonClickSound()
     if (settingsOpen) {
       setSettingsOpen(false)
       setSettingsSubView('main')
       return
     }
+    if (!(await flushActiveNoteEditor())) return
     const state = useStore.getState()
     state.setPreviewItemId(null)
     state.setStyleFlyoutOpen(false)
     setSettingsOpen(true)
+  }
+
+  const changeWorkspace = async (mode: 'clipboard' | 'records') => {
+    playButtonClickSound()
+    if (mode === workspace) return
+    if (!(await flushActiveNoteEditor())) return
+    setWorkspace(mode)
+  }
+
+  const changeRecordView = async (view: 'notes' | 'todos') => {
+    playButtonClickSound()
+    if (view === recordView) return
+    if (!(await flushActiveNoteEditor())) return
+    setRecordView(view)
   }
 
   const openChangelog = () => {
@@ -107,9 +123,7 @@ export function Header() {
             transition={reduced ? INSTANT : CELL_SPRING}
           />
           {(['clipboard', 'records'] as const).map((mode) => (
-            <button key={mode} className={workspace === mode ? 'active' : ''} onClick={() => {
-              playButtonClickSound(); setWorkspace(mode)
-            }}>
+            <button key={mode} className={workspace === mode ? 'active' : ''} onClick={() => void changeWorkspace(mode)}>
               {mode === 'clipboard' ? t('records.workspaceClipboard') : t('records.workspaceRecords')}
             </button>
           ))}
@@ -132,7 +146,7 @@ export function Header() {
           />
         </div>
 
-        <button className="icon-btn" title={t('header.settings')} onClick={toggleSettings}>
+        <button className="icon-btn" title={t('header.settings')} onClick={() => void toggleSettings()}>
           <AnimatePresence initial={false} mode="wait">
             <motion.span key="gear" className="micro-icon-slot" initial={{ opacity: 0, scale: .85 }} animate={{ opacity: 1, scale: 1 }} transition={reduced ? INSTANT : CROSSFADE_SPRING}>
               <GearIcon />
@@ -157,9 +171,7 @@ export function Header() {
             <div className="records-segmented">
               <motion.span className="records-segmented-pill" animate={{ x: recordView === 'todos' ? 52 : 0 }} transition={reduced ? INSTANT : CELL_SPRING} />
               {(['notes', 'todos'] as const).map((view) => (
-                <button key={view} className={recordView === view ? 'active' : ''} onClick={() => {
-                  playButtonClickSound(); setRecordView(view)
-                }}>{view === 'notes' ? t('records.notes') : t('records.todos')}</button>
+                <button key={view} className={recordView === view ? 'active' : ''} onClick={() => void changeRecordView(view)}>{view === 'notes' ? t('records.notes') : t('records.todos')}</button>
               ))}
             </div>
             <motion.button className={`records-add-btn${composerOpen ? ' active' : ''}`} title={recordView === 'notes' ? t('records.newNote') : t('records.newTodo')} whileTap={reduced ? undefined : { y: 1, scale: .94 }} onClick={() => setComposerOpen(!composerOpen)}>

@@ -185,6 +185,8 @@ export interface EventMap {
 export interface SendMap {
   /** Begin a native OS drag of an item (or one file of a bundle) out of the app. */
   'item:start-drag': { args: [req: DragRequest] }
+  /** Last-chance note draft save while the editor is being unmounted. */
+  'note:save-draft': { args: [id: string, patch: UpdateNoteInput] }
   /** Synchronize tutorial step */
   'tutorial:set-step': { args: [step: number] }
 }
