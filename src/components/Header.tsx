@@ -53,6 +53,9 @@ export function Header() {
     ['images', t('filters.images')], ['files', t('filters.files')]
   ] as const
   const activeFilterIndex = Math.max(0, filters.findIndex(([id]) => id === typeFilter))
+  const maxFilterLength = Math.max(...filters.map(([, label]) => Array.from(label).length))
+  const filterFontSize = maxFilterLength >= 8 ? 7.8 : maxFilterLength >= 6 ? 8.5 : maxFilterLength >= 5 ? 9.2 : 10.2
+  const filterLetterSpacing = maxFilterLength >= 7 ? '-0.025em' : maxFilterLength >= 5 ? '-0.015em' : '0'
 
   const changelogUnread = settingsOpen && (!settings.lastSeenChangelogVersion ||
     (currentVersion && settings.lastSeenChangelogVersion !== currentVersion && settings.lastSeenChangelogVersion !== `v${currentVersion}`))
@@ -161,7 +164,7 @@ export function Header() {
           <div className="filter-segmented-track contextual-filters">
             <motion.div className="filter-slide-pill" animate={{ x: activeFilterIndex * 41 }} transition={reduced ? INSTANT : CELL_SPRING} />
             {filters.map(([id, label]) => (
-              <button key={id} className={`filter-chip${typeFilter === id ? ' active' : ''}`} onClick={() => {
+              <button key={id} className={`filter-chip${typeFilter === id ? ' active' : ''}`} style={{ fontSize: filterFontSize, letterSpacing: filterLetterSpacing }} onClick={() => {
                 playButtonClickSound(); setTypeFilter(id)
               }}>{label}</button>
             ))}

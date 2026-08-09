@@ -225,7 +225,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
           </button>
         </div>
         <div className="app-version-footer">
-          {t('footer.version')} {currentVersion || '0.2.5'}
+          {t('footer.version')} {currentVersion || '0.2.6'}
         </div>
       </div>
     </>
@@ -1225,9 +1225,8 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                   margin: '0 auto',
                   width: 'fit-content',
                   maxWidth: 'calc(100% - 24px)',
-                  background: 'rgba(76, 175, 80, 0.95)',
+                  background: '#388e3c',
                   color: '#ffffff',
-                  backdropFilter: 'blur(12px)',
                   border: '1px solid rgba(255, 255, 255, 0.25)',
                   borderRadius: 20,
                   padding: '6px 14px',

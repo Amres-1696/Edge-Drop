@@ -18,9 +18,37 @@ interface ChangelogRelease {
 
 const CHANGELOG_DATA: ChangelogRelease[] = [
   {
+    version: 'v0.2.6',
+    date: 'Aug 09, 2026',
+    isLatest: true,
+    summary: 'Selective upstream performance and typography improvements, plus a new notes and todos workspace with reliable draft persistence.',
+    highlights: [
+      {
+        title: 'Notes & Todos Workspace',
+        description: 'Added editable notes, copy actions, task completion and conversion flows in a dedicated records workspace.'
+      },
+      {
+        title: 'Reliable Draft Persistence',
+        description: 'Protected in-progress notes during autosave, navigation, panel closing and application shutdown.'
+      },
+      {
+        title: 'Smoother Rendering',
+        description: 'Selectively adopted the upstream v0.2.6 blur removal to reduce GPU and CPU work while keeping the existing visual hierarchy.'
+      },
+      {
+        title: 'Adaptive Header Typography',
+        description: 'Added dynamic filter-label sizing and overflow protection for narrow panels and longer localized labels.'
+      },
+      {
+        title: 'More Reliable Windows Packaging',
+        description: 'Bundled the required native Windows runtimes and verified the packaged application launches successfully.'
+      }
+    ]
+  },
+  {
     version: 'v0.2.5',
     date: 'Aug 03, 2026',
-    isLatest: true,
+    isLatest: false,
     summary: 'Full 30-language localization with auto-scroll selector, powerMonitor sleep/wake protection, text size typography settings, and multi-file action bar.',
     highlights: [
       {

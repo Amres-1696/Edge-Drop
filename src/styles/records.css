@@ -15,7 +15,7 @@
 .workspace-top-row { min-height: 32px; gap: 4px; }
 .workspace-sub-row { min-height: 29px; }
 .workspace-header-actions { margin-left: auto; display: flex; align-items: center; gap: 4px; }
-.settings-header-title { padding-left: 6px; color: rgba(255,255,255,.58); font-size: calc(12px * var(--font-scale, 1)); font-weight: 600; }
+.settings-header-title { min-width: 0; max-width: 170px; padding-left: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgba(255,255,255,.58); font-size: calc(12px * var(--font-scale, 1)); font-weight: 600; }
 .workspace-header .icon-btn { position: relative; flex: 0 0 32px; width: 32px; height: 32px; border-radius: 9px; }
 .workspace-header .icon-btn.active { background: rgba(255,255,255,.1); color: white; }
 .header-unread-dot, .header-update-dot { position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 50%; background: white; border: 1.5px solid #000; }
@@ -45,7 +45,7 @@
   border: 1px solid rgba(255,255,255,.2);
   box-shadow: 0 3px 10px rgba(0,0,0,.35), inset 0 1px rgba(255,255,255,.18);
 }
-.workspace-switch button { position: relative; z-index: 1; border-radius: 999px; color: rgba(255,255,255,.54); font-size: calc(10.5px * var(--font-scale, 1)); font-weight: 560; white-space: nowrap; }
+.workspace-switch button { position: relative; z-index: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; border-radius: 999px; color: rgba(255,255,255,.54); font-size: calc(10.5px * var(--font-scale, 1)); font-weight: 560; white-space: nowrap; }
 .workspace-switch button.active { color: white; }
 
 .expanding-search { margin-left: auto; width: 32px; height: 32px; display: flex; align-items: center; overflow: hidden; border: 1px solid transparent; border-radius: 10px; transition: width .28s cubic-bezier(.18,1.1,.35,1), background .18s, border-color .18s; }
@@ -56,10 +56,10 @@
 
 .contextual-filters {
   position: relative; display: flex; gap: 2px; align-items: center; padding: 2px 3px; margin-left: 0;
-  border: 1px solid rgba(255,255,255,.08); border-radius: 999px; background: rgba(255,255,255,.035);
+  max-width: 100%; overflow: hidden; border: 1px solid rgba(255,255,255,.08); border-radius: 999px; background: rgba(255,255,255,.05);
 }
 .contextual-filters .filter-slide-pill { position: absolute; z-index: 0; left: 3px; top: 2px; width: 39px; height: 22px; border-radius: 999px; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.2); box-shadow: inset 0 1px rgba(255,255,255,.16); pointer-events: none; }
-.contextual-filters .filter-chip { position: relative; z-index: 1; width: 39px; height: 22px; border-radius: 999px; color: rgba(255,255,255,.55); font-size: calc(9.5px * var(--font-scale, 1)); white-space: nowrap; }
+.contextual-filters .filter-chip { position: relative; z-index: 1; width: 39px; height: 22px; min-width: 0; padding: 0 1px; overflow: hidden; border-radius: 999px; color: rgba(255,255,255,.55); white-space: nowrap; }
 .contextual-filters .filter-chip.active { color: white; font-weight: 600; }
 
 .records-segmented { position: relative; display: grid; grid-template-columns: repeat(2, 52px); height: 29px; padding: 3px; border: 1px solid rgba(255,255,255,.08); border-radius: 999px; background: rgba(255,255,255,.035); }

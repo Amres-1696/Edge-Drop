@@ -19,9 +19,37 @@ export interface ChangelogRelease {
  */
 export const ZH_CN_CHANGELOG: ChangelogRelease[] = [
   {
+    version: 'v0.2.6',
+    date: '2026年8月9日',
+    isLatest: true,
+    summary: '选择性接入上游性能和文字适配优化，并新增可靠的笔记与待办工作区。',
+    highlights: [
+      {
+        title: '笔记与待办工作区',
+        description: '新增可编辑笔记、复制操作、待办完成状态和内容转换流程，与剪贴板数据彼此独立。'
+      },
+      {
+        title: '可靠的草稿保护',
+        description: '完善自动保存、页面切换、面板关闭和应用退出流程，避免尚未保存的笔记内容丢失。'
+      },
+      {
+        title: '更流畅的界面渲染',
+        description: '选择性接入上游 v0.2.6 的模糊效果移除方案，减少 CPU 与 GPU 负担，同时保留现有界面层次。'
+      },
+      {
+        title: '顶部文字自适应',
+        description: '筛选标签会根据翻译长度自动调整字号，并增加窄面板边界保护，避免文字重叠或挤出。'
+      },
+      {
+        title: 'Windows 安装包稳定性',
+        description: '补齐安装版所需的原生运行组件，并完成独立用户目录下的安装版启动验证。'
+      }
+    ]
+  },
+  {
     version: 'v0.2.5',
     date: '2026年8月3日',
-    isLatest: true,
+    isLatest: false,
     summary: '新增 30 种语言本地化、笔记本睡眠与解锁保护、字体大小调节、多文件批量操作，以及多项性能和显示质量优化。',
     highlights: [
       {
