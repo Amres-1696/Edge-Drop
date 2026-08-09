@@ -92,6 +92,17 @@ win.addEventListener('drop', (e: any) => {
 const api = {
   /* Renderer -> Main */
   loadState: () => invoke('state:load'),
+  loadRecords: () => invoke('records:load'),
+  convertClipboardToRecord: (input: import('../../shared/types').ConvertClipboardInput) => invoke('records:convert-clipboard', input),
+  createNote: (input: import('../../shared/types').CreateNoteInput) => invoke('note:create', input),
+  updateNote: (id: string, patch: import('../../shared/types').UpdateNoteInput) => invoke('note:update', id, patch),
+  setNotePinned: (id: string, pinned: boolean) => invoke('note:set-pinned', id, pinned),
+  createTodo: (input: import('../../shared/types').CreateTodoInput) => invoke('todo:create', input),
+  updateTodo: (id: string, patch: import('../../shared/types').UpdateTodoInput) => invoke('todo:update', id, patch),
+  setTodoCompleted: (id: string, completed: boolean) => invoke('todo:set-completed', id, completed),
+  deleteRecord: (target: import('../../shared/types').RecordTarget, id: string) => invoke('record:delete', target, id),
+  restoreRecord: (id: string) => invoke('record:restore', id),
+  clearCompletedTodos: () => invoke('todo:clear-completed'),
   setPinned: (id: string, pinned: boolean) => invoke('item:set-pinned', id, pinned),
   deleteItem: (id: string) => invoke('item:delete', id),
   clearItems: () => invoke('item:clear'),
@@ -122,6 +133,7 @@ const api = {
   /* Main -> Renderer */
   onItems: (cb: (items: EventArgs<'state:items'>[0]) => void) => on('state:items', cb),
   onSettings: (cb: (settings: EventArgs<'state:settings'>[0]) => void) => on('state:settings', cb),
+  onRecords: (cb: (snapshot: EventArgs<'state:records'>[0]) => void) => on('state:records', cb),
   onToggle: (cb: (open?: boolean) => void) => on('window:toggle', cb),
   onOpenSettings: (cb: () => void) => on('window:open-settings', cb),
   onDragEnd: (cb: () => void) => on('item:drag-end', cb),

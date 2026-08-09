@@ -163,6 +163,12 @@ export interface ConvertClipboardInput {
   suggestedTitle?: string
 }
 
+export interface ConvertClipboardResult {
+  snapshot: RecordsSnapshot
+  recordId: string
+  existing: boolean
+}
+
 /** Section the renderer groups items into. */
 export type ItemSection = 'pinned' | 'shelf'
 

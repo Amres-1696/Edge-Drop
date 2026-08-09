@@ -9,7 +9,20 @@
  *   - `Renderer -> Main` calls (invoke/handle) are listed in `InvokeMap`.
  *   - `Main -> Renderer` events (send/on) are listed in `EventMap`.
  */
-import type { ClipboardItemDto, DragRequest, MergeResult, Settings } from './types'
+import type {
+  ClipboardItemDto,
+  ConvertClipboardInput,
+  ConvertClipboardResult,
+  CreateNoteInput,
+  CreateTodoInput,
+  DragRequest,
+  MergeResult,
+  RecordsSnapshot,
+  RecordTarget,
+  Settings,
+  UpdateNoteInput,
+  UpdateTodoInput
+} from './types'
 
 /* ------------------------------------------------------------------ */
 /* Renderer -> Main  (ipcMain.handle / ipcRenderer.invoke)            */
@@ -18,6 +31,19 @@ import type { ClipboardItemDto, DragRequest, MergeResult, Settings } from './typ
 export interface InvokeMap {
   /** Returns the full current item list + settings on startup. */
   'state:load': { args: []; result: { items: ClipboardItemDto[]; settings: Settings; version: string; isStoreBuild?: boolean } }
+
+  /** Load long-lived notes and todos separately from clipboard history. */
+  'records:load': { args: []; result: RecordsSnapshot }
+  'records:convert-clipboard': { args: [input: ConvertClipboardInput]; result: ConvertClipboardResult }
+  'record:delete': { args: [target: RecordTarget, id: string]; result: RecordsSnapshot }
+  'record:restore': { args: [id: string]; result: RecordsSnapshot }
+  'note:create': { args: [input: CreateNoteInput]; result: RecordsSnapshot }
+  'note:update': { args: [id: string, patch: UpdateNoteInput]; result: RecordsSnapshot }
+  'note:set-pinned': { args: [id: string, pinned: boolean]; result: RecordsSnapshot }
+  'todo:create': { args: [input: CreateTodoInput]; result: RecordsSnapshot }
+  'todo:update': { args: [id: string, patch: UpdateTodoInput]; result: RecordsSnapshot }
+  'todo:set-completed': { args: [id: string, completed: boolean]; result: RecordsSnapshot }
+  'todo:clear-completed': { args: []; result: { snapshot: RecordsSnapshot; deletedIds: string[] } }
 
   /** Set an item's pinned state. */
   'item:set-pinned': { args: [id: string, pinned: boolean]; result: ClipboardItemDto[] }
@@ -105,6 +131,8 @@ export interface EventMap {
   'state:items': [items: ClipboardItemDto[]]
   /** Settings changed (e.g. from the tray menu). */
   'state:settings': [settings: Settings]
+  /** Notes/todos changed after a mutation. */
+  'state:records': [snapshot: RecordsSnapshot]
   /** Toggle the panel open/closed from the main process (e.g. tray). */
   'window:toggle': [open?: boolean]
   /** Open the panel directly to settings from the main process (e.g. tray). */

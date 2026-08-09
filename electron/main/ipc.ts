@@ -12,7 +12,7 @@ import { execFile } from 'node:child_process'
 import { psHost, getSystemPowerShellPath } from './powershell'
 import { filterValidPaths, isValidFilePath, isExistingFilePath } from './pathValidation'
 import { type InvokeMap, type InvokeChannel, type SendMap, type SendChannel } from '../../shared/ipc'
-import { getStore, loadSettings, saveSettings, pushState, addFiles, getWatcher } from './state'
+import { getRecordStore, getStore, loadSettings, saveSettings, pushState, addFiles, getWatcher } from './state'
 import { getMainWindow } from './window'
 import { setInteractive, setHeartbeatPaused, setHotZoneWidth, repositionWindow, getDisplayListOptions, popUpAndRetract } from './window'
 import { getOnboardingWindow } from './onboardingWindow'
@@ -183,6 +183,76 @@ export function registerIpc(): void {
       version: app.getVersion(),
       isStoreBuild: isStoreBuild()
     }
+  })
+
+  handle('records:load', () => getRecordStore().snapshot())
+
+  handle('records:convert-clipboard', (input) => {
+    const item = getStore().get(input.itemId)
+    if (!item) throw new Error('Clipboard item not found')
+    const before = getRecordStore().snapshot()
+    const existed = input.target === 'note'
+      ? before.notes.some((note) => note.origin.clipboardItemId === input.itemId)
+      : before.todos.some((todo) => todo.origin.clipboardItemId === input.itemId)
+    const record = getRecordStore().convert(item, input.target, input.suggestedTitle)
+    const snapshot = getRecordStore().snapshot()
+    pushState.records()
+    return { snapshot, recordId: record.id, existing: existed }
+  })
+
+  handle('note:create', (input) => {
+    getRecordStore().createNote(input)
+    pushState.records()
+    return getRecordStore().snapshot()
+  })
+
+  handle('note:update', (id, patch) => {
+    getRecordStore().updateNote(id, patch)
+    pushState.records()
+    return getRecordStore().snapshot()
+  })
+
+  handle('note:set-pinned', (id, pinned) => {
+    getRecordStore().setNotePinned(id, pinned)
+    pushState.records()
+    return getRecordStore().snapshot()
+  })
+
+  handle('todo:create', (input) => {
+    getRecordStore().createTodo(input)
+    pushState.records()
+    return getRecordStore().snapshot()
+  })
+
+  handle('todo:update', (id, patch) => {
+    getRecordStore().updateTodo(id, patch)
+    pushState.records()
+    return getRecordStore().snapshot()
+  })
+
+  handle('todo:set-completed', (id, completed) => {
+    getRecordStore().setTodoCompleted(id, completed)
+    pushState.records()
+    return getRecordStore().snapshot()
+  })
+
+  handle('record:delete', (target, id) => {
+    getRecordStore().delete(target, id)
+    pushState.records()
+    return getRecordStore().snapshot()
+  })
+
+  handle('record:restore', (id) => {
+    getRecordStore().restore(id)
+    pushState.records()
+    return getRecordStore().snapshot()
+  })
+
+  handle('todo:clear-completed', () => {
+    const deletedIds = getRecordStore().clearCompleted()
+    const snapshot = getRecordStore().snapshot()
+    pushState.records()
+    return { snapshot, deletedIds }
   })
 
   handle('app:install-update', () => {

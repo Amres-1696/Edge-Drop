@@ -5,12 +5,33 @@
  * contract lives in one place. The actual implementation lives in the preload;
  * the renderer only ever sees `window.edge` typed as this interface.
  */
-import type { Settings } from './types'
+import type {
+  ConvertClipboardInput,
+  ConvertClipboardResult,
+  CreateNoteInput,
+  CreateTodoInput,
+  RecordsSnapshot,
+  RecordTarget,
+  Settings,
+  UpdateNoteInput,
+  UpdateTodoInput
+} from './types'
 import type { DragRequest } from './types'
 
 export interface EdgeApi {
   /* Renderer -> Main */
   loadState: () => Promise<{ items: import('./types').ClipboardItemDto[]; settings: Settings; version: string; isStoreBuild?: boolean }>
+  loadRecords: () => Promise<RecordsSnapshot>
+  convertClipboardToRecord: (input: ConvertClipboardInput) => Promise<ConvertClipboardResult>
+  createNote: (input: CreateNoteInput) => Promise<RecordsSnapshot>
+  updateNote: (id: string, patch: UpdateNoteInput) => Promise<RecordsSnapshot>
+  setNotePinned: (id: string, pinned: boolean) => Promise<RecordsSnapshot>
+  createTodo: (input: CreateTodoInput) => Promise<RecordsSnapshot>
+  updateTodo: (id: string, patch: UpdateTodoInput) => Promise<RecordsSnapshot>
+  setTodoCompleted: (id: string, completed: boolean) => Promise<RecordsSnapshot>
+  deleteRecord: (target: RecordTarget, id: string) => Promise<RecordsSnapshot>
+  restoreRecord: (id: string) => Promise<RecordsSnapshot>
+  clearCompletedTodos: () => Promise<{ snapshot: RecordsSnapshot; deletedIds: string[] }>
   setPinned: (id: string, pinned: boolean) => Promise<import('./types').ClipboardItemDto[]>
   deleteItem: (id: string) => Promise<import('./types').ClipboardItemDto[]>
   clearItems: () => Promise<import('./types').ClipboardItemDto[]>
@@ -50,6 +71,7 @@ export interface EdgeApi {
   /* Main -> Renderer */
   onItems: (cb: (items: import('./types').ClipboardItemDto[]) => void) => () => void
   onSettings: (cb: (settings: Settings) => void) => () => void
+  onRecords: (cb: (snapshot: RecordsSnapshot) => void) => () => void
   onToggle: (cb: (open?: boolean) => void) => () => void
   onOpenSettings: (cb: () => void) => () => void
   onDragEnd: (cb: () => void) => () => void

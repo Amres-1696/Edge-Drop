@@ -6,9 +6,10 @@
  * here so there's one path that re-pushes the DTO list.
  */
 import { ItemStore } from '../store/ItemStore'
+import { RecordStore } from '../store/RecordStore'
 import { ClipboardWatcher } from '../clipboard/ClipboardWatcher'
 import { loadSettings, saveSettings } from '../store/settings'
-import type { ClipboardItemDto, Settings } from '../../shared/types'
+import type { ClipboardItemDto, RecordsSnapshot, Settings } from '../../shared/types'
 import { MAX_STACK } from '../../shared/types'
 import { createId } from '../store/ids'
 import { nativeImage, BrowserWindow, powerMonitor } from 'electron'
@@ -18,6 +19,9 @@ import { prefetchFileIcons } from './drag'
 import { runtime } from './config'
 
 const store = new ItemStore()
+const recordStore = new RecordStore({
+  resolveClipboardImage: (imageId, ext) => store.getImagePath(imageId, ext)
+})
 const watcher = new ClipboardWatcher(600)
 let pruneTimer: ReturnType<typeof setInterval> | null = null
 let wakeTimer: ReturnType<typeof setTimeout> | null = null
@@ -41,6 +45,7 @@ function handleSystemWake(): void {
 /** Initialize persistence + start the clipboard watcher. */
 export function initState(): void {
   store.load()
+  recordStore.load()
   if (loadSettings().clearUnpinnedOnRestart) {
     store.clearUnpinned()
   }
@@ -103,6 +108,10 @@ export function getStore(): ItemStore {
   return store
 }
 
+export function getRecordStore(): RecordStore {
+  return recordStore
+}
+
 export function getWatcher(): ClipboardWatcher {
   return watcher
 }
@@ -124,6 +133,10 @@ export const pushState = {
   },
   settings(next: Settings): void {
     send('state:settings', next)
+  },
+  records(): void {
+    const snapshot: RecordsSnapshot = recordStore.snapshot()
+    send('state:records', snapshot)
   },
   togglePanel(open?: boolean): void {
     console.log(`[Main] Sending window:toggle event to renderer with open=${open}`)

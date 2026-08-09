@@ -11,6 +11,7 @@
 import { useEffect } from 'react'
 import { Panel } from './components/Panel'
 import { useStore } from './store/appStore'
+import { useRecordStore } from './store/recordStore'
 import { edge } from './lib/edge'
 import { applyReduceMotion } from './lib/theme'
 import { useEdgeHover } from './hooks/useEdgeHover'
@@ -21,6 +22,8 @@ export default function App() {
   const setSettings = useStore((s) => s.setSettings)
   const pushToast = useStore((s) => s.pushToast)
   const settings = useStore((s) => s.settings)
+  const hydrateRecords = useRecordStore((s) => s.hydrate)
+  const applyRecordSnapshot = useRecordStore((s) => s.applySnapshot)
 
   // Drive the edge open/close behavior.
   useEdgeHover()
@@ -28,8 +31,10 @@ export default function App() {
   // Hydrate once + subscribe to pushed updates.
   useEffect(() => {
     void hydrate()
+    void hydrateRecords()
     const offItems = edge.onItems((items) => setItems(items))
     const offSettings = edge.onSettings((next) => setSettings(next))
+    const offRecords = edge.onRecords((snapshot) => applyRecordSnapshot(snapshot))
     const offToast = edge.onToast((t) => pushToast(t))
     const offToggle = edge.onToggle((forceOpen) => {
       const next = forceOpen !== undefined ? forceOpen : !useStore.getState().open
@@ -83,6 +88,7 @@ export default function App() {
     return () => {
       offItems()
       offSettings()
+      offRecords()
       offToast()
       offToggle()
       offOpenSettings()
@@ -90,7 +96,7 @@ export default function App() {
       offUpdateAvailable()
       offUpdateDownloaded()
     }
-  }, [hydrate, setItems, setSettings, pushToast])
+  }, [hydrate, hydrateRecords, applyRecordSnapshot, setItems, setSettings, pushToast])
 
   // Apply theme whenever settings change.
   useEffect(() => {
