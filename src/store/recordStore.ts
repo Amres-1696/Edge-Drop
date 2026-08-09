@@ -75,7 +75,7 @@ export const useRecordStore = create<RecordState>((set, get) => ({
 
   createNote: async (input) => {
     try { set({ ...(await edge.createNote(input)) }) }
-    catch { fail('创建备忘失败，请重试') }
+    catch { fail('创建笔记失败，请重试') }
   },
 
   updateNote: async (id, patch) => {

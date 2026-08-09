@@ -1,4 +1,4 @@
-# Edge Drop 备忘录与待办实施计划
+# Edge Drop 笔记录与待办实施计划
 
 ## 基线
 
@@ -25,7 +25,7 @@
 
 1. 扩展 `shared/ipc.ts`、`shared/bridge.ts` 和 `electron/preload/index.ts`。
 2. 在 `electron/main/state.ts` 初始化 RecordStore，并广播 `state:records`。
-3. 在 `electron/main/ipc.ts` 注册转换、备忘、待办、删除/恢复和清理已完成项目接口。
+3. 在 `electron/main/ipc.ts` 注册转换、笔记、待办、删除/恢复和清理已完成项目接口。
 4. 新建 `src/store/recordStore.ts`，实现乐观更新、错误回滚和保存状态。
 5. 在 `src/App.tsx` 完成记录加载与事件订阅。
 6. 验证：Node/Web TypeScript 类型检查。
@@ -41,7 +41,7 @@
 
 ## 阶段 5：剪贴板联动与微互动
 
-1. 在 `ClipboardItem.tsx` 增加“保存为备忘 / 添加为待办 / 查看”动作。
+1. 在 `ClipboardItem.tsx` 增加“保存为笔记 / 添加为待办 / 查看”动作。
 2. 接入 Segmented Control、Expanding Search、Press Depth、Value Flash、Show More、Accordion、Icon Morph、Hold to Confirm 和 New Items Pill 的适配实现。
 3. 所有动作读取系统和应用减少动态效果，不使用长期 `will-change`、静态 `translateZ(0)` 或 `backface-visibility`。
 4. 增加快捷键：`Ctrl+F`、记录页 `Ctrl+N`、`Esc`、待办输入 `Enter`、编辑器 `Ctrl+S`。
@@ -52,7 +52,7 @@
 1. 为 `TranslationKeys`、英文和简体中文补齐记录功能文案；其他语言通过英文回退，不在组件中写死用户可见字符串。
 2. 扩展本地化测试，保证 `en` 与 `zh-CN` 新键完全对应。
 3. 运行全部 Vitest、Node/Web TypeScript、`electron-vite` 生产构建和 `git diff --check`。
-4. 启动开发构建，人工检查剪贴板、备忘、待办、编辑器、减少动态效果和 100%/125%/150% 字体缩放。
+4. 启动开发构建，人工检查剪贴板、笔记、待办、编辑器、减少动态效果和 100%/125%/150% 字体缩放。
 5. 修复回归后生成 Windows 安装包，保存在本地输出目录；是否上传远端按用户后续指令执行。
 
 ## 提交策略

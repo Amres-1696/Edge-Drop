@@ -6,6 +6,7 @@ import { useRecordStore } from '../../store/recordStore'
 import { useTranslation } from '../../i18n'
 import { ARRIVE_EASE, INSTANT, SMALL_SPRING } from '../../lib/motion'
 import { useTextInputMode } from '../../hooks/useTextInputMode'
+import { CheckIcon, CopyIcon } from '../icons'
 
 export function NotesView({ onDelete }: { onDelete: (id: string) => void }) {
   const systemReduced = useReducedMotion()
@@ -18,15 +19,22 @@ export function NotesView({ onDelete }: { onDelete: (id: string) => void }) {
   const composerOpen = useStore((s) => s.recordComposerOpen)
   const setComposerOpen = useStore((s) => s.setRecordComposerOpen)
   const setEditingNoteId = useStore((s) => s.setEditingNoteId)
+  const pushToast = useStore((s) => s.pushToast)
   const [draft, setDraft] = useState('')
+  const [copiedId, setCopiedId] = useState<string | null>(null)
   const [pinnedOpen, setPinnedOpen] = useState(true)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const listRef = useRef<HTMLDivElement>(null)
   const composerRef = useRef<HTMLTextAreaElement>(null)
   const previousTopId = useRef<string | undefined>(notes[0]?.id)
   const [showNewPill, setShowNewPill] = useState(false)
+  const copyTimer = useRef<number | null>(null)
 
   useTextInputMode('note-composer', composerOpen, composerRef)
+
+  useEffect(() => () => {
+    if (copyTimer.current !== null) window.clearTimeout(copyTimer.current)
+  }, [])
 
   useEffect(() => {
     const topId = notes[0]?.id
@@ -53,6 +61,19 @@ export function NotesView({ onDelete }: { onDelete: (id: string) => void }) {
     setComposerOpen(false)
   }
 
+  const copyNote = async (id: string) => {
+    try {
+      const ok = await window.edge.copyNote(id)
+      if (!ok) throw new Error('copy failed')
+      setCopiedId(id)
+      pushToast({ id: `note-copy-${Date.now()}`, message: t('records.noteCopied'), tone: 'info' })
+      if (copyTimer.current !== null) window.clearTimeout(copyTimer.current)
+      copyTimer.current = window.setTimeout(() => setCopiedId(null), 1_250)
+    } catch {
+      pushToast({ id: `note-copy-error-${Date.now()}`, message: t('records.copyFailed'), tone: 'error' })
+    }
+  }
+
   const renderNote = (note: NoteRecordDto) => {
     const isExpanded = expanded.has(note.id)
     return (
@@ -70,6 +91,14 @@ export function NotesView({ onDelete }: { onDelete: (id: string) => void }) {
         </button>
         <div className="record-card-actions">
           {note.body.length > 90 && <button onClick={() => setExpanded((prev) => toggleSet(prev, note.id))}>{isExpanded ? t('records.collapse') : t('records.showMore')}</button>}
+          <button className={`record-copy-command${copiedId === note.id ? ' copied' : ''}`} onClick={() => void copyNote(note.id)} title={t('records.copy')}>
+            <AnimatePresence initial={false} mode="wait">
+              <motion.span key={copiedId === note.id ? 'copied' : 'copy'} initial={reduced ? false : { opacity: 0, y: 3, scale: .9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={reduced ? { opacity: 0 } : { opacity: 0, y: -3, scale: .9 }} transition={reduced ? INSTANT : { duration: .14 }}>
+                {copiedId === note.id ? <CheckIcon width={11} /> : <CopyIcon width={11} />}
+                {copiedId === note.id ? t('records.copied') : t('records.copy')}
+              </motion.span>
+            </AnimatePresence>
+          </button>
           <button onClick={() => void setPinned(note.id, !note.pinned)}>{note.pinned ? t('records.unpin') : t('records.pin')}</button>
           <button className="danger" onClick={() => onDelete(note.id)}>{t('records.delete')}</button>
         </div>

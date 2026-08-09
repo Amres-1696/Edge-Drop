@@ -21,6 +21,7 @@ import { startDragOut, resolveDragData } from './drag'
 import { clipboardSignature } from '../clipboard/formats'
 import type { ItemData, MergeResult } from '../../shared/types'
 import { quitAndInstallUpdate, checkForUpdatesManual, startUpdateDownload, syncAutoUpdaterState } from './updater'
+import { formatNoteClipboardText } from '../../shared/noteClipboard'
 
 /**
  * Returns true if the current system clipboard content matches the given item data.
@@ -216,6 +217,15 @@ export function registerIpc(): void {
     getRecordStore().setNotePinned(id, pinned)
     pushState.records()
     return getRecordStore().snapshot()
+  })
+
+  handle('note:copy', (id) => {
+    const note = getRecordStore().snapshot().notes.find((entry) => entry.id === id)
+    if (!note) return false
+    const text = formatNoteClipboardText(note)
+    if (!text) return false
+    clipboard.writeText(text)
+    return true
   })
 
   handle('todo:create', (input) => {

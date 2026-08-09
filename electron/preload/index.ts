@@ -97,6 +97,7 @@ const api = {
   createNote: (input: import('../../shared/types').CreateNoteInput) => invoke('note:create', input),
   updateNote: (id: string, patch: import('../../shared/types').UpdateNoteInput) => invoke('note:update', id, patch),
   setNotePinned: (id: string, pinned: boolean) => invoke('note:set-pinned', id, pinned),
+  copyNote: (id: string) => invoke('note:copy', id),
   createTodo: (input: import('../../shared/types').CreateTodoInput) => invoke('todo:create', input),
   updateTodo: (id: string, patch: import('../../shared/types').UpdateTodoInput) => invoke('todo:update', id, patch),
   setTodoCompleted: (id: string, completed: boolean) => invoke('todo:set-completed', id, completed),

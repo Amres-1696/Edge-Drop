@@ -40,6 +40,7 @@ export interface InvokeMap {
   'note:create': { args: [input: CreateNoteInput]; result: RecordsSnapshot }
   'note:update': { args: [id: string, patch: UpdateNoteInput]; result: RecordsSnapshot }
   'note:set-pinned': { args: [id: string, pinned: boolean]; result: RecordsSnapshot }
+  'note:copy': { args: [id: string]; result: boolean }
   'todo:create': { args: [input: CreateTodoInput]; result: RecordsSnapshot }
   'todo:update': { args: [id: string, patch: UpdateTodoInput]; result: RecordsSnapshot }
   'todo:set-completed': { args: [id: string, completed: boolean]; result: RecordsSnapshot }
