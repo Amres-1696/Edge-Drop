@@ -37,6 +37,9 @@ if (!app.isPackaged && process.env.EDGE_DROP_DEV_PROFILE) {
 // Restrict the renderer to a single webContents and forbid remote module usage.
 app.enableSandbox()
 
+// Expose GC switch for safe idle memory trimming when panel is closed.
+app.commandLine.appendSwitch('js-flags', '--expose-gc')
+
 // ---- single instance -------------------------------------------------------
 const gotLock = app.requestSingleInstanceLock()
 if (!gotLock) {
