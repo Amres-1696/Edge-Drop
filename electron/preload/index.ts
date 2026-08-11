@@ -107,6 +107,7 @@ const api = {
   clearCompletedTodos: () => invoke('todo:clear-completed'),
   setPinned: (id: string, pinned: boolean) => invoke('item:set-pinned', id, pinned),
   deleteItem: (id: string) => invoke('item:delete', id),
+  deleteBatchItems: (ids: string[]) => invoke('item:delete-batch', ids),
   clearItems: () => invoke('item:clear'),
   copyItem: (id: string) => invoke('item:copy', id),
   copySubitem: (req: import('../../shared/types').DragRequest) => invoke('item:copy-subitem', req),

@@ -36,6 +36,7 @@ export interface EdgeApi {
   clearCompletedTodos: () => Promise<{ snapshot: RecordsSnapshot; deletedIds: string[] }>
   setPinned: (id: string, pinned: boolean) => Promise<import('./types').ClipboardItemDto[]>
   deleteItem: (id: string) => Promise<import('./types').ClipboardItemDto[]>
+  deleteBatchItems: (ids: string[]) => Promise<import('./types').ClipboardItemDto[]>
   clearItems: () => Promise<import('./types').ClipboardItemDto[]>
   removeSubitem: (req: DragRequest) => Promise<boolean>
   copyItem: (id: string) => Promise<boolean>
