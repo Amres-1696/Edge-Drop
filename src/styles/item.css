@@ -19,6 +19,8 @@
               background 0.22s ease,
               border-color 0.22s ease;
   overflow: hidden;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 80px;
 }
 
 .item:hover {
