@@ -13,8 +13,7 @@ import { psHost, getSystemPowerShellPath } from './powershell'
 import { filterValidPaths, isValidFilePath, isExistingFilePath } from './pathValidation'
 import { type InvokeMap, type InvokeChannel, type SendMap, type SendChannel } from '../../shared/ipc'
 import { getRecordStore, getStore, loadSettings, saveSettings, pushState, addFiles, getWatcher } from './state'
-import { getMainWindow } from './window'
-import { setInteractive, setTextInputActive, setHeartbeatPaused, setHotZoneWidth, repositionWindow, getDisplayListOptions, popUpAndRetract } from './window'
+import { sendToMainWindow, setInteractive, setTextInputActive, setHeartbeatPaused, setHotZoneWidth, repositionWindow, getDisplayListOptions, popUpAndRetract } from './window'
 import { getOnboardingWindow } from './onboardingWindow'
 import { rebuildTrayMenu } from './tray'
 import { startDragOut, resolveDragData } from './drag'
@@ -48,10 +47,7 @@ function clipboardMatchesItem(data: ItemData): boolean {
 
 /** Fire a transient toast to the renderer (best-effort; renderer may be closed). */
 function toast(message: string, tone: 'info' | 'error' = 'info'): void {
-  const win = getMainWindow()
-  if (win && !win.isDestroyed()) {
-    win.webContents.send('ui:toast', { id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, message, tone })
-  }
+  sendToMainWindow('ui:toast', { id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, message, tone })
 }
 
 /** Simulate pressing Ctrl+V via PowerShell after returning focus to the previous active window. */
@@ -353,6 +349,10 @@ export function registerIpc(): void {
     return getStore().toDto()
   })
 
+  handle('item:get-full-text', (id) => {
+    return getStore().getFullText(id)
+  })
+
   handle('item:copy', async (id) => {
     const item = getStore().get(id)
     console.log('[IPC] item:copy id=', id, 'found=', !!item)
@@ -360,11 +360,13 @@ export function registerIpc(): void {
 
     const watcher = getWatcher()
     watcher.setPaused(true)
-    await writeItemToClipboard(item.data)
+    const fullText = item.data.kind === 'text' ? getStore().getFullText(id) : undefined
+    const itemDataWithFullText = item.data.kind === 'text' && fullText ? { ...item.data, text: fullText } : item.data
+    await writeItemToClipboard(itemDataWithFullText)
     console.log('[IPC] item:copy wrote to clipboard, kind=', item.data.kind)
 
     // Promote the copied item to the top of the history stack
-    getStore().add(item.data, loadSettings().historyLimit)
+    getStore().add(itemDataWithFullText, loadSettings().historyLimit)
     pushState.items()
 
     // Unpause after a short delay to allow OS clipboard event to settle.
@@ -441,16 +443,18 @@ export function registerIpc(): void {
     watcher.setPaused(true)
 
     try {
-      await writeItemToClipboard(item.data)
+      // 1. Close panel immediately so Edge-Drop slides shut with 0ms UI lag
+      pushState.togglePanel(false)
+
+      // 2. Write item to system clipboard
+      const fullText = item.data.kind === 'text' ? getStore().getFullText(id) : undefined
+      const itemDataWithFullText = item.data.kind === 'text' && fullText ? { ...item.data, text: fullText } : item.data
+      await writeItemToClipboard(itemDataWithFullText)
       console.log('[IPC] item:paste wrote to clipboard, kind=', item.data.kind)
 
       // DO NOT call store.add() here. hitCount must only increment when the user
       // genuinely copies the content from a source app (detected by the watcher).
       // Pasting from Edge-Drop is a retrieval action, not a new copy.
-
-      // Close panel so focus returns to the user's active input/text box.
-      // Pass false to explicitly close and avoid toggle race conditions.
-      pushState.togglePanel(false)
 
       // Wait 50ms for layout updates, then simulate Ctrl+V
       setTimeout(() => {
@@ -696,10 +700,12 @@ export function registerSendListeners(): void {
 /** Write any item payload back onto the system clipboard. */
 export async function writeItemToClipboard(data: ItemData): Promise<void> {
   switch (data.kind) {
-    case 'text':
+    case 'text': {
+      const textToUse = data.text
       clipboard.clear()
-      clipboard.write({ text: data.text, html: data.html })
+      clipboard.write({ text: textToUse, html: data.html })
       break
+    }
 
     case 'image': {
       const dto = getStore().toDto().find(

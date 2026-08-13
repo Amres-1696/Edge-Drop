@@ -13,7 +13,7 @@ export const MAX_STACK = 10
 
 /** Discriminated union describing the payload of a clipboard item. */
 export type ItemData =
-  | { kind: 'text'; text: string; html?: string; isUrl: boolean; isColor?: boolean }
+  | { kind: 'text'; text: string; html?: string; isUrl: boolean; isColor?: boolean; hasFullPayload?: boolean; previewText?: string }
   | { kind: 'image'; imageId: string; width: number; height: number; bytes: number; ext?: string }
   | { kind: 'image-collection'; images: { imageId: string; width: number; height: number; bytes: number; ext?: string }[] }
   | { kind: 'files'; paths: string[] }
@@ -54,7 +54,7 @@ export interface FileEntry {
 /** Payload sent over IPC: same as ClipboardItem but with inline image previews. */
 export interface ClipboardItemDto extends Omit<ClipboardItem, 'data'> {
   data:
-  | { kind: 'text'; text: string; html?: string; isUrl: boolean; isColor?: boolean }
+  | { kind: 'text'; text: string; html?: string; isUrl: boolean; isColor?: boolean; hasFullPayload?: boolean; previewText?: string }
   | { kind: 'image'; imageId: string; width: number; height: number; bytes: number; preview: string; ext?: string }
   | { kind: 'image-collection'; images: { imageId: string; width: number; height: number; bytes: number; preview: string; ext?: string }[] }
   | { kind: 'files'; paths: string[]; previews?: string[]; entries?: FileEntry[] }

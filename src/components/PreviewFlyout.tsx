@@ -561,10 +561,21 @@ function PreviewContent({
   const { t, resolvedLang } = useTranslation()
   const startDrag = useDragOut()
 
+  const [fullText, setFullText] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (item?.data?.kind === 'text' && item.data.hasFullPayload) {
+      window.edge.getFullText(item.id).then((t) => setFullText(t)).catch(() => {})
+    } else {
+      setFullText(null)
+    }
+  }, [item?.id, item?.data?.hasFullPayload])
+
   if (item.data.kind === 'text') {
-    const text: string = item.data.text.length > 20000
-      ? item.data.text.slice(0, 20000) + `\n\n${t('flyout.contentTruncated')}`
-      : item.data.text
+    const activeText = fullText ?? item.data.text
+    const text: string = activeText.length > 20000
+      ? activeText.slice(0, 20000) + `\n\n${t('flyout.contentTruncated')}`
+      : activeText
     const isCode = looksLikeCode(text)
     const isUrl = item.data.isUrl
 
@@ -584,13 +595,13 @@ function PreviewContent({
             <QuickActionButton
               title={t('flyout.openLink')}
               icon={ExternalLinkIcon}
-              onClick={() => window.open(item.data.text, '_blank')}
+              onClick={() => window.open(activeText, '_blank')}
             />
           )}
           <QuickActionButton
             title={t('flyout.copyText')}
             icon={CopyIcon}
-            onClick={() => navigator.clipboard.writeText(item.data.text)}
+            onClick={() => navigator.clipboard.writeText(activeText)}
           />
         </div>
         <div style={{
@@ -608,7 +619,7 @@ function PreviewContent({
             <span
               onClick={(e) => {
                 e.stopPropagation()
-                window.open(item.data.text, '_blank')
+                window.open(activeText, '_blank')
               }}
               style={{ cursor: 'pointer' }}
             >

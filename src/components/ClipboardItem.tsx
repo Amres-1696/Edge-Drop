@@ -500,6 +500,8 @@ function BundleFluidPreview({
                 >
                   <motion.img
                     src={img.preview}
+                    loading="lazy"
+                    decoding="async"
                     style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 4, background: 'rgba(0,0,0,0.5)' }}
                     draggable={false}
                   />
@@ -538,6 +540,8 @@ function BundleFluidPreview({
                     <motion.img
                       key={img.imageId}
                       src={img.preview}
+                      loading="lazy"
+                      decoding="async"
                       className="bundle-stack-card"
                       animate={{ 
                         x: realIndex * 20 - 20, 
@@ -616,6 +620,8 @@ function BundleFluidPreview({
                         <img 
                           src={entry.preview} 
                           alt="" 
+                          loading="lazy"
+                          decoding="async"
                           draggable={false} 
                           style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }} 
                         />
@@ -679,6 +685,8 @@ function BundleFluidPreview({
                         <img 
                           src={entry.preview} 
                           alt="" 
+                          loading="lazy"
+                          decoding="async"
                           draggable={false} 
                           style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }} 
                         />
@@ -731,6 +739,8 @@ function Preview({ item }: { item: ClipboardItemDto }) {
               className="thumb"
               src={item.data.preview}
               alt=""
+              loading="lazy"
+              decoding="async"
               draggable={false}
             />
           ) : (
@@ -757,6 +767,8 @@ function Preview({ item }: { item: ClipboardItemDto }) {
                   className="thumb"
                   src={entry.preview}
                   alt=""
+                  loading="lazy"
+                  decoding="async"
                   draggable={false}
                 />
               ) : (
