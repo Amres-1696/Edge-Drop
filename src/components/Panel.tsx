@@ -16,7 +16,7 @@ import { ItemList } from './ItemList'
 import { RecordsView } from './RecordsView'
 import { Settings } from './Settings'
 import { ToastStack } from './Toast'
-import { TrashIcon } from './icons'
+import { ClearMenu } from './ClearMenu'
 import { PreviewFlyout } from './PreviewFlyout'
 import { IndicatorStyleFlyout } from './IndicatorStyleFlyout'
 import { CopyIndicatorCurve } from './CopyIndicatorCurve'
@@ -33,19 +33,7 @@ export function Panel() {
   const filteredItems = useMemo(() => [...pinned, ...recent], [pinned, recent])
   const filteredCount = filteredItems.length
   const clear = useStore((s) => s.clear)
-  const typeFilter = useStore((s) => s.typeFilter)
-  const query = useStore((s) => s.query)
-  const isFiltered = typeFilter !== 'all' || query.trim().length > 0
-
-  const handleClear = () => {
-    if (filteredCount === 0) return
-    if (!isFiltered) {
-      clear()
-    } else {
-      const ids = filteredItems.map((it: any) => it.id)
-      clear(ids)
-    }
-  }
+  const items = useStore((s) => s.items)
 
   const settings = useStore((s) => s.settings)
   const reduced = systemReduced || settings.reduceMotion
@@ -400,18 +388,13 @@ export function Panel() {
                     &nbsp;{t('item.items')}
                   </span>
                   <div className="spacer" />
-                  <motion.button
-                    className="text-btn danger"
-                    onClick={handleClear} 
-                    disabled={filteredCount === 0} 
-                    title={isFiltered ? t('item.clear') : t('item.clear')} 
-                    style={{ display: 'flex', alignItems: 'center', gap: 6 }}
-                    whileTap={filteredCount === 0 || reduced ? undefined : { y: 1, scale: 0.98 }}
-                    transition={reduced ? INSTANT : CELL_SPRING}
-                  >
-                    <TrashIcon width={14} height={14} />
-                    <span>{t('item.clear')}</span>
-                  </motion.button>
+<ClearMenu
+                    items={items}
+                    disabled={recent.length === 0}
+                    panelOpen={open}
+                    onClear={(ids) => clear(ids)}
+                    onClearAll={() => clear()}
+                  />
                 </div>
               </motion.div>
             ) : (
