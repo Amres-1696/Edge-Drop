@@ -110,6 +110,8 @@ export interface TranslationKeys {
     hoverActivationTitle: string
     hoverActivationDescOn: string
     hoverActivationDescOff: string
+    toggleHotkeyTitle?: string
+    toggleHotkeyDesc?: string
     disabledHoverOff: string
     fullscreenProtectionTitle: string
     fullscreenProtectionDesc: string
@@ -319,6 +321,7 @@ export interface TranslationKeys {
     itemPinned: string
     itemUnpinned: string
     settingsSaved: string
+    shortcutUpdated?: string
   }
   footer: {
     communityAndSupport: string
@@ -518,7 +521,9 @@ export const en: TranslationKeys = {
     "incognitoDesc": "Temporarily pause recording new clipboard items",
     "hoverActivationTitle": "Hover Activation",
     "hoverActivationDescOn": "Slide open shelf when hovering cursor near screen edge",
-    "hoverActivationDescOff": "Hover trigger paused. Use Alt + C to open",
+    "hoverActivationDescOff": "Hover trigger paused. Use {shortcut} to open",
+    "toggleHotkeyTitle": "Global Toggle Shortcut",
+    "toggleHotkeyDesc": "Set custom key combination to open or close shelf from anywhere",
     "disabledHoverOff": "Disabled because Hover Activation is turned off",
     "fullscreenProtectionTitle": "Fullscreen Protection",
     "fullscreenProtectionDesc": "Automatically pause edge hover while playing games or watching fullscreen videos",
@@ -727,7 +732,8 @@ export const en: TranslationKeys = {
     "itemDeleted": "Item deleted",
     "itemPinned": "Item pinned",
     "itemUnpinned": "Item unpinned",
-    "settingsSaved": "Settings saved"
+    "settingsSaved": "Settings saved",
+    "shortcutUpdated": "Global shortcut set to {shortcut}"
   },
   "footer": {
     "communityAndSupport": "Community & Support",

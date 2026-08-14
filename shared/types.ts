@@ -277,6 +277,9 @@ export interface Settings {
   autoUpdates?: boolean
   /** Active UI language code ('system' | 'en' | 'es' | 'fr' | 'de' | ...). Chinese build default: 'zh-CN'. */
   language?: string
+  /** Configurable global hotkey accelerator to toggle Edge-Drop shelf (e.g. 'Alt+C', 'Alt+Shift+C'). Default: 'Alt+C'. */
+  toggleHotkey?: string
+
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -307,7 +310,9 @@ export const DEFAULT_SETTINGS: Settings = {
   hoverActivation: true,
   fontSizeScale: 1.0,
   autoUpdates: true,
-  language: 'zh-CN'
+  language: 'zh-CN',
+  toggleHotkey: 'Alt+C'
+
 }
 
 

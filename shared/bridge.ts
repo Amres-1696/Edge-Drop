@@ -60,8 +60,10 @@ export interface EdgeApi {
   setInteractive: (value: boolean) => Promise<void>
   setTextInputActive: (active: boolean) => Promise<void>
   setPreviewMode: (active: boolean) => Promise<void>
+  pauseHotkey: (paused: boolean) => Promise<void>
   revealFile: (path: string) => Promise<boolean>
   minimizeWindow: () => Promise<void>
+  focusWindow: () => Promise<void>
   getDisplays: () => Promise<import('./types').DisplayInfo[]>
   getReleases: () => Promise<Array<{
     version: string
