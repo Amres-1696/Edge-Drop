@@ -476,7 +476,6 @@ export function createWindow(): BrowserWindow {
   const { x, y, height } = getStickGeometry()
 
   mainWindow = new BrowserWindow({
-    type: 'toolbar',
     icon: PATHS.icon(),
     x,
     y,
@@ -494,7 +493,7 @@ export function createWindow(): BrowserWindow {
     hasShadow: false,
     skipTaskbar: true,
     alwaysOnTop: true,
-    focusable: true,
+    focusable: false,
     backgroundColor: '#00000000',
     roundedCorners: false,
     webPreferences: {
@@ -788,10 +787,19 @@ export function setVisible(visible: boolean): void {
   }
 }
 
-export function focusMainWindow(): void {
+export function setWindowFocusable(focusable: boolean): void {
   if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.focus()
+    try {
+      mainWindow.setFocusable(focusable)
+      if (focusable) {
+        mainWindow.focus()
+      }
+    } catch {}
   }
+}
+
+export function focusMainWindow(): void {
+  setWindowFocusable(true)
 }
 
 /**
