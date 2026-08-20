@@ -112,6 +112,10 @@ export interface TranslationKeys {
     hoverActivationDescOff: string
     toggleHotkeyTitle?: string
     toggleHotkeyDesc?: string
+    hotkeyEdit?: string
+    hotkeyRecording?: string
+    hotkeyCancel?: string
+    hotkeyReset?: string
     disabledHoverOff: string
     fullscreenProtectionTitle: string
     fullscreenProtectionDesc: string
@@ -524,6 +528,10 @@ export const en: TranslationKeys = {
     "hoverActivationDescOff": "Hover trigger paused. Use {shortcut} to open",
     "toggleHotkeyTitle": "Global Toggle Shortcut",
     "toggleHotkeyDesc": "Set custom key combination to open or close shelf from anywhere",
+    "hotkeyEdit": "Edit",
+    "hotkeyRecording": "Press key combination...",
+    "hotkeyCancel": "Cancel",
+    "hotkeyReset": "Reset to default ({shortcut})",
     "disabledHoverOff": "Disabled because Hover Activation is turned off",
     "fullscreenProtectionTitle": "Fullscreen Protection",
     "fullscreenProtectionDesc": "Automatically pause edge hover while playing games or watching fullscreen videos",
@@ -2915,7 +2923,13 @@ export const zh_CN: TranslationKeys = {
     "incognitoDesc": "暂时暂停记录新的剪贴板项",
     "hoverActivationTitle": "悬停激活",
     "hoverActivationDescOn": "光标靠近屏幕边缘时滑出打开搁架",
-    "hoverActivationDescOff": "悬停触发已暂停。使用 Alt + C 打开",
+    "hoverActivationDescOff": "悬停触发已暂停。使用 {shortcut} 打开",
+    "toggleHotkeyTitle": "全局快捷键",
+    "toggleHotkeyDesc": "设置自定义按键组合，可从任意位置打开或关闭侧边栏",
+    "hotkeyEdit": "编辑",
+    "hotkeyRecording": "请按下按键组合...",
+    "hotkeyCancel": "取消",
+    "hotkeyReset": "恢复默认值（{shortcut}）",
     "disabledHoverOff": "已禁用，因为悬停激活已关闭",
     "fullscreenProtectionTitle": "全屏保护",
     "fullscreenProtectionDesc": "玩游戏或观看全屏视频时自动暂停边缘悬停",
@@ -3119,7 +3133,8 @@ export const zh_CN: TranslationKeys = {
     "itemDeleted": "项已删除",
     "itemPinned": "项已固定",
     "itemUnpinned": "项已取消固定",
-    "settingsSaved": "设置已保存"
+    "settingsSaved": "设置已保存",
+    "shortcutUpdated": "全局快捷键已设置为 {shortcut}"
   },
   "footer": {
     "communityAndSupport": "社区和支持",

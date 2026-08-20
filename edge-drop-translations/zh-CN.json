@@ -236,7 +236,8 @@
     "itemDeleted": "项已删除",
     "itemPinned": "项已固定",
     "itemUnpinned": "项已取消固定",
-    "settingsSaved": "设置已保存"
+    "settingsSaved": "设置已保存",
+    "shortcutUpdated": "全局快捷键已设置为 {shortcut}"
   },
   "footer": {
     "communityAndSupport": "社区和支持",
