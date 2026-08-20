@@ -5,9 +5,16 @@
  * edge whenever content is copied to the clipboard, displaying the selected icon
  * animation (GSAP Liquid Octopus Logo or Animated Tick Icon) inside the curve peak.
  */
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useStore } from '../store/appStore'
 import { LiquidOctopusLoader } from './LiquidOctopusLoader'
+import { INSTANT } from '../lib/motion'
+
+function useIndicatorReducedMotion(): boolean {
+  const systemReduced = useReducedMotion()
+  const appReduced = useStore((state) => state.settings.reduceMotion)
+  return Boolean(systemReduced || appReduced)
+}
 
 export function TickIndicatorIcon({
   fillColor = '#ffffff',
@@ -19,6 +26,7 @@ export function TickIndicatorIcon({
   glowColor?: string
   size?: number
 }) {
+  const reduced = useIndicatorReducedMotion()
   return (
     <div
       style={{
@@ -33,12 +41,12 @@ export function TickIndicatorIcon({
     >
       {/* Floating & Breathing Motion Wrapper */}
       <motion.div
-        animate={{
+        animate={reduced ? { y: 0, rotate: 0, scale: 1 } : {
           y: [-2.5, 2.5, -2.5],
           rotate: [-4, 4, -4],
           scale: [0.98, 1.04, 0.98]
         }}
-        transition={{
+        transition={reduced ? INSTANT : {
           duration: 2.4,
           ease: 'easeInOut',
           repeat: Infinity,
@@ -61,9 +69,9 @@ export function TickIndicatorIcon({
             strokeWidth="4.2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            initial={{ pathLength: 0, opacity: 0 }}
+            initial={reduced ? false : { pathLength: 0, opacity: 0 }}
             animate={{ pathLength: 1, opacity: 1 }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            transition={reduced ? INSTANT : { duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
           />
         </svg>
       </motion.div>
@@ -80,6 +88,7 @@ export function CopyIndicatorIcon({
   glowColor?: string
   size?: number
 }) {
+  const reduced = useIndicatorReducedMotion()
   const maskId = 'copy-icon-gap-mask'
 
   return (
@@ -96,12 +105,12 @@ export function CopyIndicatorIcon({
     >
       {/* Floating & Breathing Motion Wrapper */}
       <motion.div
-        animate={{
+        animate={reduced ? { y: 0, rotate: 0, scale: 1 } : {
           y: [-2.5, 2.5, -2.5],
           rotate: [-4, 4, -4],
           scale: [0.98, 1.04, 0.98]
         }}
-        transition={{
+        transition={reduced ? INSTANT : {
           duration: 2.4,
           ease: 'easeInOut',
           repeat: Infinity,
@@ -135,9 +144,9 @@ export function CopyIndicatorIcon({
             rx="4.2"
             fill={fillColor}
             mask={`url(#${maskId})`}
-            initial={{ scale: 0.4, opacity: 0 }}
+            initial={reduced ? false : { scale: 0.4, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+            transition={reduced ? INSTANT : { type: 'spring', stiffness: 400, damping: 22 }}
           />
 
           {/* Front Sheet (Top-Right) — pure solid fill with ZERO top/right borders */}
@@ -148,9 +157,9 @@ export function CopyIndicatorIcon({
             height="13"
             rx="4.2"
             fill={fillColor}
-            initial={{ scale: 0.4, opacity: 0 }}
+            initial={reduced ? false : { scale: 0.4, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 450, damping: 24, delay: 0.05 }}
+            transition={reduced ? INSTANT : { type: 'spring', stiffness: 450, damping: 24, delay: 0.05 }}
           />
         </svg>
       </motion.div>
@@ -167,6 +176,7 @@ export function SparkleIndicatorIcon({
   glowColor?: string
   size?: number
 }) {
+  const reduced = useIndicatorReducedMotion()
   return (
     <div
       style={{
@@ -181,12 +191,12 @@ export function SparkleIndicatorIcon({
     >
       {/* Floating & Breathing Motion Wrapper */}
       <motion.div
-        animate={{
+        animate={reduced ? { y: 0, rotate: 0, scale: 1 } : {
           y: [-2.5, 2.5, -2.5],
           rotate: [-4, 4, -4],
           scale: [0.98, 1.04, 0.98]
         }}
-        transition={{
+        transition={reduced ? INSTANT : {
           duration: 2.4,
           ease: 'easeInOut',
           repeat: Infinity,
@@ -206,18 +216,18 @@ export function SparkleIndicatorIcon({
           <motion.path
             d="M 9.5 1.5 C 9.5 5.8 5.8 9.5 1.5 9.5 C 5.8 9.5 9.5 13.2 9.5 17.5 C 9.5 13.2 13.2 9.5 17.5 9.5 C 13.2 9.5 9.5 5.8 9.5 1.5 Z"
             fill={fillColor}
-            initial={{ scale: 0.3, rotate: -20, opacity: 0 }}
+            initial={reduced ? false : { scale: 0.3, rotate: -20, opacity: 0 }}
             animate={{ scale: 1, rotate: 0, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 420, damping: 24 }}
+            transition={reduced ? INSTANT : { type: 'spring', stiffness: 420, damping: 24 }}
           />
 
           {/* Secondary Sparkle (Bottom-Right) */}
           <motion.path
             d="M 18.5 12.5 C 18.5 15.2 16.2 17.5 13.5 17.5 C 16.2 17.5 18.5 19.8 18.5 22.5 C 18.5 19.8 20.8 17.5 23.5 17.5 C 20.8 17.5 18.5 15.2 18.5 12.5 Z"
             fill={fillColor}
-            initial={{ scale: 0, opacity: 0 }}
+            initial={reduced ? false : { scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 450, damping: 22, delay: 0.08 }}
+            transition={reduced ? INSTANT : { type: 'spring', stiffness: 450, damping: 22, delay: 0.08 }}
           />
         </svg>
       </motion.div>
@@ -226,6 +236,7 @@ export function SparkleIndicatorIcon({
 }
 
 export function CopyIndicatorCurve() {
+  const reduced = useIndicatorReducedMotion()
   const copyFlareActive = useStore((s) => s.copyFlareActive)
   const flareKey = useStore((s) => s.flareKey)
   const open = useStore((s) => s.open)
@@ -270,10 +281,10 @@ export function CopyIndicatorCurve() {
         <motion.div
           key={`copy-sine-curve-${flareKey}`}
           className={`copy-curve-container ${isRight ? 'right' : 'left'}`}
-          initial={{ opacity: 0 }}
+          initial={reduced ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
+          transition={reduced ? INSTANT : { duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
           style={{
             position: 'absolute',
             top: topOffset,
@@ -305,10 +316,10 @@ export function CopyIndicatorCurve() {
               stroke="none"
               strokeWidth="0"
               shapeRendering="geometricPrecision"
-              initial={{ d: flatPath }}
+              initial={reduced ? false : { d: flatPath }}
               animate={{ d: activePath }}
               exit={{ d: flatPath }}
-              transition={{
+              transition={reduced ? INSTANT : {
                 duration: 0.38,
                 ease: [0.16, 1, 0.3, 1]
               }}
@@ -317,10 +328,10 @@ export function CopyIndicatorCurve() {
 
           {/* Selected Copy Indicator Icon (Logo / Tick / Copy) centered inside the Curve Bulge */}
           <motion.div
-            initial={{ scale: 0.3, opacity: 0, x: isRight ? 10 : -10 }}
+            initial={reduced ? false : { scale: 0.3, opacity: 0, x: isRight ? 10 : -10 }}
             animate={{ scale: 1, opacity: 1, x: 0 }}
             exit={{ scale: 0.3, opacity: 0, x: isRight ? 10 : -10 }}
-            transition={{
+            transition={reduced ? INSTANT : {
               type: 'spring',
               stiffness: 420,
               damping: 24,

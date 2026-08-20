@@ -48,6 +48,7 @@ export function ClearMenu({ items, disabled, panelOpen, onClear, onClearAll }: C
   const reduced = systemReduced || appReduced
   const [open, setOpen] = useState(false)
   const [confirmAll, setConfirmAll] = useState(false)
+  const [confirmWindow, setConfirmWindow] = useState<'24h' | null>(null)
   const ref = useRef<HTMLDivElement>(null)
 
   // Force-close menu when panel slides closed
@@ -55,6 +56,7 @@ export function ClearMenu({ items, disabled, panelOpen, onClear, onClearAll }: C
     if (!panelOpen) {
       setOpen(false)
       setConfirmAll(false)
+      setConfirmWindow(null)
     }
   }, [panelOpen])
 
@@ -64,22 +66,43 @@ export function ClearMenu({ items, disabled, panelOpen, onClear, onClearAll }: C
         setOpen(false)
       }
     }
-    if (open) window.addEventListener('mousedown', handleClickOutside)
-    return () => window.removeEventListener('mousedown', handleClickOutside)
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    if (open) {
+      window.addEventListener('mousedown', handleClickOutside)
+      window.addEventListener('keydown', handleKeyDown)
+    }
+    return () => {
+      window.removeEventListener('mousedown', handleClickOutside)
+      window.removeEventListener('keydown', handleKeyDown)
+    }
   }, [open])
 
   // Re-arm "Clear all" confirmation whenever menu closes
   useEffect(() => {
-    if (!open) setConfirmAll(false)
+    if (!open) {
+      setConfirmAll(false)
+      setConfirmWindow(null)
+    }
   }, [open])
 
-  const clearWindow = (hours: number) => {
+  const idsForWindow = (hours: number) => {
     const cutoff = Date.now() - hours * 3600 * 1000
     // Pinned items are never included in a bulk clear
-    const ids = items.filter((it) => !it.pinned && it.capturedAt >= cutoff).map((it) => it.id)
+    return items.filter((it) => !it.pinned && it.capturedAt >= cutoff).map((it) => it.id)
+  }
+
+  const clearWindow = (key: '1h' | '6h' | '24h', hours: number) => {
+    const ids = idsForWindow(hours)
+    if (ids.length === 0) return
     playButtonClickSound()
+    if (key === '24h' && confirmWindow !== '24h') {
+      setConfirmWindow('24h')
+      return
+    }
     setOpen(false)
-    if (ids.length > 0) onClear(ids)
+    onClear(ids)
   }
 
   const handleAllClick = () => {
@@ -129,24 +152,35 @@ export function ClearMenu({ items, disabled, panelOpen, onClear, onClearAll }: C
               boxShadow: '0 12px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05)',
               zIndex: 100
             }}
+            role="menu"
+            aria-label={t('item.clear')}
           >
-            {WINDOWS.map((w) => (
-              <button
-                key={w.key}
-                type="button"
-                onClick={() => clearWindow(w.hours)}
-                style={menuItemStyle}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.07)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
-              >
-                {t(`item.clearLast${w.key}` as any)}
-              </button>
-            ))}
+            {WINDOWS.map((w) => {
+              const count = idsForWindow(w.hours).length
+              const confirming = w.key === '24h' && confirmWindow === '24h'
+              return (
+                <button
+                  key={w.key}
+                  type="button"
+                  role="menuitem"
+                  disabled={count === 0}
+                  onClick={() => clearWindow(w.key, w.hours)}
+                  style={{ ...menuItemStyle, opacity: count === 0 ? 0.42 : 1, color: confirming ? '#ff8a80' : menuItemStyle.color }}
+                  onMouseEnter={(e) => { if (count > 0) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.07)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
+                >
+                  {confirming
+                    ? t('item.clearWindowConfirm', { count })
+                    : `${t(`item.clearLast${w.key}` as any)} · ${count}`}
+                </button>
+              )
+            })}
 
             <div style={{ height: 1, background: 'rgba(255, 255, 255, 0.1)', margin: '4px 2px' }} />
 
             <button
               type="button"
+              role="menuitem"
               onClick={handleAllClick}
               style={{
                 ...menuItemStyle,

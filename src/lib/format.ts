@@ -1,7 +1,7 @@
 /**
  * Small display helpers for clipboard item previews.
  */
-import { t } from '../i18n'
+import { getResolvedLanguage, t } from '../i18n'
 
 /** Truncate long text for list previews. */
 export function previewText(text: string, max = 160): string {
@@ -23,16 +23,25 @@ export function formatBytes(bytes: number): string {
 export function relativeTime(ts: number): string {
   const diff = Date.now() - ts
   const s = Math.round(diff / 1000)
-  const agoStr = t('item.ago')
   if (s < 5) return t('item.justNow')
-  if (s < 60) return `${s}s ${agoStr}`.trim()
   const m = Math.round(s / 60)
-  if (m < 60) return `${m}m ${agoStr}`.trim()
   const h = Math.round(m / 60)
-  if (h < 24) return `${h}h ${agoStr}`.trim()
   const d = Math.round(h / 24)
-  if (d < 7) return `${d}d ${agoStr}`.trim()
-  return new Date(ts).toLocaleDateString()
+  const language = getResolvedLanguage()
+  try {
+    const relative = new Intl.RelativeTimeFormat(language, { numeric: 'always', style: 'short' })
+    if (s < 60) return relative.format(-s, 'second')
+    if (m < 60) return relative.format(-m, 'minute')
+    if (h < 24) return relative.format(-h, 'hour')
+    if (d < 7) return relative.format(-d, 'day')
+  } catch {
+    const ago = t('item.ago')
+    if (s < 60) return `${s}s ${ago}`.trim()
+    if (m < 60) return `${m}m ${ago}`.trim()
+    if (h < 24) return `${h}h ${ago}`.trim()
+    if (d < 7) return `${d}d ${ago}`.trim()
+  }
+  return new Date(ts).toLocaleDateString(language)
 }
 
 /** Pull a filename out of a path, cross-platform. */
@@ -51,8 +60,9 @@ export function formatImageDisplayName(path: string, capturedAt?: number): strin
     const screenshotLabel = t('item.screenshot')
     if (capturedAt) {
       const d = new Date(capturedAt)
-      const dateStr = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-      const timeStr = d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+      const language = getResolvedLanguage()
+      const dateStr = d.toLocaleDateString(language, { month: 'short', day: 'numeric' })
+      const timeStr = d.toLocaleTimeString(language, { hour: 'numeric', minute: '2-digit' })
       return `${screenshotLabel} ${dateStr}, ${timeStr}`
     }
     return screenshotLabel

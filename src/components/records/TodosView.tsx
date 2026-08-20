@@ -11,7 +11,7 @@ import { useTextInputMode } from '../../hooks/useTextInputMode'
 export function TodosView({ onDelete }: { onDelete: (id: string) => void }) {
   const systemReduced = useReducedMotion()
   const reduced = systemReduced || useStore((s) => s.settings.reduceMotion)
-  const { t } = useTranslation()
+  const { t, resolvedLang } = useTranslation()
   const todos = useRecordStore((s) => s.todos)
   const createTodo = useRecordStore((s) => s.createTodo)
   const updateTodo = useRecordStore((s) => s.updateTodo)
@@ -55,7 +55,7 @@ export function TodosView({ onDelete }: { onDelete: (id: string) => void }) {
           <span className="record-title">{todo.title}</span>
           {todo.details && <span className="record-preview">{todo.details}</span>}
           <AttachmentStrip attachments={todo.attachments} />
-          <span className="record-meta"><span>{todo.dueAt ? formatDue(todo.dueAt) : t('records.noDueDate')}</span><span>{todo.status === 'completed' ? t('records.completed') : t('records.pending')}</span></span>
+          <span className="record-meta"><span>{todo.dueAt ? formatDue(todo.dueAt, resolvedLang) : t('records.noDueDate')}</span><span>{todo.status === 'completed' ? t('records.completed') : t('records.pending')}</span></span>
         </button>
       </div>
       <AnimatePresence initial={false}>
@@ -113,5 +113,5 @@ function TodoDetails({ todo, onSave, onDelete, reduced }: { todo: TodoRecordDto;
   </motion.div>
 }
 
-function formatDue(time: number): string { return new Date(time).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) }
+function formatDue(time: number, language: string): string { return new Date(time).toLocaleDateString(language, { month: 'short', day: 'numeric' }) }
 function Chevron() { return <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6" /></svg> }

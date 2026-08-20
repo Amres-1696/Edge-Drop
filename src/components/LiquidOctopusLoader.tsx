@@ -1,6 +1,7 @@
 import { useEffect, useRef, useMemo } from 'react'
 import gsap from 'gsap'
 import { useStore } from '../store/appStore'
+import { useReducedMotion } from 'framer-motion'
 
 // Raw SVG Path for the Central Octopus Logo
 const OCTO_PATH =
@@ -20,12 +21,14 @@ export function LiquidOctopusLoader({
   active
 }: LiquidLoaderProps) {
   const octoRef = useRef<SVGPathElement | null>(null)
+  const systemReduced = useReducedMotion()
 
   const open = useStore((s) => s.open)
   const copyFlareActive = useStore((s) => s.copyFlareActive)
   const settingsOpen = useStore((s) => s.settingsOpen)
+  const appReduced = useStore((s) => s.settings.reduceMotion)
 
-  const isAnimating = active ?? (open || copyFlareActive || settingsOpen)
+  const isAnimating = !(systemReduced || appReduced) && (active ?? (open || copyFlareActive || settingsOpen))
 
   // Octopus path dimensions & center coordinates
   const bounds = useMemo(() => {

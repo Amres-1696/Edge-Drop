@@ -11,7 +11,7 @@ import { CheckIcon, CopyIcon } from '../icons'
 export function NotesView({ onDelete }: { onDelete: (id: string) => void }) {
   const systemReduced = useReducedMotion()
   const reduced = systemReduced || useStore((s) => s.settings.reduceMotion)
-  const { t } = useTranslation()
+  const { t, resolvedLang } = useTranslation()
   const notes = useRecordStore((s) => s.notes)
   const createNote = useRecordStore((s) => s.createNote)
   const setPinned = useRecordStore((s) => s.setNotePinned)
@@ -86,7 +86,7 @@ export function NotesView({ onDelete }: { onDelete: (id: string) => void }) {
               <span className={`record-preview${isExpanded ? ' expanded' : ''}`}>{note.body || t('records.attachmentNote')}</span>
             )}
             <AttachmentStrip attachments={note.attachments} />
-            <span className="record-meta"><span>{formatRelative(note.updatedAt, t)}</span><span>{note.pinned ? t('records.pinned') : `${note.body.length} ${t('records.characters')}`}</span></span>
+            <span className="record-meta"><span>{formatRelative(note.updatedAt, t, resolvedLang)}</span><span>{note.pinned ? t('records.pinned') : `${note.body.length} ${t('records.characters')}`}</span></span>
           </span>
         </button>
         <div className="record-card-actions">
@@ -148,5 +148,5 @@ export function RecordEmpty({ title, detail }: { title: string; detail: string }
 }
 
 function toggleSet(previous: Set<string>, id: string): Set<string> { const next = new Set(previous); next.has(id) ? next.delete(id) : next.add(id); return next }
-function formatRelative(time: number, t: (key: string) => string): string { const mins = Math.max(0, Math.floor((Date.now() - time) / 60_000)); return mins < 1 ? t('records.justNow') : mins < 60 ? `${mins} ${t('records.minutesAgo')}` : new Date(time).toLocaleDateString() }
+function formatRelative(time: number, t: (key: string) => string, language: string): string { const mins = Math.max(0, Math.floor((Date.now() - time) / 60_000)); return mins < 1 ? t('records.justNow') : mins < 60 ? `${mins} ${t('records.minutesAgo')}` : new Date(time).toLocaleDateString(language) }
 function Chevron() { return <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6" /></svg> }

@@ -64,7 +64,10 @@ function localizeToastMessage(message: string, language: string): string {
     'Files can only be grouped with other files': '文件只能与其他文件组合',
     'Text and links cannot be grouped together': '文本和链接不能组合',
     'Collection is full (10 max)': '集合已满（最多 10 项）',
-    'Cannot combine different item types': '无法组合不同类型的项目'
+    'Cannot combine different item types': '无法组合不同类型的项目',
+    'Could not delete this item. Please try again.': '删除失败，请重试。',
+    'Could not clear history. Please try again.': '清理历史记录失败，请重试。',
+    'Clipboard storage is temporarily read-only': '剪贴板存储暂时处于只读状态，请重启后重试。'
   }
 
   return messages[message] ?? message

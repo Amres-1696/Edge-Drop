@@ -126,6 +126,7 @@
     "clearLast24h": "Clear last 24 hours",
     "clearAll": "Clear all history",
     "clearAllConfirm": "Tap again to confirm",
+    "clearWindowConfirm": "Clear {count} items? Tap again",
     "dropToSave": "Drop to save",
     "dropToSaveDesc": "Any file, image, link, or text",
     "justNow": "just now",

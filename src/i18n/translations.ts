@@ -208,6 +208,7 @@ export interface TranslationKeys {
     clearLast24h?: string
     clearAll?: string
     clearAllConfirm?: string
+    clearWindowConfirm?: string
     dropToSave: string
     dropToSaveDesc: string
     justNow: string
@@ -625,6 +626,7 @@ export const en: TranslationKeys = {
     "clearLast24h": "Clear last 24 hours",
     "clearAll": "Clear all history",
     "clearAllConfirm": "Tap again to confirm",
+    "clearWindowConfirm": "Clear {count} items? Tap again",
     "dropToSave": "Drop to save",
     "dropToSaveDesc": "Any file, image, link, or text",
     "justNow": "just now",
@@ -3043,7 +3045,8 @@ export const zh_CN: TranslationKeys = {
     "clearLast6h": "清除最近 6 小时",
     "clearLast24h": "清除最近 24 小时",
     "clearAll": "清除所有历史记录",
-    "clearAllConfirm": "再次点击以确认"
+    "clearAllConfirm": "再次点击以确认",
+    "clearWindowConfirm": "将清除 {count} 项，再次点击确认"
   },
   "fileKinds": {
     "pdf": "PDF",

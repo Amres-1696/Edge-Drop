@@ -145,7 +145,8 @@
     "clearLast6h": "清除最近 6 小时",
     "clearLast24h": "清除最近 24 小时",
     "clearAll": "清除所有历史记录",
-    "clearAllConfirm": "再次点击以确认"
+    "clearAllConfirm": "再次点击以确认",
+    "clearWindowConfirm": "将清除 {count} 项，再次点击确认"
   },
   "fileKinds": {
     "pdf": "PDF",
