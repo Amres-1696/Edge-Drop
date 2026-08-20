@@ -326,6 +326,7 @@ export interface TranslationKeys {
     itemUnpinned: string
     settingsSaved: string
     shortcutUpdated?: string
+    shortcutUnavailable?: string
   }
   footer: {
     communityAndSupport: string
@@ -741,7 +742,8 @@ export const en: TranslationKeys = {
     "itemPinned": "Item pinned",
     "itemUnpinned": "Item unpinned",
     "settingsSaved": "Settings saved",
-    "shortcutUpdated": "Global shortcut set to {shortcut}"
+    "shortcutUpdated": "Global shortcut set to {shortcut}",
+    "shortcutUnavailable": "That shortcut is unavailable. Restored {shortcut}"
   },
   "footer": {
     "communityAndSupport": "Community & Support",
@@ -3139,7 +3141,8 @@ export const zh_CN: TranslationKeys = {
     "itemPinned": "项已固定",
     "itemUnpinned": "项已取消固定",
     "settingsSaved": "设置已保存",
-    "shortcutUpdated": "全局快捷键已设置为 {shortcut}"
+    "shortcutUpdated": "全局快捷键已设置为 {shortcut}",
+    "shortcutUnavailable": "该快捷键不可用，已恢复为 {shortcut}"
   },
   "footer": {
     "communityAndSupport": "社区和支持",

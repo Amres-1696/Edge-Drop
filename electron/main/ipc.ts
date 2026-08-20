@@ -615,7 +615,7 @@ export function registerIpc(): void {
         }
       }
     }
-    const next = saveSettings(enrichedPatch)
+    let next = saveSettings(enrichedPatch)
     if (patch.launchAtLogin !== undefined) {
       syncLoginItemSettings(next.launchAtLogin)
     }
@@ -631,8 +631,10 @@ export function registerIpc(): void {
     if (patch.autoUpdates !== undefined) {
       syncAutoUpdaterState()
     }
-    if (patch.toggleHotkey !== undefined) {
-      registerGlobalHotkey(patch.toggleHotkey)
+    if (patch.toggleHotkey !== undefined && !registerGlobalHotkey(patch.toggleHotkey)) {
+      // Keep the persisted/UI value aligned with the shortcut that is actually
+      // active when Windows rejects a reserved or conflicting accelerator.
+      next = saveSettings({ toggleHotkey: 'Alt+C' })
     }
     pushState.settings(next)
     rebuildTrayMenu()

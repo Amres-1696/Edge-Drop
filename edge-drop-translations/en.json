@@ -243,7 +243,8 @@
     "itemPinned": "Item pinned",
     "itemUnpinned": "Item unpinned",
     "settingsSaved": "Settings saved",
-    "shortcutUpdated": "Global shortcut set to {shortcut}"
+    "shortcutUpdated": "Global shortcut set to {shortcut}",
+    "shortcutUnavailable": "That shortcut is unavailable. Restored {shortcut}"
   },
   "footer": {
     "communityAndSupport": "Community & Support",

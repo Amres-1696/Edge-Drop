@@ -377,12 +377,15 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
                     </div>
                     <HotkeyRecorder
                       hotkey={settings.toggleHotkey || 'Alt+C'}
-                      onChange={(nextHotkey) => {
-                        patch({ toggleHotkey: nextHotkey })
+                      onChange={async (nextHotkey) => {
+                        await patch({ toggleHotkey: nextHotkey })
+                        const appliedHotkey = useStore.getState().settings.toggleHotkey || 'Alt+C'
                         pushToast({
                           id: Date.now().toString(),
-                          message: t('toast.shortcutUpdated', { shortcut: nextHotkey }),
-                          tone: 'info'
+                          message: appliedHotkey === nextHotkey
+                            ? t('toast.shortcutUpdated', { shortcut: appliedHotkey })
+                            : t('toast.shortcutUnavailable', { shortcut: appliedHotkey }),
+                          tone: appliedHotkey === nextHotkey ? 'info' : 'error'
                         })
                       }}
                     />
