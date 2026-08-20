@@ -209,11 +209,13 @@ export function setInteractive(value: boolean): void {
 export function setTextInputActive(active: boolean): void {
   if (!mainWindow || mainWindow.isDestroyed() || active === textInputActive) return
   textInputActive = active
-  mainWindow.setFocusable(active)
+  // WS_EX_NOACTIVATE must be removed together with Electron's focusable flag.
+  // Otherwise Windows still refuses keyboard focus and note/to-do editors look
+  // clickable but cannot accept input.
+  setWindowFocusable(active)
   if (active) {
     mainWindow.setIgnoreMouseEvents(false)
     mainWindow.setAlwaysOnTop(true, 'screen-saver')
-    mainWindow.focus()
   }
 }
 
