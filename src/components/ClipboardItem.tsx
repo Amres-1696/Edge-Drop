@@ -67,10 +67,12 @@ const ClipboardItemBase = forwardRef<HTMLDivElement, Props>(({ item }, ref) => {
   const existingTodo = todos.find((todo) => todo.origin.clipboardItemId === item.id)
 
 
-  const open = useStore((s) => s.open)
   useEffect(() => {
-    if (!open) setExpanded(false)
-  }, [open])
+    if (!expanded) return
+    return useStore.subscribe((state, previousState) => {
+      if (previousState.open && !state.open) setExpanded(false)
+    })
+  }, [expanded])
 
   const isPreviewing = useStore((s) => s.previewItemId) === item.id
   const isBundle = (item.data.kind === 'files' && item.data.paths.length > 1) || item.data.kind === 'image-collection'
@@ -163,7 +165,7 @@ const ClipboardItemBase = forwardRef<HTMLDivElement, Props>(({ item }, ref) => {
     <motion.div
       ref={ref}
       layout="position"
-      initial={open ? (reduced ? { opacity: 0 } : { opacity: 0, scale: 0.97, y: 8 }) : false}
+      initial={useStore.getState().open ? (reduced ? { opacity: 0 } : { opacity: 0, scale: 0.97, y: 8 }) : false}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={reduced
         ? { opacity: 0, transition: INSTANT }

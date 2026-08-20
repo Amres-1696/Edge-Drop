@@ -19,6 +19,7 @@ import { playExpandSound } from '../lib/soundEffects'
 
 import { useTranslation } from '../i18n'
 import { ARRIVE_EASE, INSTANT, SMALL_SPRING } from '../lib/motion'
+import { ITEM_RENDER_BATCH, nextVisibleItemCount } from '../lib/visibleItemWindow'
 
 export function ItemList() {
   const systemReduced = useReducedMotion()
@@ -36,6 +37,7 @@ export function ItemList() {
 
   const typeFilter = useStore((s) => s.typeFilter) || 'all'
   const [showScrollTop, setShowScrollTop] = useState(false)
+  const [visibleItemCount, setVisibleItemCount] = useState(ITEM_RENDER_BATCH)
   const [collapsedMap, setCollapsedMap] = useState<Record<string, boolean>>(() => {
     try {
       const saved = localStorage.getItem('edge_drop_pinned_collapsed_map')
@@ -45,6 +47,10 @@ export function ItemList() {
   })
 
   const pinnedCollapsed = collapsedMap[typeFilter] ?? true
+  const visiblePinned = pinnedCollapsed ? [] : pinned.slice(0, visibleItemCount)
+  const remainingSlots = Math.max(0, visibleItemCount - visiblePinned.length)
+  const visibleRecent = recent.slice(0, pinnedCollapsed ? visibleItemCount : remainingSlots)
+  const renderableTotal = (pinnedCollapsed ? 0 : pinned.length) + recent.length
 
   const setPinnedCollapsed = (val: boolean) => {
     setCollapsedMap((prev) => {
@@ -127,12 +133,21 @@ export function ItemList() {
   }, [isDraggingAny])
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (e.currentTarget.scrollTop > 50) {
+    const list = e.currentTarget
+    if (list.scrollTop > 50) {
       setShowScrollTop(true)
     } else {
       setShowScrollTop(false)
     }
+    if (list.scrollHeight - list.scrollTop - list.clientHeight < 640) {
+      setVisibleItemCount((current) => nextVisibleItemCount(current, renderableTotal))
+    }
   }
+
+  useLayoutEffect(() => {
+    setVisibleItemCount(ITEM_RENDER_BATCH)
+    if (listRef.current) listRef.current.scrollTop = 0
+  }, [query, typeFilter, pinnedCollapsed])
 
   const scrollToTop = () => {
     if (listRef.current) {
@@ -246,7 +261,7 @@ export function ItemList() {
                     style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 6 }}
                   >
                     <AnimatePresence initial={false}>
-                      {pinned.map((it) => (
+                      {visiblePinned.map((it) => (
                         <ClipboardItemCard key={it.id} item={it} />
                       ))}
                     </AnimatePresence>
@@ -264,7 +279,7 @@ export function ItemList() {
                 </motion.div>
               )}
               <AnimatePresence initial={false}>
-                {recent.map((it) => (
+                {visibleRecent.map((it) => (
                   <ClipboardItemCard key={it.id} item={it} />
                 ))}
               </AnimatePresence>
