@@ -48,7 +48,7 @@
     ],
     "publish": {
       "provider": "github",
-      "owner": "Deepender25",
+      "owner": "Amres-1696",
       "repo": "Edge-Drop"
     },
     "win": {
