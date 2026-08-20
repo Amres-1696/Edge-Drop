@@ -805,6 +805,12 @@ export class ItemStore {
           data: { ...it.data, entries }
         }
       }
+      if (it.data.kind === 'text') {
+        // Rich HTML is only needed by main-process copy/paste. Keeping it out
+        // of snapshots avoids duplicating large Office/browser markup over IPC.
+        const { html: _html, ...data } = it.data
+        return { ...it, data }
+      }
       return { ...it, data: it.data }
     })
   }

@@ -12,6 +12,8 @@ import { promisify } from 'node:util'
 import koffi from 'koffi'
 import type { ItemData } from '../../shared/types'
 
+const MAX_STORED_HTML_CHARS = 1_000_000
+
 let getSeqNum: (() => number) | null = null
 if (process.platform === 'win32') {
   try {
@@ -260,7 +262,7 @@ export async function readClipboard(): Promise<ItemData | null> {
   if (isTextIntent) {
     let html: string | undefined
     const rawHtml = clipboard.readHTML().trim()
-    if (rawHtml && rawHtml !== rawText) html = rawHtml
+    if (rawHtml && rawHtml !== rawText && rawHtml.length <= MAX_STORED_HTML_CHARS) html = rawHtml
 
     const isUrl = URL_RE.test(rawText)
     const isColor = COLOR_HEX_RE.test(rawText)
@@ -285,7 +287,7 @@ export async function readClipboard(): Promise<ItemData | null> {
   if (rawText) {
     let html: string | undefined
     const rawHtml = clipboard.readHTML().trim()
-    if (rawHtml && rawHtml !== rawText) html = rawHtml
+    if (rawHtml && rawHtml !== rawText && rawHtml.length <= MAX_STORED_HTML_CHARS) html = rawHtml
 
     const isUrl = URL_RE.test(rawText)
     const isColor = COLOR_HEX_RE.test(rawText)
