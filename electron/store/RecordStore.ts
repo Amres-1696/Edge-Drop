@@ -29,6 +29,7 @@ import type {
 import { createId } from './ids'
 import { PATHS } from './paths'
 import { createNoteDraft, createTodoDraft, type RecordDraftAttachment } from './recordConversion'
+import { thumbnailUrlForFile } from '../main/imageProtocol'
 
 const SCHEMA_VERSION = 1
 const UNDO_WINDOW_MS = 5_000
@@ -78,18 +79,6 @@ function cleanBody(value: string): string {
   return value.slice(0, MAX_BODY)
 }
 
-function mimeForExt(ext?: string): string {
-  switch ((ext ?? 'png').replace(/^\./, '').toLowerCase()) {
-    case 'jpg': case 'jpeg': case 'jfif': return 'image/jpeg'
-    case 'gif': return 'image/gif'
-    case 'webp': return 'image/webp'
-    case 'bmp': return 'image/bmp'
-    case 'svg': return 'image/svg+xml'
-    case 'avif': return 'image/avif'
-    default: return 'image/png'
-  }
-}
-
 export class RecordStore {
   private notes: NoteRecord[] = []
   private todos: TodoRecord[] = []
@@ -101,6 +90,8 @@ export class RecordStore {
   private now: () => number
   private crypto: CryptoAdapter
   private undoWindowMs: number
+  /** Prevents an unreadable encrypted database from being replaced by an empty one. */
+  private readOnly = false
 
   constructor(options: RecordStoreOptions = {}) {
     this.recordsFile = options.recordsFile ?? PATHS.recordsFile
@@ -116,6 +107,7 @@ export class RecordStore {
   }
 
   load(): void {
+    this.readOnly = false
     mkdirSync(this.assetsDir(), { recursive: true })
     const file = this.recordsFile()
     if (!existsSync(file)) {
@@ -145,6 +137,7 @@ export class RecordStore {
       try { writeFileSync(`${file}.corrupted.${this.now()}`, readFileSync(file)) } catch { /* preserve best effort */ }
       this.notes = []
       this.todos = []
+      this.readOnly = true
     }
   }
 
@@ -159,6 +152,7 @@ export class RecordStore {
   getTodo(id: string): TodoRecord | undefined { return this.todos.find((todo) => todo.id === id) }
 
   createNote(input: CreateNoteInput): NoteRecordDto {
+    this.assertWritable()
     const now = this.now()
     const note: NoteRecord = {
       id: this.idFactory(),
@@ -176,6 +170,7 @@ export class RecordStore {
   }
 
   createTodo(input: CreateTodoInput): TodoRecordDto {
+    this.assertWritable()
     const now = this.now()
     const todo: TodoRecord = {
       id: this.idFactory(),
@@ -194,6 +189,7 @@ export class RecordStore {
   }
 
   updateNote(id: string, patch: UpdateNoteInput): NoteRecordDto | null {
+    this.assertWritable()
     const note = this.getNote(id)
     if (!note) return null
     if (patch.title !== undefined) note.title = cleanTitle(patch.title) || note.title
@@ -205,6 +201,7 @@ export class RecordStore {
   }
 
   setNotePinned(id: string, pinned: boolean): NoteRecordDto | null {
+    this.assertWritable()
     const note = this.getNote(id)
     if (!note) return null
     note.pinned = pinned
@@ -215,6 +212,7 @@ export class RecordStore {
   }
 
   updateTodo(id: string, patch: UpdateTodoInput): TodoRecordDto | null {
+    this.assertWritable()
     const todo = this.getTodo(id)
     if (!todo) return null
     if (patch.title !== undefined) todo.title = cleanTitle(patch.title) || todo.title
@@ -226,6 +224,7 @@ export class RecordStore {
   }
 
   setTodoCompleted(id: string, completed: boolean): TodoRecordDto | null {
+    this.assertWritable()
     const todo = this.getTodo(id)
     if (!todo) return null
     const now = this.now()
@@ -238,6 +237,7 @@ export class RecordStore {
   }
 
   convert(item: ClipboardItem, target: RecordTarget, suggestedTitle?: string): NoteRecordDto | TodoRecordDto {
+    this.assertWritable()
     const existing = target === 'note'
       ? this.notes.find((note) => note.origin.clipboardItemId === item.id)
       : this.todos.find((todo) => todo.origin.clipboardItemId === item.id)
@@ -262,6 +262,7 @@ export class RecordStore {
   }
 
   delete(type: RecordTarget, id: string): boolean {
+    this.assertWritable()
     const list = type === 'note' ? this.notes : this.todos
     const index = list.findIndex((record) => record.id === id)
     if (index < 0) return false
@@ -276,6 +277,7 @@ export class RecordStore {
   }
 
   restore(id: string): boolean {
+    this.assertWritable()
     const tombstone = this.tombstones.get(id)
     if (!tombstone || tombstone.expiresAt < this.now()) return false
     if (tombstone.timer) clearTimeout(tombstone.timer)
@@ -289,8 +291,20 @@ export class RecordStore {
   }
 
   clearCompleted(): string[] {
-    const ids = this.todos.filter((todo) => todo.status === 'completed').map((todo) => todo.id)
-    for (const id of ids) this.delete('todo', id)
+    this.assertWritable()
+    const completed = this.todos.filter((todo) => todo.status === 'completed')
+    if (completed.length === 0) return []
+    const ids = completed.map((todo) => todo.id)
+    const completedIds = new Set(ids)
+    const expiresAt = this.now() + this.undoWindowMs
+    this.todos = this.todos.filter((todo) => !completedIds.has(todo.id))
+    for (const todo of completed) {
+      const tombstone: Tombstone = { type: 'todo', record: todo, expiresAt }
+      tombstone.timer = setTimeout(() => this.finalizeDelete(todo.id), this.undoWindowMs)
+      tombstone.timer.unref?.()
+      this.tombstones.set(todo.id, tombstone)
+    }
+    this.persist()
     return ids
   }
 
@@ -327,12 +341,10 @@ export class RecordStore {
     if (attachment.kind === 'file-reference') return { ...attachment, available: existsSync(attachment.path) }
     const path = this.assetPath(attachment)
     if (!existsSync(path)) return { ...attachment }
-    try {
-      const data = readFileSync(path).toString('base64')
-      return { ...attachment, preview: `data:${mimeForExt(attachment.ext)};base64,${data}` }
-    } catch {
-      return { ...attachment }
-    }
+    // Keep snapshots tiny. Chromium requests a bounded thumbnail lazily through
+    // the app's local image protocol instead of duplicating the full asset as
+    // base64 in main memory, IPC and renderer state on every record update.
+    return { ...attachment, preview: thumbnailUrlForFile(path) }
   }
 
   private assetPath(attachment: Extract<RecordAttachment, { kind: 'image' }>): string {
@@ -375,7 +387,14 @@ export class RecordStore {
     })
   }
 
+  private assertWritable(): void {
+    if (this.readOnly) {
+      throw new Error('Record storage is temporarily read-only because the existing database could not be decrypted')
+    }
+  }
+
   private persist(): void {
+    this.assertWritable()
     mkdirSync(dirname(this.recordsFile()), { recursive: true })
     mkdirSync(this.assetsDir(), { recursive: true })
     const state: PersistedRecords = { schemaVersion: SCHEMA_VERSION, notes: this.notes, todos: this.todos }

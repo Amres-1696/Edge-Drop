@@ -43,4 +43,9 @@ for (const path of nativeFiles) {
 }
 
 const packageJson = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'))
-console.log(`[package-contents] v${packageJson.version} 的 ASAR 依赖、主进程边界和原生组件均完整。`)
+const packagedPackageJson = JSON.parse(extractFile(asarPath, 'package.json').toString('utf8'))
+if (packagedPackageJson.version !== packageJson.version) {
+  console.error(`\n[package-contents] ASAR 版本 v${packagedPackageJson.version} 与源码版本 v${packageJson.version} 不一致。\n`)
+  process.exit(1)
+}
+console.log(`[package-contents] v${packagedPackageJson.version} 的 ASAR 依赖、主进程边界和原生组件均完整。`)

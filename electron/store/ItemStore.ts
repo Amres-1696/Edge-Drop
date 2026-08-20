@@ -53,6 +53,8 @@ interface Index {
 export class ItemStore {
   private items: ClipboardItem[] = []
   private sigToId = new Map<string, string>()
+  /** Prevents a transient DPAPI/read failure from overwriting the user's index. */
+  private persistenceBlocked = false
   /** Assets evicted by the history cap; removed only after the new index is durable. */
   private pendingCleanup: ClipboardItem[] = []
   /** Small, bounded thumbnails for renderer DTOs. Original image bytes stay on disk. */
@@ -60,6 +62,7 @@ export class ItemStore {
 
   /** Load persisted state from disk. Called once at startup. */
   load(): void {
+    this.persistenceBlocked = false
     try {
       const file = PATHS.indexFile()
       if (!existsSync(file)) {
@@ -88,9 +91,11 @@ export class ItemStore {
             parsedIndex = JSON.parse(decryptedStr) as Index
           } catch (err) {
             console.error('[ItemStore] DPAPI decryption failed:', err)
+            this.persistenceBlocked = true
           }
         } else {
           console.warn('[ItemStore] safeStorage unavailable to decrypt items.json')
+          this.persistenceBlocked = true
         }
       } else if (parsedJson && Array.isArray(parsedJson.items)) {
         // Plain JSON (Legacy v0.1.1 format from active users)
@@ -149,6 +154,7 @@ export class ItemStore {
         }
       } else {
         console.warn('[ItemStore] Index file could not be parsed; preserving data without wiping')
+        this.persistenceBlocked = true
         const backupFile = `${file}.corrupted.${Date.now()}`
         try { writeFileSync(backupFile, rawBuffer) } catch { /* ignore */ }
       }
@@ -182,6 +188,10 @@ export class ItemStore {
     if (this.persistTimer) {
       clearTimeout(this.persistTimer)
       this.persistTimer = null
+    }
+    if (this.persistenceBlocked) {
+      console.error('[ItemStore] Persistence blocked because the existing index could not be safely loaded')
+      return false
     }
     try {
       const indexObj: Index = { items: this.items }
@@ -263,6 +273,7 @@ export class ItemStore {
    * Returns true if the list actually changed (so callers can decide to push).
    */
   add(data: ItemData, limit: number): boolean {
+    if (this.persistenceBlocked) return false
     if (data.kind === 'text' && data.text.length > 500000) {
       data = { ...data, text: data.text.slice(0, 500000) }
     }
@@ -310,6 +321,7 @@ export class ItemStore {
   }
 
   setPinned(id: string, pinned: boolean): void {
+    if (this.persistenceBlocked) return
     const it = this.items.find((x) => x.id === id)
     if (!it) return
     it.pinned = pinned
@@ -354,6 +366,7 @@ export class ItemStore {
   }
 
   merge(sourceId: string, targetId: string): MergeResult {
+    if (this.persistenceBlocked) return { ok: false, reason: 'notfound', message: 'Clipboard storage is temporarily read-only' }
     if (sourceId === targetId) return { ok: false }
     const srcIdx = this.items.findIndex(x => x.id === sourceId)
     const tgtIdx = this.items.findIndex(x => x.id === targetId)
@@ -439,6 +452,7 @@ export class ItemStore {
   }
 
   public removeSubitem(req: DragRequest): boolean {
+    if (this.persistenceBlocked) return false
     const sourceItem = this.get(req.id)
     if (!sourceItem) return false
     const sourceIndex = this.items.findIndex(i => i.id === req.id)
@@ -476,6 +490,7 @@ export class ItemStore {
   }
 
   public split(req: DragRequest): boolean {
+    if (this.persistenceBlocked) return false
     const sourceItem = this.get(req.id)
     if (!sourceItem) return false
     const sourceIndex = this.items.findIndex(i => i.id === req.id)

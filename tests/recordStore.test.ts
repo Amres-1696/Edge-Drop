@@ -140,5 +140,7 @@ describe('RecordStore', () => {
     const backups = readdirSync(root).filter((name) => name.startsWith('records.json.corrupted.'))
     expect(backups).toHaveLength(1)
     expect(readFileSync(join(root, 'records.json'), 'utf8')).toBe('{broken')
+    expect(() => store.createNote({ title: '不应覆盖' })).toThrow(/read-only/)
+    expect(readFileSync(join(root, 'records.json'), 'utf8')).toBe('{broken')
   })
 })
