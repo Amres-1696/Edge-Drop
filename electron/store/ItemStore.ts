@@ -11,6 +11,7 @@
  */
 import { existsSync, readFileSync, writeFileSync, rmSync, statSync, readdirSync } from 'node:fs'
 import { join, extname, basename as pathBasename } from 'node:path'
+import { createHash } from 'node:crypto'
 import { nativeImage, safeStorage } from 'electron'
 import { thumbnailUrlForFile, thumbnailUrlForStoredImage } from '../main/imageProtocol'
 import {
@@ -25,11 +26,16 @@ import {
 import { PATHS } from './paths'
 import { createId } from './ids'
 
+/** Stable, compact content hash used for text deduplication. */
+function textContentHash(text: string): string {
+  return createHash('sha256').update(text, 'utf8').digest('hex')
+}
+
 /** Stable, content-based key used for deduplication. */
 function signature(data: ItemData): string {
   switch (data.kind) {
     case 'text':
-      return `text|${data.text}`
+      return `text|${data.contentHash ?? textContentHash(data.text)}`
     case 'image':
       return `image|${data.imageId}`
     case 'image-collection':
@@ -93,17 +99,26 @@ export class ItemStore {
       if (parsedIndex && Array.isArray(parsedIndex.items)) {
         this.items = parsedIndex.items.filter((it) => it && it.data && typeof it.id === 'string')
 
-        // Auto-migrate large text items to disk payload files
+        // Auto-migrate large text items to disk payload files. Persist a compact
+        // content hash as well: after restart only the preview remains in the
+        // index, so hashing preview text would break full-text deduplication.
         let migratedAnyPayloads = false
         for (const it of this.items) {
-          if (it.data.kind === 'text') {
-            if (!it.data.hasFullPayload && it.data.text.length > 300) {
-              this.writeTextPayload(it.id, it.data.text)
-              it.data.hasFullPayload = true
-              it.data.previewText = it.data.text.slice(0, 300)
-              it.data.text = it.data.previewText
-              migratedAnyPayloads = true
-            }
+          if (it.data.kind !== 'text') continue
+          let fullText = it.data.text
+          if (!it.data.hasFullPayload && fullText.length > 300) {
+            this.writeTextPayload(it.id, fullText)
+            it.data.hasFullPayload = true
+            it.data.previewText = fullText.slice(0, 300)
+            it.data.text = it.data.previewText
+            migratedAnyPayloads = true
+          } else if (it.data.hasFullPayload) {
+            fullText = this.getFullText(it.id)
+          }
+          const contentHash = textContentHash(fullText)
+          if (it.data.contentHash !== contentHash) {
+            it.data.contentHash = contentHash
+            migratedAnyPayloads = true
           }
         }
 
@@ -238,10 +253,14 @@ export class ItemStore {
         ...data,
         hasFullPayload: true,
         previewText: data.text.slice(0, 300),
-        text: data.text.slice(0, 300)
+        text: data.text.slice(0, 300),
+        contentHash: textContentHash(data.text)
       }
     }
 
+    if (finalData.kind === 'text' && !finalData.contentHash) {
+      finalData = { ...finalData, contentHash: textContentHash(finalData.text) }
+    }
     const item: ClipboardItem = { id, data: finalData, capturedAt: now, hitCount: 1, pinned: false }
     this.items.unshift(item)
     this.sigToId.set(sig, id)
@@ -521,6 +540,7 @@ export class ItemStore {
         if (it.data.kind === 'image-collection') {
           it.data.images.forEach((img) => this.removeImageFile(img.imageId))
         }
+        if (it.data.kind === 'text') this.removeTextPayload(it.id)
       }
     }
     if (removedAny) {
