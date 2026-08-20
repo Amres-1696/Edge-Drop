@@ -217,7 +217,13 @@ export function registerIpc(): void {
     const existed = input.target === 'note'
       ? before.notes.some((note) => note.origin.clipboardItemId === input.itemId)
       : before.todos.some((todo) => todo.origin.clipboardItemId === input.itemId)
-    const record = getRecordStore().convert(item, input.target, input.suggestedTitle)
+    // Large text entries keep only a short preview in memory. Materialize the
+    // disk-backed payload before conversion so notes and to-dos never silently
+    // lose the remainder of the clipboard text.
+    const conversionItem = item.data.kind === 'text' && item.data.hasFullPayload
+      ? { ...item, data: { ...item.data, text: getStore().getFullText(item.id), hasFullPayload: false } }
+      : item
+    const record = getRecordStore().convert(conversionItem, input.target, input.suggestedTitle)
     const snapshot = getRecordStore().snapshot()
     pushState.records()
     return { snapshot, recordId: record.id, existing: existed }

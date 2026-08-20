@@ -1,8 +1,10 @@
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { TrashIcon } from './icons'
 import { playButtonClickSound } from '../lib/soundEffects'
 import { useTranslation } from '../i18n'
+import { useStore } from '../store/appStore'
+import { INSTANT } from '../lib/motion'
 import type { ClipboardItemDto } from '../../shared/types'
 
 interface ClearMenuProps {
@@ -41,6 +43,9 @@ const menuItemStyle: CSSProperties = {
 
 export function ClearMenu({ items, disabled, panelOpen, onClear, onClearAll }: ClearMenuProps) {
   const { t } = useTranslation()
+  const systemReduced = useReducedMotion()
+  const appReduced = useStore((state) => state.settings.reduceMotion)
+  const reduced = systemReduced || appReduced
   const [open, setOpen] = useState(false)
   const [confirmAll, setConfirmAll] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -108,10 +113,10 @@ export function ClearMenu({ items, disabled, panelOpen, onClear, onClearAll }: C
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: 6, scale: 0.98 }}
+            initial={reduced ? false : { opacity: 0, y: 6, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 6, scale: 0.98 }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
+            exit={reduced ? { opacity: 0 } : { opacity: 0, y: 6, scale: 0.98 }}
+            transition={reduced ? INSTANT : { duration: 0.15, ease: 'easeOut' }}
             style={{
               position: 'absolute',
               bottom: 'calc(100% + 6px)',
