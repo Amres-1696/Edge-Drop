@@ -23,7 +23,7 @@ import { CopyIndicatorCurve } from './CopyIndicatorCurve'
 import { useFilteredItems } from '../hooks/useFilteredItems'
 
 import { useTranslation } from '../i18n'
-import { CELL_SPRING, CROSSFADE_SPRING, INSTANT } from '../lib/motion'
+import { CROSSFADE_SPRING, INSTANT } from '../lib/motion'
 
 export function Panel() {
   const systemReduced = useReducedMotion()
@@ -549,3 +549,4 @@ function SplitDropZone({ isRight = false }: { isRight?: boolean }) {
     </AnimatePresence>
   )
 }
+

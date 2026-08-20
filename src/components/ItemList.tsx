@@ -18,7 +18,7 @@ import { ChevronDownIcon, PinFillIcon } from './icons'
 import { playExpandSound } from '../lib/soundEffects'
 
 import { useTranslation } from '../i18n'
-import { ARRIVE_EASE, INSTANT, LEAVE_EASE, SMALL_SPRING } from '../lib/motion'
+import { ARRIVE_EASE, INSTANT, SMALL_SPRING } from '../lib/motion'
 
 export function ItemList() {
   const systemReduced = useReducedMotion()
@@ -293,3 +293,4 @@ export function ItemList() {
     </motion.div>
   )
 }
+
