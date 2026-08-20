@@ -18,9 +18,37 @@ interface ChangelogRelease {
 
 const CHANGELOG_DATA: ChangelogRelease[] = [
   {
+    version: 'v0.2.7',
+    date: 'Aug 20, 2026',
+    isLatest: true,
+    summary: 'Selectively integrated upstream v0.2.7 stability and performance work while preserving the Chinese notes, to-dos and crisp typography experience.',
+    highlights: [
+      {
+        title: 'Lower Background Resource Usage',
+        description: 'Added adaptive edge polling, paused hidden animations, bounded memory usage and released image buffers after staging.'
+      },
+      {
+        title: 'Large Content Storage Improvements',
+        description: 'Moved long text payloads to disk and introduced image thumbnails while preserving full content during note and to-do conversion.'
+      },
+      {
+        title: 'Time-based History Clearing',
+        description: 'Clear the last hour, 6 hours, 24 hours or all unpinned history from a compact confirmation menu.'
+      },
+      {
+        title: 'Configurable Global Shortcut',
+        description: 'Record a custom key combination for opening and closing the shelf from anywhere.'
+      },
+      {
+        title: 'Windows Focus and Taskbar Fixes',
+        description: 'Prevented paste focus theft, ghost taskbar icons after Explorer restarts and launch-at-login path drift.'
+      }
+    ]
+  },
+  {
     version: 'v0.2.6',
     date: 'Aug 09, 2026',
-    isLatest: true,
+    isLatest: false,
     summary: 'Selective upstream performance and typography improvements, plus a new notes and todos workspace with reliable draft persistence.',
     highlights: [
       {

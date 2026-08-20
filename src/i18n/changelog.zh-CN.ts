@@ -19,9 +19,37 @@ export interface ChangelogRelease {
  */
 export const ZH_CN_CHANGELOG: ChangelogRelease[] = [
   {
+    version: 'v0.2.7',
+    date: '2026年8月20日',
+    isLatest: true,
+    summary: '选择性接入上游 v0.2.7 的稳定性与性能改进，并保留中文版笔记、待办和清晰字体体验。',
+    highlights: [
+      {
+        title: '更低的后台资源占用',
+        description: '加入自适应边缘轮询、动画暂停、内存上限和图片缓存释放，降低待机时的 CPU、GPU 与内存消耗。'
+      },
+      {
+        title: '大文本与图片存储优化',
+        description: '长文本改用磁盘载荷、图片预览改用缩略图，同时确保转换成笔记或待办时保留完整内容。'
+      },
+      {
+        title: '按时间清理历史记录',
+        description: '清理菜单现在支持最近 1 小时、6 小时、24 小时或全部历史记录，并始终保留置顶内容。'
+      },
+      {
+        title: '自定义全局快捷键',
+        description: '可在设置中录制用于打开或关闭侧边栏的按键组合，相关界面已完成简体中文适配。'
+      },
+      {
+        title: 'Windows 焦点与任务栏修复',
+        description: '修复粘贴时抢走当前输入焦点、资源管理器重启后出现幽灵任务栏图标，以及登录启动路径漂移问题。'
+      }
+    ]
+  },
+  {
     version: 'v0.2.6',
     date: '2026年8月9日',
-    isLatest: true,
+    isLatest: false,
     summary: '选择性接入上游性能和文字适配优化，并新增可靠的笔记与待办工作区。',
     highlights: [
       {
