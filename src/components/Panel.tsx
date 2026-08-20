@@ -101,11 +101,11 @@ export function Panel() {
     const unsubInternalDrop = window.edge.onInternalDrop((pos) => {
       // The OS drag ended inside our window, but Electron/Windows swallowed the drop event.
       if (!internalDragReq) return
-      
+
       const req = { ...internalDragReq }
       setInternalDragReq(null)
       setDragActive(false)
-      
+
       const el = document.elementFromPoint(pos.x, pos.y)
       if (!el) return
 
@@ -549,4 +549,3 @@ function SplitDropZone({ isRight = false }: { isRight?: boolean }) {
     </AnimatePresence>
   )
 }
-

@@ -30,10 +30,10 @@ export function ItemList() {
   const listRef = useRef<HTMLDivElement>(null)
 
   const total = pinned.length + recent.length
-  
+
   const isDraggingAny = useStore((s) => !!s.dragActive || !!s.internalDragReq)
   const open = useStore((s) => s.open)
-  
+
   const typeFilter = useStore((s) => s.typeFilter) || 'all'
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [collapsedMap, setCollapsedMap] = useState<Record<string, boolean>>(() => {
@@ -53,7 +53,7 @@ export function ItemList() {
       return next
     })
   }
-  
+
   const topRecentId = recent[0]?.id
   const topRecentTime = recent[0]?.capturedAt
   const topPinnedTime = pinned[0]?.capturedAt
@@ -192,9 +192,9 @@ export function ItemList() {
   }
 
   return (
-    <motion.div 
-      className="list" 
-      ref={listRef} 
+    <motion.div
+      className="list"
+      ref={listRef}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeaveOrDrop}
       onDrop={handleDragLeaveOrDrop}
@@ -206,7 +206,7 @@ export function ItemList() {
         <>
           {pinned.length > 0 && (
             <motion.section layout={!reduced} transition={reduced ? INSTANT : { duration: 0.22, ease: ARRIVE_EASE }} className="pinned-section">
-              <motion.div 
+              <motion.div
                 layout={!reduced}
                 transition={reduced ? INSTANT : { duration: 0.22, ease: ARRIVE_EASE }}
                 className={`section-label pinned-header-interactive ${pinnedCollapsed ? 'is-collapsed' : ''}`}
@@ -293,4 +293,3 @@ export function ItemList() {
     </motion.div>
   )
 }
-

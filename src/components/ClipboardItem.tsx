@@ -66,7 +66,7 @@ const ClipboardItemBase = forwardRef<HTMLDivElement, Props>(({ item }, ref) => {
   const existingNote = notes.find((note) => note.origin.clipboardItemId === item.id)
   const existingTodo = todos.find((todo) => todo.origin.clipboardItemId === item.id)
 
-  
+
   const open = useStore((s) => s.open)
   useEffect(() => {
     if (!open) setExpanded(false)
@@ -219,7 +219,7 @@ const ClipboardItemBase = forwardRef<HTMLDivElement, Props>(({ item }, ref) => {
             e.preventDefault()
             e.stopPropagation()
             // If they drop an entire item or a subitem onto another item, we merge them.
-            // Currently our merge logic merges the entire source item. 
+            // Currently our merge logic merges the entire source item.
             // In the future we might want to merge just the subitem.
             window.edge.mergeItems(activeDrag.id, item.id)
             setInternalDragReq(null)
@@ -233,12 +233,12 @@ const ClipboardItemBase = forwardRef<HTMLDivElement, Props>(({ item }, ref) => {
       >
         <div className="body">
           {isBundle ? (
-              <BundleFluidPreview 
-                item={item} 
-                expanded={expanded} 
-                onDragStart={handleDragStart} 
-                onCopy={onCopy} 
-                onRemove={() => remove(item.id)} 
+              <BundleFluidPreview
+                item={item}
+                expanded={expanded}
+                onDragStart={handleDragStart}
+                onCopy={onCopy}
+                onRemove={() => remove(item.id)}
                 onCollapse={onCollapse}
               />
           ) : (
@@ -258,9 +258,9 @@ const ClipboardItemBase = forwardRef<HTMLDivElement, Props>(({ item }, ref) => {
           </div>
         </div>
 
-        <div 
-          className="actions" 
-          onClick={(e) => { e.stopPropagation(); e.preventDefault(); }} 
+        <div
+          className="actions"
+          onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
           style={{ display: isBundle && expanded ? 'none' : undefined }}
         >
           <button
@@ -464,8 +464,8 @@ function BundleFluidPreview({
               exit="exit"
             >
               <div className="bundle-actions">
-                <div 
-                  className="bundle-collapse-zone" 
+                <div
+                  className="bundle-collapse-zone"
                   title={t('item.collapsePinned')}
                   onClick={(e) => { e.stopPropagation(); onCollapse(e); }}
                 >
@@ -543,11 +543,11 @@ function BundleFluidPreview({
                       loading="lazy"
                       decoding="async"
                       className="bundle-stack-card"
-                      animate={{ 
-                        x: realIndex * 20 - 20, 
-                        y: realIndex * 6, 
-                        rotate: realIndex * 6 - 6, 
-                        scale: 1 - realIndex * 0.05 
+                      animate={{
+                        x: realIndex * 20 - 20,
+                        y: realIndex * 6,
+                        rotate: realIndex * 6 - 6,
+                        scale: 1 - realIndex * 0.05
                       }}
                       style={{ zIndex: 10 - realIndex }}
                       draggable={false}
@@ -617,13 +617,13 @@ function BundleFluidPreview({
                   >
                     {entry?.isImage && entry.preview ? (
                       <div className="fluid-list-icon" style={{ overflow: 'hidden', padding: 0 }}>
-                        <img 
-                          src={entry.preview} 
-                          alt="" 
+                        <img
+                          src={entry.preview}
+                          alt=""
                           loading="lazy"
                           decoding="async"
-                          draggable={false} 
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }} 
+                          draggable={false}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }}
                         />
                       </div>
                     ) : (
@@ -682,13 +682,13 @@ function BundleFluidPreview({
                       initial={{ borderRadius: 8 }}
                     >
                       {entry?.isImage && entry.preview ? (
-                        <img 
-                          src={entry.preview} 
-                          alt="" 
+                        <img
+                          src={entry.preview}
+                          alt=""
                           loading="lazy"
                           decoding="async"
-                          draggable={false} 
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }} 
+                          draggable={false}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }}
                         />
                       ) : (
                         <div style={{ color: getFileKind(filePath).color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
