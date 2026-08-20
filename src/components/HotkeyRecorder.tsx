@@ -3,6 +3,7 @@ import { playToggleSound, playButtonClickSound } from '../lib/soundEffects'
 import { RotateCcwIcon, CloseIcon } from './icons'
 import { edge } from '../lib/edge'
 import { useTranslation } from '../i18n'
+import { markIntentionalTextInputBlur } from '../hooks/useTextInputMode'
 
 interface HotkeyRecorderProps {
   hotkey: string
@@ -94,9 +95,8 @@ export function HotkeyRecorder({ hotkey, onChange }: HotkeyRecorderProps) {
   const displayBadges = parseKeyBadges(activeHotkey)
   const isDefault = activeHotkey === 'Alt+C'
 
-  const stopRecording = useCallback((canceled = false) => {
-    setIsRecording(false)
-    setPressedBadges([])
+  const restoreRecorderEnvironment = useCallback(() => {
+    markIntentionalTextInputBlur()
     try {
       edge.focusWindow(false).catch?.(() => {})
     } catch {
@@ -107,10 +107,16 @@ export function HotkeyRecorder({ hotkey, onChange }: HotkeyRecorderProps) {
     } catch {
       /* ignore */
     }
+  }, [])
+
+  const stopRecording = useCallback((canceled = false) => {
+    setIsRecording(false)
+    setPressedBadges([])
+    restoreRecorderEnvironment()
     if (canceled) {
       playButtonClickSound()
     }
-  }, [])
+  }, [restoreRecorderEnvironment])
 
   const startRecording = useCallback(() => {
     if (document.activeElement instanceof HTMLElement) {
@@ -176,8 +182,11 @@ export function HotkeyRecorder({ hotkey, onChange }: HotkeyRecorderProps) {
       window.removeEventListener('keydown', handleKeyDown, { capture: true })
       window.removeEventListener('keyup', handleKeyUp, { capture: true })
       window.removeEventListener('mousedown', handleClickOutside)
+      // Settings/panel navigation can unmount the recorder without going
+      // through stopRecording. Always restore focus policy and the shortcut.
+      restoreRecorderEnvironment()
     }
-  }, [isRecording, onChange, stopRecording])
+  }, [isRecording, onChange, restoreRecorderEnvironment, stopRecording])
 
   const handleResetDefault = (e: React.MouseEvent) => {
     e.stopPropagation()

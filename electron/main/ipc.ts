@@ -51,6 +51,8 @@ function toast(message: string, tone: 'info' | 'error' = 'info'): void {
   sendToMainWindow('ui:toast', { id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, message, tone })
 }
 
+let hotkeyPauseSafetyTimer: ReturnType<typeof setTimeout> | null = null
+
 /** Simulate pressing Ctrl+V via PowerShell after returning focus to the previous active window. */
 function simulatePaste(): void {
   if (process.platform === 'win32') {
@@ -651,11 +653,22 @@ export function registerIpc(): void {
   })
 
   handle('hotkey:pause', (paused) => {
+    if (hotkeyPauseSafetyTimer) {
+      clearTimeout(hotkeyPauseSafetyTimer)
+      hotkeyPauseSafetyTimer = null
+    }
     if (paused) {
       try {
         const { globalShortcut } = require('electron')
         globalShortcut.unregisterAll()
       } catch { /* ignore */ }
+      // Renderer crashes or navigation must not leave every global shortcut
+      // unregistered for the remainder of the process lifetime.
+      hotkeyPauseSafetyTimer = setTimeout(() => {
+        hotkeyPauseSafetyTimer = null
+        registerGlobalHotkey()
+      }, 60_000)
+      hotkeyPauseSafetyTimer.unref?.()
     } else {
       registerGlobalHotkey()
     }

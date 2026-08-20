@@ -19,6 +19,11 @@ export function isIntentionalTextInputBlur(): boolean {
   return Date.now() < intentionalBlurUntil
 }
 
+/** Mark a deliberate focus release so the edge-hover blur handler stays open. */
+export function markIntentionalTextInputBlur(durationMs = 700): void {
+  intentionalBlurUntil = Math.max(intentionalBlurUntil, Date.now() + durationMs)
+}
+
 export function isTextInputModeActive(): boolean {
   return activeScopes.size > 0
 }

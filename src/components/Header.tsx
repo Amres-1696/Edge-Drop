@@ -46,7 +46,7 @@ export function Header() {
   const composerOpen = useStore((s) => s.recordComposerOpen)
   const setComposerOpen = useStore((s) => s.setRecordComposerOpen)
 
-  useTextInputMode('header-search', searchExpanded, inputRef)
+  useTextInputMode('header-search', searchExpanded && !settingsOpen, inputRef)
 
   const filters = [
     ['all', t('filters.all')], ['text', t('filters.text')], ['links', t('filters.links')],
