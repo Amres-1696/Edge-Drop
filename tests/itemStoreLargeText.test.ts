@@ -1,9 +1,9 @@
-import { existsSync, mkdirSync, rmSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const electronState = vi.hoisted(() => ({ root: '' }))
+const electronState = vi.hoisted(() => ({ root: '', cryptoAvailable: true }))
 
 vi.mock('electron', () => ({
   app: {
@@ -11,9 +11,9 @@ vi.mock('electron', () => ({
     getAppPath: () => electronState.root
   },
   safeStorage: {
-    isEncryptionAvailable: () => false,
-    encryptString: (value: string) => Buffer.from(value),
-    decryptString: (value: Buffer) => value.toString('utf8')
+    isEncryptionAvailable: () => electronState.cryptoAvailable,
+    encryptString: (value: string) => Buffer.from(`protected:${value}`),
+    decryptString: (value: Buffer) => value.toString('utf8').replace(/^protected:/, '')
   },
   nativeImage: {
     createFromPath: () => ({
@@ -31,6 +31,7 @@ const LONG_TEXT = `${'同一段长文本'.repeat(80)}\n末尾必须完整保留`
 
 describe('ItemStore disk-backed text', () => {
   beforeEach(() => {
+    electronState.cryptoAvailable = true
     electronState.root = join(tmpdir(), `edge-drop-item-store-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}`)
     for (const dir of ['images', 'payloads', 'record-assets', 'temp']) {
       mkdirSync(join(electronState.root, dir), { recursive: true })
@@ -63,6 +64,7 @@ describe('ItemStore disk-backed text', () => {
     const item = store.list()[0]
     const payload = join(electronState.root, 'payloads', `${item.id}.txt`)
     expect(existsSync(payload)).toBe(true)
+    expect(readFileSync(payload, 'utf8')).not.toContain('末尾必须完整保留')
 
     item.capturedAt = Date.now() - 2 * 60 * 60 * 1000
     expect(store.pruneExpired(1)).toBe(true)

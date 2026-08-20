@@ -342,7 +342,10 @@ export function registerIpc(): void {
 
   handle('item:delete', (id) => {
     const item = getStore().get(id)
-    getStore().delete(id)
+    const comparisonData = item?.data.kind === 'text'
+      ? { ...item.data, text: getStore().getFullText(id) }
+      : item?.data
+    if (!getStore().delete(id)) throw new Error('Could not persist item deletion')
     // If the deleted item is still on the system clipboard, clear the clipboard.
     // This is the fix for the copy→delete→copy cycle bug:
     //   Without this, resyncSignature() would lock lastSig to the current
@@ -350,7 +353,7 @@ export function registerIpc(): void {
     //   clipboard never changes, so the watcher never fires and the item stays
     //   invisible. Clearing makes the clipboard transition to 'empty', so the
     //   next re-copy IS a detectable change.
-    if (item && clipboardMatchesItem(item.data)) {
+    if (comparisonData && clipboardMatchesItem(comparisonData)) {
       clipboard.clear()
     }
     getWatcher().resyncSignature()
@@ -360,9 +363,15 @@ export function registerIpc(): void {
 
   handle('item:delete-batch', (ids) => {
     if (!ids || ids.length === 0) return getStore().toDto()
-    const items = ids.map((id) => getStore().get(id)).filter(Boolean)
-    getStore().deleteBatch(ids)
-    if (items.some((item) => item && clipboardMatchesItem(item.data))) {
+    const items = ids.map((id) => {
+      const item = getStore().get(id)
+      if (!item) return null
+      return item.data.kind === 'text'
+        ? { ...item.data, text: getStore().getFullText(id) }
+        : item.data
+    }).filter((data): data is ItemData => Boolean(data))
+    if (!getStore().deleteBatch(ids)) throw new Error('Could not persist batch deletion')
+    if (items.some((data) => clipboardMatchesItem(data))) {
       clipboard.clear()
     }
     getWatcher().resyncSignature()
@@ -371,7 +380,7 @@ export function registerIpc(): void {
   })
 
   handle('item:clear', () => {
-    getStore().clearUnpinned()
+    if (!getStore().clearUnpinned()) throw new Error('Could not persist history clearing')
     // Clear the system clipboard unconditionally: the user wiped their history,
     // so whatever is on the clipboard should not zombie-reappear, and clearing
     // ensures any subsequent re-copy of the same content is detectable.

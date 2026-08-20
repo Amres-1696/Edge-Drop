@@ -9,7 +9,7 @@
  *   - Persist the index to JSON and image bytes to per-item PNG files.
  *   - Convert internal items to the serializable DTO form for the renderer.
  */
-import { existsSync, readFileSync, writeFileSync, rmSync, statSync, readdirSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync, renameSync, rmSync, statSync, readdirSync } from 'node:fs'
 import { join, extname, basename as pathBasename } from 'node:path'
 import { createHash } from 'node:crypto'
 import { nativeImage, safeStorage } from 'electron'
@@ -53,6 +53,8 @@ interface Index {
 export class ItemStore {
   private items: ClipboardItem[] = []
   private sigToId = new Map<string, string>()
+  /** Assets evicted by the history cap; removed only after the new index is durable. */
+  private pendingCleanup: ClipboardItem[] = []
   /** Small, bounded thumbnails for renderer DTOs. Original image bytes stay on disk. */
   private previewCache = new Map<string, string>()
 
@@ -107,13 +109,21 @@ export class ItemStore {
           if (it.data.kind !== 'text') continue
           let fullText = it.data.text
           if (!it.data.hasFullPayload && fullText.length > 300) {
-            this.writeTextPayload(it.id, fullText)
-            it.data.hasFullPayload = true
-            it.data.previewText = fullText.slice(0, 300)
-            it.data.text = it.data.previewText
-            migratedAnyPayloads = true
+            if (this.writeTextPayload(it.id, fullText)) {
+              it.data.hasFullPayload = true
+              it.data.previewText = fullText.slice(0, 300)
+              it.data.text = it.data.previewText
+              migratedAnyPayloads = true
+            }
           } else if (it.data.hasFullPayload) {
-            fullText = this.getFullText(it.id)
+            const payload = this.readTextPayload(it.id)
+            if (payload) {
+              fullText = payload.text
+              // Upgrade the initial upstream plaintext payload format to DPAPI.
+              if (safeStorage.isEncryptionAvailable() && !payload.encrypted && this.writeTextPayload(it.id, fullText)) {
+                migratedAnyPayloads = true
+              }
+            }
           }
           const contentHash = textContentHash(fullText)
           if (it.data.contentHash !== contentHash) {
@@ -168,7 +178,7 @@ export class ItemStore {
   }
 
   /** Synchronous disk write (called by debounced timer or on app shutdown). */
-  public persistSync(): void {
+  public persistSync(): boolean {
     if (this.persistTimer) {
       clearTimeout(this.persistTimer)
       this.persistTimer = null
@@ -185,13 +195,45 @@ export class ItemStore {
           encrypted: true,
           payload: encryptedBuf.toString('base64')
         }
-        writeFileSync(file, JSON.stringify(envelope, null, 2), 'utf8')
+        this.writeIndexAtomically(file, JSON.stringify(envelope, null, 2))
       } else {
-        writeFileSync(file, JSON.stringify(indexObj, null, 2), 'utf8')
+        this.writeIndexAtomically(file, JSON.stringify(indexObj, null, 2))
       }
+      const cleanup = this.pendingCleanup.splice(0)
+      cleanup.forEach((item) => this.cleanupItemAssets(item))
+      return true
     } catch (err) {
       console.error('[ItemStore] Persistence failed:', err)
+      return false
     }
+  }
+
+  private writeIndexAtomically(file: string, contents: string): void {
+    const temp = `${file}.tmp`
+    try {
+      writeFileSync(temp, contents, 'utf8')
+      renameSync(temp, file)
+    } catch (error) {
+      try { rmSync(temp, { force: true }) } catch { /* ignore */ }
+      throw error
+    }
+  }
+
+  private cleanupItemAssets(item: ClipboardItem): void {
+    const imageReferenced = (imageId: string) => this.items.some((current) => {
+      if (current.data.kind === 'image') return current.data.imageId === imageId
+      if (current.data.kind === 'image-collection') return current.data.images.some((image) => image.imageId === imageId)
+      return false
+    })
+    if (item.data.kind === 'image' && !imageReferenced(item.data.imageId)) {
+      this.removeImageFile(item.data.imageId)
+    }
+    if (item.data.kind === 'image-collection') {
+      item.data.images.forEach((img) => {
+        if (!imageReferenced(img.imageId)) this.removeImageFile(img.imageId)
+      })
+    }
+    if (item.data.kind === 'text') this.removeTextPayload(item.id)
   }
 
   /**
@@ -207,11 +249,7 @@ export class ItemStore {
       const it = this.items[i]
       if (stillNeed > 0 && !it.pinned) {
         this.sigToId.delete(signature(it.data))
-        if (it.data.kind === 'image') this.removeImageFile(it.data.imageId)
-        if (it.data.kind === 'image-collection') {
-          it.data.images.forEach((img) => this.removeImageFile(img.imageId))
-        }
-        if (it.data.kind === 'text') this.removeTextPayload(it.id)
+        this.pendingCleanup.push(it)
         stillNeed--
       } else {
         survivors.unshift(it)
@@ -248,13 +286,14 @@ export class ItemStore {
     const id = createId()
     let finalData = data
     if (data.kind === 'text' && data.text.length > 300) {
-      this.writeTextPayload(id, data.text)
-      finalData = {
-        ...data,
-        hasFullPayload: true,
-        previewText: data.text.slice(0, 300),
-        text: data.text.slice(0, 300),
-        contentHash: textContentHash(data.text)
+      if (this.writeTextPayload(id, data.text)) {
+        finalData = {
+          ...data,
+          hasFullPayload: true,
+          previewText: data.text.slice(0, 300),
+          text: data.text.slice(0, 300),
+          contentHash: textContentHash(data.text)
+        }
       }
     }
 
@@ -277,21 +316,23 @@ export class ItemStore {
     this.persist()
   }
 
-  delete(id: string): void {
+  delete(id: string): boolean {
     const idx = this.items.findIndex((x) => x.id === id)
-    if (idx < 0) return
+    if (idx < 0) return false
     const [removed] = this.items.splice(idx, 1)
     this.sigToId.delete(signature(removed.data))
-    if (removed.data.kind === 'image') this.removeImageFile(removed.data.imageId)
-    if (removed.data.kind === 'image-collection') {
-      removed.data.images.forEach((img) => this.removeImageFile(img.imageId))
+    if (!this.persistSync()) {
+      this.items.splice(idx, 0, removed)
+      this.rebuildIndex()
+      return false
     }
-    if (removed.data.kind === 'text') this.removeTextPayload(removed.id)
-    this.persistSync()
+    this.cleanupItemAssets(removed)
+    return true
   }
 
-  deleteBatch(ids: string[]): void {
-    if (!ids || ids.length === 0) return
+  deleteBatch(ids: string[]): boolean {
+    if (!ids || ids.length === 0) return true
+    const previousItems = this.items
     const set = new Set(ids)
     const toRemove: ClipboardItem[] = []
     this.items = this.items.filter((it) => {
@@ -302,15 +343,14 @@ export class ItemStore {
       return true
     })
 
-    for (const removed of toRemove) {
-      this.sigToId.delete(signature(removed.data))
-      if (removed.data.kind === 'image') this.removeImageFile(removed.data.imageId)
-      if (removed.data.kind === 'image-collection') {
-        removed.data.images.forEach((img) => this.removeImageFile(img.imageId))
-      }
-      if (removed.data.kind === 'text') this.removeTextPayload(removed.id)
+    this.rebuildIndex()
+    if (!this.persistSync()) {
+      this.items = previousItems
+      this.rebuildIndex()
+      return false
     }
-    this.persistSync()
+    toRemove.forEach((item) => this.cleanupItemAssets(item))
+    return true
   }
 
   merge(sourceId: string, targetId: string): MergeResult {
@@ -508,21 +548,23 @@ export class ItemStore {
     return false
   }
 
-  clearUnpinned(): void {
+  clearUnpinned(): boolean {
+    const previousItems = this.items
     const kept: ClipboardItem[] = []
+    const removed: ClipboardItem[] = []
     for (const it of this.items) {
       if (it.pinned) kept.push(it)
-      else {
-        this.sigToId.delete(signature(it.data))
-        if (it.data.kind === 'image') this.removeImageFile(it.data.imageId)
-        if (it.data.kind === 'image-collection') {
-          it.data.images.forEach((img) => this.removeImageFile(img.imageId))
-        }
-        if (it.data.kind === 'text') this.removeTextPayload(it.id)
-      }
+      else removed.push(it)
     }
     this.items = kept
-    this.persistSync()
+    this.rebuildIndex()
+    if (!this.persistSync()) {
+      this.items = previousItems
+      this.rebuildIndex()
+      return false
+    }
+    removed.forEach((item) => this.cleanupItemAssets(item))
+    return true
   }
 
   pruneExpired(hours: number): boolean {
@@ -535,17 +577,18 @@ export class ItemStore {
         kept.push(it)
       } else {
         removedAny = true
-        this.sigToId.delete(signature(it.data))
-        if (it.data.kind === 'image') this.removeImageFile(it.data.imageId)
-        if (it.data.kind === 'image-collection') {
-          it.data.images.forEach((img) => this.removeImageFile(img.imageId))
-        }
-        if (it.data.kind === 'text') this.removeTextPayload(it.id)
       }
     }
     if (removedAny) {
+      const previousItems = this.items
       this.items = kept
-      this.persistSync()
+      this.rebuildIndex()
+      if (!this.persistSync()) {
+        this.items = previousItems
+        this.rebuildIndex()
+        return false
+      }
+      previousItems.filter((item) => !kept.includes(item)).forEach((item) => this.cleanupItemAssets(item))
     }
     return removedAny
   }
@@ -649,10 +692,21 @@ export class ItemStore {
     return join(PATHS.payloadsDir(), `${id}.txt`)
   }
 
-  private writeTextPayload(id: string, text: string): void {
+  private writeTextPayload(id: string, text: string): boolean {
+    const target = this.textPayloadPath(id)
+    const temp = `${target}.tmp`
     try {
-      writeFileSync(this.textPayloadPath(id), text, 'utf8')
-    } catch { /* ignore */ }
+      const contents = safeStorage.isEncryptionAvailable()
+        ? JSON.stringify({ v: 1, encrypted: true, payload: safeStorage.encryptString(text).toString('base64') })
+        : text
+      writeFileSync(temp, contents, 'utf8')
+      renameSync(temp, target)
+      return true
+    } catch (error) {
+      try { rmSync(temp, { force: true }) } catch { /* ignore */ }
+      console.error('[ItemStore] Text payload persistence failed:', error)
+      return false
+    }
   }
 
   private removeTextPayload(id: string): void {
@@ -662,16 +716,35 @@ export class ItemStore {
     } catch { /* ignore */ }
   }
 
+  private readTextPayload(id: string): { text: string; encrypted: boolean } | null {
+    try {
+      const path = this.textPayloadPath(id)
+      if (!existsSync(path)) return null
+      const raw = readFileSync(path, 'utf8')
+      try {
+        const envelope = JSON.parse(raw)
+        if (envelope?.encrypted === true && typeof envelope.payload === 'string') {
+          if (!safeStorage.isEncryptionAvailable()) return null
+          return {
+            text: safeStorage.decryptString(Buffer.from(envelope.payload, 'base64')),
+            encrypted: true
+          }
+        }
+      } catch {
+        /* Legacy plaintext payload. */
+      }
+      return { text: raw, encrypted: false }
+    } catch {
+      return null
+    }
+  }
+
   public getFullText(id: string): string {
     const item = this.items.find((x) => x.id === id)
     if (!item || item.data.kind !== 'text') return ''
     if (item.data.hasFullPayload) {
-      try {
-        const p = this.textPayloadPath(id)
-        if (existsSync(p)) {
-          return readFileSync(p, 'utf8')
-        }
-      } catch { /* ignore */ }
+      const payload = this.readTextPayload(id)
+      if (payload) return payload.text
     }
     return item.data.text
   }
