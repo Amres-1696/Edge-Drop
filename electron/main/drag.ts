@@ -52,7 +52,7 @@ function getResvgConstructor(): ResvgConstructor | null {
     }
   } catch (error: any) {
     cachedResvg = null
-    logDrag(`Resvg unavailable; using transparent drag icon: ${error?.message || error}`)
+    console.warn(`[drag] Resvg unavailable; using fallback icon: ${error?.message || error}`)
   }
 
   return cachedResvg
@@ -293,7 +293,6 @@ function createFileStackDragIcon(paths: string[]): Electron.NativeImage {
   </svg>`
 
   try {
-    logDrag(`createFileStackDragIcon calling Resvg for count=${count}`)
     const Resvg = getResvgConstructor()
     if (!Resvg) return getFileDragIcon()
     const resvg = new Resvg(svg, { fitTo: { mode: 'zoom', value: 3 } })
