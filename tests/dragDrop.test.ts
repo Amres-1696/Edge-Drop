@@ -64,7 +64,7 @@ describe('formatScreenshotFilename', () => {
 describe('stageDragFile dual-channel payload', () => {
   const timestamp = new Date(2026, 7, 15, 22, 30, 45).getTime()
 
-  it('returns both file and files array for single image items with human-readable filename', () => {
+  it('uses the single-file Electron drag path with a human-readable filename', () => {
     const imageData: ItemData = {
       kind: 'image',
       imageId: 'img_test_123',
@@ -77,9 +77,7 @@ describe('stageDragFile dual-channel payload', () => {
     const staged = stageDragFile(imageData, timestamp)
     expect(staged).not.toBeNull()
     expect(staged?.file).toContain('Screenshot 2026-08-15 22.30.45.png')
-    expect(staged?.files).toBeDefined()
-    expect(staged?.files).toHaveLength(1)
-    expect(staged?.files?.[0]).toBe(staged?.file)
+    expect(staged?.files).toBeUndefined()
   })
 
   it('returns indexed filenames and files array for image-collection items', () => {
@@ -125,4 +123,3 @@ describe('stageDragFile dual-channel payload', () => {
     expect(staged?.files?.[0]).toBe(staged?.file)
   })
 })
-

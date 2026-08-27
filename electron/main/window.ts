@@ -283,12 +283,12 @@ let _lastSentY = -9999
  */
 export function setHeartbeatPaused(paused: boolean): void {
   heartbeatPaused = paused
-  if (mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible()) {
-    if (paused) {
-      // Lower only the z-band during the OLE drag so Windows can draw the drag
-      // ghost above the panel without hiding or deactivating the panel itself.
-      mainWindow.setAlwaysOnTop(true, 'normal')
-    } else {
+  // Do not touch the z-band at drag start. Reordering the transparent window
+  // at that exact moment makes the Windows DWM drag preview disappear on some
+  // systems. Pausing the heartbeat is sufficient; restore the normal level
+  // only after the native drag has finished.
+  if (!paused) {
+    if (mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible()) {
       mainWindow.setAlwaysOnTop(true, 'screen-saver')
     }
   }

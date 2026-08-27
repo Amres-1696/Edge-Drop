@@ -175,7 +175,10 @@ export function stageDragFile(data: ItemData, capturedAt?: number): Staged | nul
       } catch {
         return null
       }
-      result = { file: dest, files: [dest] }
+      // Keep the single-file payload on Electron's proven `file` path. Passing
+      // both `file` and a one-entry `files` array suppresses the Windows drag
+      // preview on some builds.
+      result = { file: dest }
       break
     }
     case 'image-collection': {
