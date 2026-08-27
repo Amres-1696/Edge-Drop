@@ -740,7 +740,10 @@ function PreviewContent({
   }
 
   if (item.data.kind === 'files') {
-    const isSingleImage = item.data.paths.length === 1 && (item.data.entries?.[0]?.isImage || getFileKind(item.data.paths[0]).kind === 'image')
+    const firstEntry = item.data.entries?.[0]
+    const isSingleImage = item.data.paths.length === 1
+      && !firstEntry?.isDirectory
+      && (firstEntry?.isImage || getFileKind(item.data.paths[0]).kind === 'image')
     if (isSingleImage) {
       const p = item.data.paths[0]
       const entry = item.data.entries?.[0]
@@ -815,17 +818,20 @@ function PreviewContent({
     }
 
     const isSingleFile = item.data.paths.length === 1
-    const hasImageFiles = item.data.entries?.some((e: any) => e.isImage) || item.data.paths.some((p: string) => getFileKind(p).kind === 'image')
+    const hasImageFiles = item.data.paths.some((p: string, index: number) => {
+      const entry = item.data.entries?.[index]
+      return !entry?.isDirectory && (entry?.isImage || getFileKind(p).kind === 'image')
+    })
     const useSingleColumn = isSingleFile || hasImageFiles
 
     return (
       <div style={{ display: useSingleColumn ? 'flex' : 'grid', flexDirection: useSingleColumn ? 'column' : undefined, gridTemplateColumns: useSingleColumn ? undefined : 'repeat(2, 1fr)', gap: 12 }}>
         {item.data.paths.map((p: string, i: number) => {
           const entry = item.data.entries?.[i]
-          const info = getFileKind(p)
+          const info = getFileKind(p, entry?.isDirectory)
           const fileName = formatImageDisplayName(entry?.name || p, item.capturedAt)
           const isSelected = selectedKeys?.has(p) ?? false
-          const isImg = entry?.isImage || info.kind === 'image'
+          const isImg = !entry?.isDirectory && (entry?.isImage || info.kind === 'image')
 
           if (isImg) {
             const fullResUrl = `edgelocal://file/${encodeURIComponent(p.replace(/\\/g, '/'))}`
@@ -1008,7 +1014,7 @@ function PreviewContent({
                     onToggle={(e) => onToggleSelectKey?.(p, e)}
                   />
                   <div style={{ color: info.color, flexShrink: 0, display: 'flex', alignItems: 'center' }}>
-                    <FileKindIcon path={p} width={18} height={18} />
+                    <FileKindIcon path={p} isDirectory={entry?.isDirectory} width={18} height={18} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
                     <span

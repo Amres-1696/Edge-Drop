@@ -639,8 +639,8 @@ function BundleFluidPreview({
                         />
                       </div>
                     ) : (
-                      <div className="fluid-list-icon" style={{ color: getFileKind(filePath).color }}>
-                        <FileKindIcon path={filePath} width={16} height={16} />
+                      <div className="fluid-list-icon">
+                        <FileKindIcon path={filePath} isDirectory={entry?.isDirectory} width={16} height={16} />
                       </div>
                     )}
                     <div className="fluid-list-text-wrap">
@@ -703,8 +703,8 @@ function BundleFluidPreview({
                           style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }}
                         />
                       ) : (
-                        <div style={{ color: getFileKind(filePath).color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <FileKindIcon path={filePath} width={40} height={40} />
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <FileKindIcon path={filePath} isDirectory={entry?.isDirectory} width={40} height={40} />
                         </div>
                       )}
                     </motion.div>
@@ -767,7 +767,7 @@ function Preview({ item }: { item: ClipboardItemDto }) {
       const rawName = entry?.name ?? basename(first)
       const displayName = formatImageDisplayName(first, item.capturedAt)
       const isInternalHash = /^[a-z0-9]{6,12}-[a-z0-9]{6,12}\.[a-z0-9]+$/i.test(rawName) || first.includes('edge-drop/images') || first.includes('edge-drop\\images') || first.includes('edge-drop/temp') || first.includes('edge-drop\\temp')
-      const isImage = entry?.isImage || getFileKind(first).kind === 'image'
+      const isImage = !entry?.isDirectory && (entry?.isImage || getFileKind(first).kind === 'image')
 
       // Single image file — show its thumbnail.
       if (item.data.paths.length === 1 && isImage) {
@@ -800,11 +800,11 @@ function Preview({ item }: { item: ClipboardItemDto }) {
         )
       }
       // Non-image single file — show a tinted type icon alongside its name.
-      const info = getFileKind(first)
+      const info = getFileKind(first, entry?.isDirectory)
       return (
         <div className="single-file-preview">
           <div className="single-file-icon" style={{ color: info.color }}>
-            <FileKindIcon path={first} width={28} height={28} />
+            <FileKindIcon path={first} isDirectory={entry?.isDirectory} width={28} height={28} />
           </div>
           <div className="single-file-meta">
             <div className="preview single">
@@ -850,7 +850,8 @@ function KindBadge({ item }: { item: ClipboardItemDto }) {
       )
     case 'files': {
       const firstPath = item.data.paths[0]
-      const info = getFileKind(firstPath)
+      const entry = item.data.entries?.[0]
+      const info = getFileKind(firstPath, entry?.isDirectory)
       const count = item.data.paths.length
       const isImage = count === 1 && (item.data.entries?.[0]?.isImage || info.kind === 'image')
       if (isImage) {
@@ -863,7 +864,7 @@ function KindBadge({ item }: { item: ClipboardItemDto }) {
       const label = count > 1 ? `${count} ${t('filters.files').toLowerCase()}` : info.label.toLowerCase()
       return (
         <span className="kind-badge" style={{ color: count > 1 ? undefined : info.color }}>
-          <FileKindIcon path={firstPath} width={11} height={11} />
+          <FileKindIcon path={firstPath} isDirectory={entry?.isDirectory} width={11} height={11} />
           {label}
         </span>
       )

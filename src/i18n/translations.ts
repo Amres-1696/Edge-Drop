@@ -242,6 +242,7 @@ export interface TranslationKeys {
     video: string
     image: string
     file: string
+    folder: string
   }
   emptyState: {
     shelfEmpty: string
@@ -659,7 +660,8 @@ export const en: TranslationKeys = {
     "audio": "Audio",
     "video": "Video",
     "image": "Image",
-    "file": "File"
+    "file": "File",
+    "folder": "Folder"
   },
   "emptyState": {
     "shelfEmpty": "Shelf is empty",
@@ -918,7 +920,8 @@ export const es: TranslationKeys = {
     "audio": "Audio",
     "video": "Vídeo",
     "image": "Imagen",
-    "file": "Archivo"
+    "file": "Archivo",
+    "folder": "Carpeta"
   },
   "emptyState": {
     "shelfEmpty": "El panel está vacío",
@@ -1175,7 +1178,8 @@ export const fr: TranslationKeys = {
     "audio": "Audio",
     "video": "Vidéo",
     "image": "Image",
-    "file": "Fichier"
+    "file": "Fichier",
+    "folder": "Dossier"
   },
   "emptyState": {
     "shelfEmpty": "L'étagère est vide",
@@ -1432,7 +1436,8 @@ export const de: TranslationKeys = {
     "audio": "Audio",
     "video": "Video",
     "image": "Bild",
-    "file": "Datei"
+    "file": "Datei",
+    "folder": "Ordner"
   },
   "emptyState": {
     "shelfEmpty": "Ablage ist leer",
@@ -1689,7 +1694,8 @@ export const it: TranslationKeys = {
     "audio": "Audio",
     "video": "Video",
     "image": "Immagine",
-    "file": "File"
+    "file": "File",
+    "folder": "Cartella"
   },
   "emptyState": {
     "shelfEmpty": "Lo scaffale è vuoto",
@@ -1946,7 +1952,8 @@ export const pt: TranslationKeys = {
     "audio": "Áudio",
     "video": "Vídeo",
     "image": "Imagem",
-    "file": "Arquivo"
+    "file": "Arquivo",
+    "folder": "Pasta"
   },
   "emptyState": {
     "shelfEmpty": "A prateleira está vazia",
@@ -2203,7 +2210,8 @@ export const ru: TranslationKeys = {
     "audio": "Аудио",
     "video": "Видео",
     "image": "Изображение",
-    "file": "Файл"
+    "file": "Файл",
+    "folder": "Папка"
   },
   "emptyState": {
     "shelfEmpty": "Полка пуста",
@@ -2460,7 +2468,8 @@ export const ja: TranslationKeys = {
     "audio": "オーディオ",
     "video": "動画",
     "image": "画像",
-    "file": "ファイル"
+    "file": "ファイル",
+    "folder": "フォルダー"
   },
   "emptyState": {
     "shelfEmpty": "シェルフは空です",
@@ -2717,7 +2726,8 @@ export const ko: TranslationKeys = {
     "audio": "오디오",
     "video": "비디오",
     "image": "이미지",
-    "file": "파일"
+    "file": "파일",
+    "folder": "폴더"
   },
   "emptyState": {
     "shelfEmpty": "선반이 비어 있습니다",
@@ -3059,7 +3069,8 @@ export const zh_CN: TranslationKeys = {
     "audio": "音频",
     "video": "视频",
     "image": "图片",
-    "file": "文件"
+    "file": "文件",
+    "folder": "文件夹"
   },
   "emptyState": {
     "shelfEmpty": "搁架为空",
@@ -3312,7 +3323,8 @@ export const zh_TW: TranslationKeys = {
     "audio": "音訊",
     "video": "影片",
     "image": "圖片",
-    "file": "檔案"
+    "file": "檔案",
+    "folder": "資料夾"
   },
   "emptyState": {
     "shelfEmpty": "層架為空",
@@ -3569,7 +3581,8 @@ export const hi: TranslationKeys = {
     "audio": "ऑडियो",
     "video": "वीडियो",
     "image": "छवि",
-    "file": "फ़ाइल"
+    "file": "फ़ाइल",
+    "folder": "फ़ोल्डर"
   },
   "emptyState": {
     "shelfEmpty": "शेल्फ़ खाली है",
@@ -3826,7 +3839,8 @@ export const ar: TranslationKeys = {
     "audio": "صوت",
     "video": "فيديو",
     "image": "صورة",
-    "file": "ملف"
+    "file": "ملف",
+    "folder": "مجلد"
   },
   "emptyState": {
     "shelfEmpty": "الرف فارغ",
@@ -4084,7 +4098,8 @@ export const bn: TranslationKeys = {
     "audio": "অডিও",
     "video": "ভিডিও",
     "image": "ছবি",
-    "file": "ফাইল"
+    "file": "ফাইল",
+    "folder": "ফোল্ডার"
   },
   "emptyState": {
     "shelfEmpty": "শেলফ খালি",
@@ -4341,7 +4356,8 @@ export const tr: TranslationKeys = {
     "audio": "Ses",
     "video": "Video",
     "image": "Görsel",
-    "file": "Dosya"
+    "file": "Dosya",
+    "folder": "Klasör"
   },
   "emptyState": {
     "shelfEmpty": "Raf boş",
@@ -4598,7 +4614,8 @@ export const vi: TranslationKeys = {
     "audio": "Âm thanh",
     "video": "Video",
     "image": "Hình ảnh",
-    "file": "Tệp"
+    "file": "Tệp",
+    "folder": "Thư mục"
   },
   "emptyState": {
     "shelfEmpty": "Giá trống",
@@ -4855,7 +4872,8 @@ export const pl: TranslationKeys = {
     "audio": "Audio",
     "video": "Wideo",
     "image": "Obraz",
-    "file": "Plik"
+    "file": "Plik",
+    "folder": "Folder"
   },
   "emptyState": {
     "shelfEmpty": "Półka jest pusta",
@@ -5112,7 +5130,8 @@ export const nl: TranslationKeys = {
     "audio": "Audio",
     "video": "Video",
     "image": "Afbeelding",
-    "file": "Bestand"
+    "file": "Bestand",
+    "folder": "Map"
   },
   "emptyState": {
     "shelfEmpty": "Plank is leeg",
@@ -5369,7 +5388,8 @@ export const sv: TranslationKeys = {
     "audio": "Ljud",
     "video": "Video",
     "image": "Bild",
-    "file": "Fil"
+    "file": "Fil",
+    "folder": "Mapp"
   },
   "emptyState": {
     "shelfEmpty": "Hyllan är tom",
@@ -5626,7 +5646,8 @@ export const id: TranslationKeys = {
     "audio": "Audio",
     "video": "Video",
     "image": "Gambar",
-    "file": "Berkas"
+    "file": "Berkas",
+    "folder": "Folder"
   },
   "emptyState": {
     "shelfEmpty": "Rak kosong",
@@ -5883,7 +5904,8 @@ export const uk: TranslationKeys = {
     "audio": "Аудіо",
     "video": "Відео",
     "image": "Зображення",
-    "file": "Файл"
+    "file": "Файл",
+    "folder": "Папка"
   },
   "emptyState": {
     "shelfEmpty": "Полиця порожня",
@@ -6140,7 +6162,8 @@ export const el: TranslationKeys = {
     "audio": "Ήχος",
     "video": "Βίντεο",
     "image": "Εικόνα",
-    "file": "Αρχείο"
+    "file": "Αρχείο",
+    "folder": "Φάκελος"
   },
   "emptyState": {
     "shelfEmpty": "Το ράφι είναι άδειο",
@@ -6397,7 +6420,8 @@ export const cs: TranslationKeys = {
     "audio": "Audio",
     "video": "Video",
     "image": "Obrázek",
-    "file": "Soubor"
+    "file": "Soubor",
+    "folder": "Složka"
   },
   "emptyState": {
     "shelfEmpty": "Police je prázdná",
@@ -6654,7 +6678,8 @@ export const ro: TranslationKeys = {
     "audio": "Audio",
     "video": "Video",
     "image": "Imagine",
-    "file": "Fișier"
+    "file": "Fișier",
+    "folder": "Dosar"
   },
   "emptyState": {
     "shelfEmpty": "Raftul este gol",
@@ -6911,7 +6936,8 @@ export const hu: TranslationKeys = {
     "audio": "Audió",
     "video": "Videó",
     "image": "Kép",
-    "file": "Fájl"
+    "file": "Fájl",
+    "folder": "Mappa"
   },
   "emptyState": {
     "shelfEmpty": "A polc üres",
@@ -7168,7 +7194,8 @@ export const da: TranslationKeys = {
     "audio": "Lyd",
     "video": "Video",
     "image": "Billede",
-    "file": "Fil"
+    "file": "Fil",
+    "folder": "Mappe"
   },
   "emptyState": {
     "shelfEmpty": "Hylde er tom",
@@ -7425,7 +7452,8 @@ export const fi: TranslationKeys = {
     "audio": "Ääni",
     "video": "Video",
     "image": "Kuva",
-    "file": "Tiedosto"
+    "file": "Tiedosto",
+    "folder": "Kansio"
   },
   "emptyState": {
     "shelfEmpty": "Hylly on tyhjä",
@@ -7682,7 +7710,8 @@ export const th: TranslationKeys = {
     "audio": "เสียง",
     "video": "วิดีโอ",
     "image": "รูปภาพ",
-    "file": "ไฟล์"
+    "file": "ไฟล์",
+    "folder": "โฟลเดอร์"
   },
   "emptyState": {
     "shelfEmpty": "ชั้นวางว่าง",
@@ -7939,7 +7968,8 @@ export const he: TranslationKeys = {
     "audio": "אודיו",
     "video": "וידאו",
     "image": "תמונה",
-    "file": "קובץ"
+    "file": "קובץ",
+    "folder": "תיקייה"
   },
   "emptyState": {
     "shelfEmpty": "המדף ריק",
@@ -8196,7 +8226,8 @@ export const no: TranslationKeys = {
     "audio": "Lyd",
     "video": "Video",
     "image": "Bilde",
-    "file": "Fil"
+    "file": "Fil",
+    "folder": "Mappe"
   },
   "emptyState": {
     "shelfEmpty": "Hyllen er tom",

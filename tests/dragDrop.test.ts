@@ -1,5 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+import { Resvg } from '@resvg/resvg-js'
 import { formatScreenshotFilename, stageDragFile } from '../electron/main/drag'
+import { buildFileDragSvg, getFileKindSvgContent } from '../electron/main/fileSvg'
+import type { FileKind } from '../shared/fileType'
 import type { ItemData } from '../shared/types'
 
 // Mock dependencies for staging
@@ -122,4 +125,61 @@ describe('stageDragFile dual-channel payload', () => {
     expect(staged?.files).toBeDefined()
     expect(staged?.files?.[0]).toBe(staged?.file)
   })
+})
+
+describe('buildFileDragSvg — standalone 3D pastel vector drag icons', () => {
+  const allKinds: FileKind[] = [
+    'pdf',
+    'word',
+    'excel',
+    'powerpoint',
+    'archive',
+    'text',
+    'code',
+    'audio',
+    'video',
+    'image',
+    'executable',
+    'folder',
+    'file'
+  ]
+
+  it('generates valid SVG content for all 13 file categories without bounding boxes', () => {
+    for (const kind of allKinds) {
+      const content = getFileKindSvgContent(kind)
+      expect(content).toBeTruthy()
+      // Ensure no black container box
+      expect(content).not.toContain('fill="#000000"')
+      expect(content).not.toContain('stroke="rgba(255,255,255,0.18)"')
+    }
+  })
+
+  it('builds a clean single-file drag icon SVG without glass card or background', () => {
+    const svg = buildFileDragSvg(['pdf'], 1)
+    expect(svg).toContain('<svg')
+    expect(svg).toContain('viewBox="0 0 512 512"')
+    expect(svg).toContain('PDF')
+    expect(svg).not.toContain('fill="#000000"')
+    expect(svg).not.toContain('<rect x="16" y="8" width="64" height="72"')
+  })
+
+  it('builds a clean multi-file stack SVG with count badge', () => {
+    const svg = buildFileDragSvg(['pdf', 'excel', 'image'], 3)
+    expect(svg).toContain('<svg')
+    expect(svg).toContain('+3')
+    expect(svg).toContain('stack-0')
+    expect(svg).toContain('stack-1')
+    expect(svg).toContain('stack-2')
+  })
+
+  it('renders every category through the native drag-thumbnail renderer', () => {
+    for (const kind of allKinds) {
+      const png = new Resvg(buildFileDragSvg([kind], 1), {
+        fitTo: { mode: 'zoom', value: 0.25 }
+      }).render().asPng()
+
+      expect(Array.from(png.subarray(0, 8))).toEqual([137, 80, 78, 71, 13, 10, 26, 10])
+      expect(png.byteLength).toBeGreaterThan(500)
+    }
+  }, 15_000)
 })

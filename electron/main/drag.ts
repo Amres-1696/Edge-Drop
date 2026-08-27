@@ -14,13 +14,14 @@
  * The temp files are cleaned up on the next app start (see cleanTemp).
  */
 import { app, nativeImage, type WebContents } from 'electron'
-import { copyFileSync, writeFileSync, existsSync } from 'node:fs'
+import { copyFileSync, writeFileSync, existsSync, statSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { join, extname } from 'node:path'
 import { PATHS } from '../store/paths'
 import type { DragRequest, ItemData } from '../../shared/types'
 import { getStore } from './state'
 import { getFileKind } from '../../shared/fileType'
+import { buildFileDragSvg } from './fileSvg'
 
 /** Build a readable Windows-safe filename for captured images. */
 export function formatScreenshotFilename(capturedAt?: number, ext = 'png', indexSuffix?: number): string {
@@ -315,54 +316,30 @@ function getGlyphSvg(kind: string, color: string): string {
   }
 }
 
-/** Generate a custom stacked card PNG icon representing file kinds with count badge. */
+/** Generate the pastel category icon used by the Windows drag preview. */
 function createFileStackDragIcon(paths: string[]): Electron.NativeImage {
   const count = paths.length
   if (count === 0) return getFileDragIcon()
 
-  const kinds = paths.slice(0, 3).map((p) => getFileKind(p))
-  const cacheKey = `stack|solid-black|${kinds.map((k) => k.kind).join('-')}|${count}`
+  const kinds = paths.slice(0, 3).map((path) => {
+    let isDirectory = false
+    try { isDirectory = statSync(path).isDirectory() } catch { /* missing path */ }
+    return getFileKind(path, isDirectory).kind
+  })
+  const cacheKey = `stack|pastel-svg|${kinds.join('-')}|${count}`
   const cached = iconCache.get(cacheKey)
   if (cached && !cached.isEmpty()) {
     return cached
   }
 
-  const defsSvg = ''
-
-  let cardsSvg = ''
-  for (let i = kinds.length - 1; i >= 0; i--) {
-    const info = kinds[i]
-    const x = 16 - i * 4
-    const y = 8 + i * 4
-    cardsSvg += `
-      <rect x="${x}" y="${y}" width="64" height="72" rx="10" fill="#000000" stroke="rgba(255,255,255,0.18)" stroke-width="1.5" />
-    `
-    if (i === 0) {
-      cardsSvg += `
-        <svg x="${x + 12}" y="${y + 16}" width="40" height="40" viewBox="0 0 24 24">
-          ${getGlyphSvg(info.kind, info.color)}
-        </svg>
-      `
-    }
-  }
-
-  const badgeSvg = count > 1 ? `
-    <circle cx="18" cy="18" r="14" fill="#FF3B30" stroke="#FFFFFF" stroke-width="2" />
-    <text x="18" y="23" font-family="sans-serif" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="middle">+${count}</text>
-  ` : ''
-
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
-    ${defsSvg}
-    ${cardsSvg}
-    ${badgeSvg}
-  </svg>`
+  const svg = buildFileDragSvg(kinds, count)
 
   try {
     const Resvg = getResvgConstructor()
     if (!Resvg) return getFileDragIcon()
-    const resvg = new Resvg(svg, { fitTo: { mode: 'zoom', value: 3 } })
+    const resvg = new Resvg(svg, { fitTo: { mode: 'zoom', value: 2 } })
     const pngData = resvg.render().asPng()
-    const img = nativeImage.createFromBuffer(pngData, { scaleFactor: 3 })
+    const img = nativeImage.createFromBuffer(pngData, { scaleFactor: 2 })
     if (!img.isEmpty()) {
       iconCache.set(cacheKey, img)
       if (iconCache.size > ICON_CACHE_MAX) {
