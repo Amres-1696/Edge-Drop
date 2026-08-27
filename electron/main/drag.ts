@@ -22,6 +22,20 @@ import type { DragRequest, ItemData } from '../../shared/types'
 import { getStore } from './state'
 import { getFileKind } from '../../shared/fileType'
 
+/** Build a readable Windows-safe filename for captured images. */
+export function formatScreenshotFilename(capturedAt?: number, ext = 'png', indexSuffix?: number): string {
+  const d = capturedAt ? new Date(capturedAt) : new Date()
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const hours = String(d.getHours()).padStart(2, '0')
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+  const seconds = String(d.getSeconds()).padStart(2, '0')
+  const cleanExt = ext.replace(/^\./, '') || 'png'
+  const suffix = typeof indexSuffix === 'number' && indexSuffix > 1 ? ` (${indexSuffix})` : ''
+  return `Screenshot ${year}-${month}-${day} ${hours}.${minutes}.${seconds}${suffix}.${cleanExt}`
+}
+
 interface ResvgInstance {
   render(): { asPng(): Buffer }
 }
@@ -64,10 +78,10 @@ function getResvgConstructor(): ResvgConstructor | null {
  * If `paths` is provided (dragging one file out of an expanded bundle), synthesize
  * a singleton `files` item. Otherwise look up the full item by id.
  */
-export function resolveDragData(req: DragRequest): ItemData | null {
+export function resolveDragData(req: DragRequest): { data: ItemData; capturedAt?: number } | null {
   if (req.paths && req.paths.length > 0) {
     prefetchFileIcons(req.paths)
-    return { kind: 'files', paths: req.paths }
+    return { data: { kind: 'files', paths: req.paths } }
   }
   const item = getStore().get(req.id)
   if (!item) return null
@@ -78,13 +92,13 @@ export function resolveDragData(req: DragRequest): ItemData | null {
   
   if (req.imageId && item.data.kind === 'image-collection') {
     const img = item.data.images.find((i) => i.imageId === req.imageId)
-    if (img) return { kind: 'image', ...img }
+    if (img) return { data: { kind: 'image', ...img }, capturedAt: item.capturedAt }
   }
-  return item.data
+  return { data: item.data, capturedAt: item.capturedAt }
 }
 
-export function startDragOut(sender: WebContents, data: ItemData): void {
-  const staged = stageDragFile(data)
+export function startDragOut(sender: WebContents, data: ItemData, capturedAt?: number): void {
+  const staged = stageDragFile(data, capturedAt)
   if (!staged) return
 
   const icon = dragIcon(data)
@@ -104,60 +118,108 @@ interface Staged {
   files?: string[]
 }
 
+const stagedCache = new Map<string, Staged>()
+const STAGED_CACHE_MAX = 64
+
+function getStagedCacheKey(data: ItemData, capturedAt?: number): string {
+  switch (data.kind) {
+    case 'files': return `files:${data.paths.join('|')}`
+    case 'image': return `img:${data.imageId}:${data.ext || 'png'}:${capturedAt || 0}`
+    case 'image-collection': return `imgs:${data.images.map((image) => image.imageId).join('|')}:${capturedAt || 0}`
+    case 'text': return `text:${data.text.length}:${data.text.slice(0, 100)}`
+  }
+}
+
+/** Warm the staged file and drag icon before the pointer starts moving. */
+export function prestageDrag(req: DragRequest): void {
+  try {
+    const resolved = resolveDragData(req)
+    if (!resolved) return
+    stageDragFile(resolved.data, resolved.capturedAt)
+    dragIcon(resolved.data)
+  } catch { /* best effort */ }
+}
+
+function availableScreenshotPath(temp: string, capturedAt: number | undefined, ext: string, firstIndex = 1): string {
+  let index = firstIndex
+  let dest = join(temp, formatScreenshotFilename(capturedAt, ext, index))
+  while (existsSync(dest)) {
+    index += 1
+    dest = join(temp, formatScreenshotFilename(capturedAt, ext, index))
+  }
+  return dest
+}
+
 /** Resolve the item to a concrete file path to hand to the OS. */
-function stageDragFile(data: ItemData): Staged | null {
+export function stageDragFile(data: ItemData, capturedAt?: number): Staged | null {
+  const cacheKey = getStagedCacheKey(data, capturedAt)
+  const cached = stagedCache.get(cacheKey)
+  if (cached && existsSync(cached.file)) return cached
+
   const temp = PATHS.tempDir()
+  let result: Staged | null = null
   switch (data.kind) {
     case 'files': {
       const real = data.paths.filter((p) => existsSync(p))
       if (!real.length) return null
-      return { file: real[0], files: real }
+      result = { file: real[0], files: real }
+      break
     }
     case 'image': {
       const src = getStore().getImagePath(data.imageId, data.ext)
       if (!existsSync(src)) return null
       const ext = extname(src) || '.png'
-      const dest = join(temp, `${data.imageId}${ext}`)
+      const dest = availableScreenshotPath(temp, capturedAt, ext)
       try {
-        if (!existsSync(dest)) {
-          copyFileSync(src, dest)
-        }
+        copyFileSync(src, dest)
       } catch {
         return null
       }
-      return { file: dest }
+      result = { file: dest, files: [dest] }
+      break
     }
     case 'image-collection': {
       const paths: string[] = []
+      let index = 1
       for (const img of data.images) {
         const src = getStore().getImagePath(img.imageId, img.ext)
         if (existsSync(src)) {
           const ext = extname(src) || '.png'
-          const dest = join(temp, `${img.imageId}${ext}`)
+          const dest = availableScreenshotPath(temp, capturedAt, ext, index)
           try {
-            if (!existsSync(dest)) {
-              copyFileSync(src, dest)
-            }
+            copyFileSync(src, dest)
             paths.push(dest)
+            index += 1
           } catch {
             // skip failed copies
           }
         }
       }
       if (!paths.length) return null
-      return { file: paths[0], files: paths }
+      result = { file: paths[0], files: paths }
+      break
     }
     case 'text': {
       const id = `${Date.now().toString(36)}`
-      const dest = join(temp, `${id}.txt`)
+      const dest = join(temp, `Snippet_${id}.txt`)
       try {
         writeFileSync(dest, data.text, 'utf8')
       } catch {
         return null
       }
-      return { file: dest }
+      result = { file: dest, files: [dest] }
+      break
     }
   }
+
+  if (result) {
+    stagedCache.set(cacheKey, result)
+    if (stagedCache.size > STAGED_CACHE_MAX) {
+      const first = stagedCache.keys().next().value
+      if (first) stagedCache.delete(first)
+    }
+  }
+  return result
 }
 
 /* ------------------------------------------------------------------ */

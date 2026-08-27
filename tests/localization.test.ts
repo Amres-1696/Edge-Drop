@@ -27,7 +27,7 @@ describe('Chinese localization', () => {
   })
 
   it('ships a complete Chinese changelog with the current version first', () => {
-    expect(ZH_CN_CHANGELOG[0]).toMatchObject({ version: 'v0.2.7', isLatest: true })
+    expect(ZH_CN_CHANGELOG[0]).toMatchObject({ version: 'v0.2.9', isLatest: true })
     expect(ZH_CN_CHANGELOG.filter((release) => release.isLatest)).toHaveLength(1)
 
     for (const release of ZH_CN_CHANGELOG) {

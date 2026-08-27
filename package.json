@@ -1,6 +1,6 @@
 {
   "name": "edge-drop",
-  "version": "0.2.7",
+  "version": "0.2.9",
   "description": "Edge-Drop：常驻屏幕边缘、悬停即可展开的桌面剪贴板管理器。",
   "author": "Edge-Drop",
   "license": "Apache-2.0",

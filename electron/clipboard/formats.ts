@@ -215,6 +215,109 @@ export function isClipboardExcluded(): boolean {
 }
 
 /**
+ * Helper to determine whether a clipboard payload containing an image and text
+ * is intended as an image (e.g. Snipping Tool window capture, browser "Copy Image",
+ * or screenshot tool) or as text (e.g. Excel/Google Sheets tabular data, rich text,
+ * multiline documents, code).
+ */
+export function isScreenshotOrImageIntent(hasImage: boolean, rawText: string, rawHtml: string): boolean {
+  if (!hasImage) return false
+  if (!rawText) return true
+
+  // Single bare image tag from browser "Copy Image" (e.g. <img src="...">)
+  if (/^<img\b[^>]*>$/i.test(rawText) || /^<img\b[^>]*\/?>$/i.test(rawHtml)) return true
+
+  // Single URL without any other text (browser "Copy Image" often sets image URL as text)
+  if (URL_RE.test(rawText) && rawText.length < 500) return true
+
+  // Spreadsheets (Excel, Google Sheets, Calc) & tabular text:
+  // 1. Tab characters (\t) indicate column separators
+  if (rawText.includes('\t')) return false
+
+  // 2. Multiline text (multiple rows) indicates real tabular data, document paragraphs, or code
+  const lines = rawText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
+  if (lines.length > 1) return false
+
+  // 3. Spreadsheet HTML markup tags & rich office metadata
+  const lowerHtml = rawHtml.toLowerCase()
+  if (
+    lowerHtml.includes('<table') ||
+    lowerHtml.includes('<tr') ||
+    lowerHtml.includes('<td') ||
+    lowerHtml.includes('<th') ||
+    lowerHtml.includes('google-sheets') ||
+    lowerHtml.includes('data-sheets') ||
+    lowerHtml.includes('urn:schemas-microsoft-com:office:spreadsheet') ||
+    lowerHtml.includes('excel') ||
+    lowerHtml.includes('<html') ||
+    lowerHtml.includes('<body') ||
+    lowerHtml.includes('<p') ||
+    lowerHtml.includes('<pre') ||
+    lowerHtml.includes('<code') ||
+    lowerHtml.includes('<ul') ||
+    lowerHtml.includes('<ol') ||
+    lowerHtml.includes('<li')
+  ) {
+    return false
+  }
+
+  // 4. If text is long (> 200 chars), it is a text document, not a window title
+  if (rawText.length > 200) return false
+
+  // Snipping tool window mode: single-line window title text <= 200 chars without tabs or HTML structure
+  return true
+}
+
+/**
+ * Format text and HTML data for clipboard write back.
+ *
+ * 1. Normalizes line breaks to Windows CRLF (\r\n). On Windows, Microsoft Excel and
+ *    other spreadsheet applications use \r\n to separate table rows. If bare \n (LF)
+ *    is used, Excel interprets the newline as an in-cell line feed (Alt+Enter) and
+ *    pastes the entire multiline table into a SINGLE cell!
+ *
+ * 2. If the text contains tab characters (\t), it represents spreadsheet tabular cells.
+ *    If no valid <table> HTML is provided (or if only non-table wrappers like
+ *    <google-sheets-html-origin> <div> exist), we synthesize a standard HTML <table>
+ *    so that spreadsheet apps (Excel, Google Sheets, Calc) and office apps (Word, Outlook)
+ *    distribute rows and columns across the cell grid rather than dumping text into one cell.
+ */
+export function formatTabularDataForClipboard(text: string, rawHtml?: string): { text: string; html?: string } {
+  if (!text) return { text: '', html: rawHtml }
+
+  // Normalize all line breaks to CRLF (\r\n) for Windows
+  const crlfText = text.replace(/\r?\n/g, '\r\n')
+
+  // Check if content has tab characters indicating column separators
+  if (text.includes('\t')) {
+    // If rawHtml already contains a standard table tag, use it
+    if (rawHtml && /<table\b[^>]*>/i.test(rawHtml)) {
+      return { text: crlfText, html: rawHtml }
+    }
+
+    // Otherwise, generate a clean, standard HTML table from the TSV content
+    const rows = text.split(/\r?\n/)
+    const htmlRows = rows.map((row) => {
+      const cells = row.split('\t').map((cell) => {
+        const escaped = cell
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;')
+        return `<td>${escaped}</td>`
+      }).join('')
+      return `<tr>${cells}</tr>`
+    }).join('')
+
+    const htmlTable = `<table border="0" cellpadding="0" cellspacing="0"><tbody>${htmlRows}</tbody></table>`
+    return { text: crlfText, html: htmlTable }
+  }
+
+  return { text: crlfText, html: rawHtml }
+}
+
+/**
  * Async snapshot of the current clipboard into a single ItemData, or null.
  *
  * Order matters: a file copy should win over its text fallback, an image wins
@@ -228,51 +331,19 @@ export async function readClipboard(): Promise<ItemData | null> {
     return null
   }
 
-  const formats = clipboard.availableFormats()
-
   // Files first — a file copy also places text on the clipboard, which we ignore.
   const files = await readFileListAsync()
   if (files && files.length) return { kind: 'files', paths: files }
 
-  // Text vs Image priority heuristic based on available formats.
-  // When copying from Office apps, both rich text and images are placed on the clipboard.
-  // When copying an image from a browser, both image and a small text fallback are placed.
-  const hasImage = formats.includes('image/png') || formats.includes('image/jpeg')
-
-  const rawText = clipboard.readText().trim()
-
-  // Determine primary intent based on formatting metadata
-  let isTextIntent = false
-  if (rawText) {
-    if (!hasImage) {
-      // If there is no image format at all, any text is definitely text.
-      isTextIntent = true
-    } else {
-      // Both text and image exist on the clipboard (common in Office, Chrome, IDEs).
-      // If the text is just a URL or a bare <img> tag, it's a browser fallback for a copied image.
-      const isUrl = URL_RE.test(rawText) && rawText.length < 500
-      const isImgTag = /^<img\b[^>]*>$/i.test(rawText)
-      if (!isUrl && !isImgTag) {
-        // Any other text (short words, code snippets, paragraphs) is genuinely copied text!
-        isTextIntent = true
-      }
-    }
-  }
-
-  if (isTextIntent) {
-    let html: string | undefined
-    const rawHtml = clipboard.readHTML().trim()
-    if (rawHtml && rawHtml !== rawText && rawHtml.length <= MAX_STORED_HTML_CHARS) html = rawHtml
-
-    const isUrl = URL_RE.test(rawText)
-    const isColor = COLOR_HEX_RE.test(rawText)
-
-    return { kind: 'text', text: rawText, html, isUrl, isColor }
-  }
-
-  // If it wasn't determined to be text intent, but we have an image, prioritize the image.
   const img = clipboard.readImage()
-  if (!img.isEmpty()) {
+  const hasImage = !img.isEmpty()
+  const rawText = clipboard.readText()
+  const rawHtml = clipboard.readHTML()
+  const trimmedText = rawText.trim()
+  const trimmedHtml = rawHtml.trim()
+
+  // Snipping Tool (Window mode, Freeform, Rectangular) or browser images:
+  if (isScreenshotOrImageIntent(hasImage, trimmedText, trimmedHtml)) {
     const size = img.getSize()
     return {
       kind: 'image',
@@ -283,16 +354,30 @@ export async function readClipboard(): Promise<ItemData | null> {
     }
   }
 
-  // Fallback to text if it's the only thing left
-  if (rawText) {
+  // Text intent (Notepad, Word, VS Code text copy, Excel/Google Sheets tabular copy, rich HTML copy)
+  if (trimmedText) {
     let html: string | undefined
-    const rawHtml = clipboard.readHTML().trim()
-    if (rawHtml && rawHtml !== rawText && rawHtml.length <= MAX_STORED_HTML_CHARS) html = rawHtml
+    if (trimmedHtml && trimmedHtml !== trimmedText && rawHtml.length <= MAX_STORED_HTML_CHARS) html = rawHtml
 
-    const isUrl = URL_RE.test(rawText)
-    const isColor = COLOR_HEX_RE.test(rawText)
+    // When text contains tabs (\t), preserve the exact TSV representation (including leading/trailing tabs for empty columns)
+    const textToStore = rawText.includes('\t') ? rawText.replace(/\r?\n+$/, '') : trimmedText
 
-    return { kind: 'text', text: rawText, html, isUrl, isColor }
+    const isUrl = URL_RE.test(trimmedText)
+    const isColor = COLOR_HEX_RE.test(trimmedText)
+
+    return { kind: 'text', text: textToStore, html, isUrl, isColor }
+  }
+
+  // Fallback to image if no text
+  if (hasImage) {
+    const size = img.getSize()
+    return {
+      kind: 'image',
+      imageId: '',
+      width: size.width,
+      height: size.height,
+      bytes: 0
+    }
   }
 
   return null
@@ -304,8 +389,8 @@ export async function readClipboard(): Promise<ItemData | null> {
  *
  * Strategy:
  *  - Files   → the list of paths (totally stable, always unique per copy)
- *  - Text    → the text content itself
  *  - Images  → dimensions + a sampled FNV-1a hash of raw pixel bytes
+ *  - Text    → the text content itself
  *
  * For images we use `nativeImage.toBitmap()` (raw BGRA, no codec) and walk
  * ~400 evenly-spaced bytes through it.  This is:
@@ -313,11 +398,6 @@ export async function readClipboard(): Promise<ItemData | null> {
  *   - Stable: same clipboard content → same pixels → same hash on every poll
  *   - Unique: different images with the same resolution produce different pixel
  *             values in practice, so collisions are astronomically unlikely
- *
- * The old approach used toPNG().length which was (a) expensive — re-encodes the
- * whole image on every poll tick — and (b) non-unique: two different 1920×1080
- * screenshots of similar complexity can produce the same byte count, causing the
- * second to be silently ignored as "no change".
  */
 export function clipboardSignature(): string {
   const seq = getClipboardSequenceNumber()
@@ -334,20 +414,16 @@ export function clipboardSignature(): string {
     return `${seqPrefix}files:${files.join('\n')}`
   }
 
-  // Text — the content itself is the fingerprint.
-  const text = clipboard.readText().trim()
-  if (text) {
-    return `${seqPrefix}text:${text}`
-  }
-
-  // Images: sample raw pixel bytes through FNV-1a for a fast, stable fingerprint.
   const img = clipboard.readImage()
-  if (!img.isEmpty()) {
+  const hasImage = !img.isEmpty()
+  const rawText = clipboard.readText().trim()
+  const rawHtml = clipboard.readHTML().trim()
+
+  if (isScreenshotOrImageIntent(hasImage, rawText, rawHtml)) {
     const size = img.getSize()
     const bitmap = img.toBitmap()  // raw BGRA — no encoding, just a memory copy
 
     // FNV-1a over ~400 evenly-spaced bytes.
-    // Step ensures we sample the full image regardless of resolution.
     const step = Math.max(1, Math.floor(bitmap.length / 400))
     let hash = 0x811c9dc5 // FNV offset basis
     for (let i = 0; i < bitmap.length; i += step) {
@@ -355,6 +431,24 @@ export function clipboardSignature(): string {
       hash = Math.imul(hash, 0x01000193) >>> 0 // FNV prime, keep as uint32
     }
 
+    return `${seqPrefix}image:${size.width}x${size.height}:${hash.toString(36)}`
+  }
+
+  // Text — the content itself is the fingerprint.
+  if (rawText) {
+    return `${seqPrefix}text:${rawText}`
+  }
+
+  // Fallback to image if no text
+  if (hasImage) {
+    const size = img.getSize()
+    const bitmap = img.toBitmap()
+    const step = Math.max(1, Math.floor(bitmap.length / 400))
+    let hash = 0x811c9dc5
+    for (let i = 0; i < bitmap.length; i += step) {
+      hash ^= bitmap[i]
+      hash = Math.imul(hash, 0x01000193) >>> 0
+    }
     return `${seqPrefix}image:${size.width}x${size.height}:${hash.toString(36)}`
   }
 

@@ -17,8 +17,8 @@ import { sendToMainWindow, setInteractive, setTextInputActive, setHeartbeatPause
 import { registerGlobalHotkey } from './index'
 import { getOnboardingWindow } from './onboardingWindow'
 import { rebuildTrayMenu } from './tray'
-import { startDragOut, resolveDragData } from './drag'
-import { clipboardSignature } from '../clipboard/formats'
+import { startDragOut, resolveDragData, prestageDrag } from './drag'
+import { clipboardSignature, formatTabularDataForClipboard } from '../clipboard/formats'
 import type { ItemData, MergeResult } from '../../shared/types'
 import { quitAndInstallUpdate, checkForUpdatesManual, startUpdateDownload, syncAutoUpdaterState } from './updater'
 import { formatNoteClipboardText } from '../../shared/noteClipboard'
@@ -32,7 +32,7 @@ import { formatNoteClipboardText } from '../../shared/noteClipboard'
  * wipe their current clipboard contents.
  */
 function clipboardMatchesItem(data: ItemData): boolean {
-  const sig = clipboardSignature()
+  const sig = clipboardSignature().replace(/^seq:\d+:/, '')
   if (data.kind === 'text') return sig === `text:${data.text}`
   if (data.kind === 'files') return sig === `files:${data.paths.join('\n')}`
   if (data.kind === 'image') {
@@ -110,37 +110,32 @@ async function writeFileListToClipboard(rawPaths: string[]): Promise<void> {
   }
 }
 
-async function writeImageToClipboard(imagePath: string | null, previewDataUrl: string): Promise<void> {
-  if (process.platform === 'win32' && imagePath && isValidFilePath(imagePath) && existsSync(imagePath)) {
+export async function writeImageToClipboard(imagePath: string | null, previewDataUrl?: string): Promise<void> {
+  // Electron can publish the bitmap directly from disk in under a millisecond.
+  // The previous PowerShell DataObject round-trip made browser image copies
+  // noticeably stall and could race the watcher while the clipboard was empty.
+  if (imagePath && isValidFilePath(imagePath) && existsSync(imagePath)) {
     try {
-      const b64Path = Buffer.from(imagePath, 'utf8').toString('base64')
-      const script = [
-        'Add-Type -AssemblyName System.Windows.Forms',
-        'Add-Type -AssemblyName System.Drawing',
-        `$p=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('${b64Path}'))`,
-        '$bmp=[Drawing.Image]::FromFile($p)',
-        '$d=New-Object Windows.Forms.DataObject',
-        '$d.SetImage($bmp)',
-        '$c=New-Object System.Collections.Specialized.StringCollection',
-        '$c.Add($p)|Out-Null',
-        '$d.SetFileDropList($c)',
-        '[Windows.Forms.Clipboard]::SetDataObject($d,$true)',
-        '$bmp.Dispose()'
-      ].join(';')
-      await psHost.run(script, 3000)
-      return
+      const img = nativeImage.createFromPath(imagePath)
+      if (!img.isEmpty()) {
+        clipboard.clear()
+        clipboard.writeImage(img)
+        return
+      }
     } catch (err) {
-      console.error('[ipc] writeImageToClipboard PowerShell failed, using bitmap fallback:', err)
+      console.error('[ipc] writeImageToClipboard nativeImage.createFromPath failed:', err)
     }
   }
-  // Fallback: write bitmap only via Electron (no file reference)
-  try {
-    const img = nativeImage.createFromDataURL(previewDataUrl)
-    if (!img.isEmpty()) {
-      clipboard.clear()
-      clipboard.writeImage(img)
-    }
-  } catch { /* ignore */ }
+
+  if (previewDataUrl) {
+    try {
+      const img = nativeImage.createFromDataURL(previewDataUrl)
+      if (!img.isEmpty()) {
+        clipboard.clear()
+        clipboard.writeImage(img)
+      }
+    } catch { /* ignore */ }
+  }
 }
 
 /**
@@ -436,7 +431,7 @@ export function registerIpc(): void {
     } else if (dto.data.kind === 'image-collection' && req.imageId) {
       const img = dto.data.images.find((i) => i.imageId === req.imageId)
       if (img) {
-        // Single image from a collection: write full bitmap + file reference atomically.
+        // Single image from a collection: publish the full bitmap directly.
         const src = getStore().getImagePath(img.imageId, img.ext)
         const preview = img.preview ?? ''
         await writeImageToClipboard(src && existsSync(src) ? src : null, preview)
@@ -734,7 +729,7 @@ export function registerSendListeners(): void {
       console.log('[IPC] start-drag: no data resolved')
       return
     }
-    console.log('[IPC] start-drag: kind=', data.kind)
+    console.log('[IPC] start-drag: kind=', data.data.kind)
 
     // Pause the always-on-top heartbeat for the duration of the drag.
     // The heartbeat fires SetWindowPos(HWND_TOPMOST) every 500 ms, which
@@ -742,7 +737,7 @@ export function registerSendListeners(): void {
     // dragged item appear to vanish ~0.5 s into any drag gesture.
     setHeartbeatPaused(true)
 
-    startDragOut(sender, data)
+    startDragOut(sender, data.data, data.capturedAt)
     console.log('[IPC] start-drag returned, sending drag-end')
     sender.send('item:drag-end')
 
@@ -764,15 +759,19 @@ export function registerSendListeners(): void {
       }
     }
   })
+
+  on('item:prestage-drag', (_sender, req) => {
+    prestageDrag(req)
+  })
 }
 
 /** Write any item payload back onto the system clipboard. */
 export async function writeItemToClipboard(data: ItemData): Promise<void> {
   switch (data.kind) {
     case 'text': {
-      const textToUse = data.text
+      const formatted = formatTabularDataForClipboard(data.text, data.html)
       clipboard.clear()
-      clipboard.write({ text: textToUse, html: data.html })
+      clipboard.write({ text: formatted.text, html: formatted.html })
       break
     }
 
@@ -781,9 +780,8 @@ export async function writeItemToClipboard(data: ItemData): Promise<void> {
         (d) => d.data.kind === 'image' && d.data.imageId === data.imageId
       )
       if (dto && dto.data.kind === 'image') {
-        // Write bitmap AND file reference atomically via PowerShell DataObject.
-        // This lets the user paste into Slack/Word (reads bitmap) AND into
-        // Explorer (reads CF_HDROP file reference) from the same clipboard write.
+        // Publish the full bitmap directly so browser and office paste targets
+        // receive it immediately without a PowerShell round-trip.
         const src = getStore().getImagePath(dto.data.imageId, dto.data.ext)
         await writeImageToClipboard(src && existsSync(src) ? src : null, dto.data.preview)
       }
@@ -808,7 +806,7 @@ export async function writeItemToClipboard(data: ItemData): Promise<void> {
           const firstImg = dto.data.images[0]
           const firstPreview = firstImg?.preview ?? ''
           if (paths.length === 1) {
-            // Single resolved path: use full atomic image+file write
+            // A single image is copied as a bitmap for broad paste compatibility.
             await writeImageToClipboard(paths[0], firstPreview)
           } else {
             // Multiple files: write CF_HDROP for all + bitmap for first

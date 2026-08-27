@@ -19,9 +19,22 @@ export interface ChangelogRelease {
  */
 export const ZH_CN_CHANGELOG: ChangelogRelease[] = [
   {
+    version: 'v0.2.9',
+    date: '2026年8月27日',
+    isLatest: true,
+    summary: '选择性接入上游 v0.2.9 的剪贴板、拖拽、SVG 与历史记录修复，同时保留中文版笔记和待办工作区。',
+    highlights: [
+      { title: '剪贴板识别更准确', description: '正确识别截图工具的窗口截图，并将 Excel、表格等内容保留为可编辑文本。' },
+      { title: '复制图片更快', description: '图片直接通过 Electron 写入剪贴板，移除耗时的 PowerShell 中转。' },
+      { title: '表格粘贴更可靠', description: '保留制表符、空单元格、行结构和 HTML 表格，重新粘贴到 Excel 或在线表格时不再挤进一个单元格。' },
+      { title: '拖拽与删除更流畅', description: '提前准备拖拽文件，保持 Windows 拖拽缩略图可见，并修复删除卡片后列表残留空隙。' },
+      { title: '按当前筛选清理', description: '“全部清理”会遵循当前分类和搜索条件，置顶内容仍然不会被批量删除。' }
+    ]
+  },
+  {
     version: 'v0.2.7',
     date: '2026年8月20日',
-    isLatest: true,
+    isLatest: false,
     summary: '选择性接入上游 v0.2.7 的稳定性与性能改进，并保留中文版笔记、待办和清晰字体体验。',
     highlights: [
       {

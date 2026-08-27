@@ -64,7 +64,6 @@ export function ItemList() {
   const topRecentTime = recent[0]?.capturedAt
   const topPinnedTime = pinned[0]?.capturedAt
 
-  const prevTopRecentId = useRef(topRecentId)
   const prevTopRecentTime = useRef(topRecentTime)
   const prevTopPinnedTime = useRef(topPinnedTime)
 
@@ -108,20 +107,20 @@ export function ItemList() {
   }, [open, topRecentId, topRecentTime, topPinnedTime])
 
   useLayoutEffect(() => {
-    // If recent or pinned items changed/updated while panel is open, instantly jump to top without animation
+    // Only a genuinely new or freshly updated item should jump to the top.
+    // Deleting an item changes the top id too, but resetting scroll during the
+    // exit layout animation leaves a visible gap in the list.
     if (open) {
-      const idChanged = topRecentId !== prevTopRecentId.current
-      const recentTimeChanged = topRecentTime !== prevTopRecentTime.current
-      const pinnedTimeChanged = topPinnedTime !== prevTopPinnedTime.current
+      const isNewRecent = !!topRecentTime && (!prevTopRecentTime.current || topRecentTime > prevTopRecentTime.current)
+      const isNewPinned = !!topPinnedTime && (!prevTopPinnedTime.current || topPinnedTime > prevTopPinnedTime.current)
 
-      if (idChanged || recentTimeChanged || pinnedTimeChanged) {
+      if (isNewRecent || isNewPinned) {
         if (listRef.current) {
           listRef.current.scrollTop = 0
         }
       }
     }
 
-    prevTopRecentId.current = topRecentId
     prevTopRecentTime.current = topRecentTime
     prevTopPinnedTime.current = topPinnedTime
   }, [open, topRecentId, topRecentTime, topPinnedTime])

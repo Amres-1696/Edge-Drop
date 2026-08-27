@@ -18,9 +18,22 @@ interface ChangelogRelease {
 
 const CHANGELOG_DATA: ChangelogRelease[] = [
   {
+    version: 'v0.2.9',
+    date: 'Aug 27, 2026',
+    isLatest: true,
+    summary: 'Selectively integrated upstream v0.2.9 clipboard, drag, SVG and history fixes while preserving the Chinese notes and to-dos workspace.',
+    highlights: [
+      { title: 'More Accurate Clipboard Capture', description: 'Recognizes Snipping Tool window captures and keeps spreadsheet selections as editable tabular text.' },
+      { title: 'Faster Image Copy', description: 'Writes cached images through Electron directly instead of waiting for a PowerShell round-trip.' },
+      { title: 'Reliable Spreadsheet Paste', description: 'Preserves TSV rows, empty cells and HTML tables when copying entries back into Excel or Sheets.' },
+      { title: 'Smoother Drag and Delete', description: 'Pre-stages drag payloads, keeps the Windows drag ghost visible and removes deletion layout gaps.' },
+      { title: 'Scoped History Clearing', description: 'Clear all now respects the active type filter and search query while pinned entries stay protected.' }
+    ]
+  },
+  {
     version: 'v0.2.7',
     date: 'Aug 20, 2026',
-    isLatest: true,
+    isLatest: false,
     summary: 'Selectively integrated upstream v0.2.7 stability and performance work while preserving the Chinese notes, to-dos and crisp typography experience.',
     highlights: [
       {

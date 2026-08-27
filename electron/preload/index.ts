@@ -119,6 +119,7 @@ const api = {
   startUpdateDownload: () => invoke('updater:start-download'),
   quitApp: () => invoke('app:quit'),
   startDrag: (req: DragRequest) => send('item:start-drag', req),
+  prestageDrag: (req: DragRequest) => send('item:prestage-drag', req),
   addFiles: (paths: string[]) => invoke('item:add-files', paths),
   removeSubitem: (req: import('../../shared/types').DragRequest) => invoke('item:remove-subitem', req),
   mergeItems: (sourceId: string, targetId: string) => invoke('item:merge', sourceId, targetId),

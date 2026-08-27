@@ -161,6 +161,12 @@ const ClipboardItemBase = forwardRef<HTMLDivElement, Props>(({ item }, ref) => {
     }
   }, [item.data, startDrag, setInternalDragReq])
 
+  const handlePrestage = useCallback(() => {
+    if (item.data.kind !== 'text' && !isPreviewing) {
+      window.edge.prestageDrag({ id: item.id })
+    }
+  }, [item.data.kind, isPreviewing, item.id])
+
   return (
     <motion.div
       ref={ref}
@@ -204,6 +210,8 @@ const ClipboardItemBase = forwardRef<HTMLDivElement, Props>(({ item }, ref) => {
         className={`item-main${isPreviewing ? ' force-actions previewing' : ''}`}
         data-id={item.id}
         draggable={!isPreviewing && item.data.kind !== 'text' && (!isBundle || !expanded)}
+        onMouseEnter={handlePrestage}
+        onPointerDown={handlePrestage}
         onDragStart={(e) => handleDragStart(e, { id: item.id })}
         onDragEnd={() => setInternalDragReq(null)}
         onDragOver={(e) => {
@@ -614,6 +622,8 @@ function BundleFluidPreview({
                     className="fluid-list-row"
                     variants={rowVariants}
                     draggable
+                    onMouseEnter={() => window.edge.prestageDrag({ id: item.id, paths: [filePath] })}
+                    onPointerDown={() => window.edge.prestageDrag({ id: item.id, paths: [filePath] })}
                     onDragStartCapture={(e: any) => { e.stopPropagation(); onDragStart(e, { id: item.id, paths: [filePath] }) }}
                     onClick={(e) => { e.stopPropagation(); tryPaste(() => window.edge.pasteSubitem({ id: item.id, paths: [filePath] })) }}
                   >
@@ -768,6 +778,10 @@ function Preview({ item }: { item: ClipboardItemDto }) {
                 <img
                   className="thumb"
                   src={entry.preview}
+                  onError={(e) => {
+                    const fallback = `edgelocal://file/${encodeURIComponent(first.replace(/\\/g, '/'))}`
+                    if (e.currentTarget.src !== fallback) e.currentTarget.src = fallback
+                  }}
                   alt=""
                   loading="lazy"
                   decoding="async"

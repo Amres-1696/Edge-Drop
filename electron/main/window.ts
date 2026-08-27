@@ -283,10 +283,12 @@ let _lastSentY = -9999
  */
 export function setHeartbeatPaused(paused: boolean): void {
   heartbeatPaused = paused
-  if (!paused) {
-    // Re-assert z-order immediately when drag ends so the window snaps back
-    // to the correct level without waiting for the next heartbeat tick.
-    if (mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible()) {
+  if (mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible()) {
+    if (paused) {
+      // Lower only the z-band during the OLE drag so Windows can draw the drag
+      // ghost above the panel without hiding or deactivating the panel itself.
+      mainWindow.setAlwaysOnTop(true, 'normal')
+    } else {
       mainWindow.setAlwaysOnTop(true, 'screen-saver')
     }
   }

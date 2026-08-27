@@ -143,13 +143,14 @@ export function useEdgeHover(): void {
     const closePanelNow = () => {
       const s = useStore.getState()
       if (s.styleFlyoutOpen) s.setStyleFlyoutOpen(false)
-      if (s.settingsOpen) s.setSettingsOpen(false)
+      // Keep the settings route mounted while the panel retracts. Clearing it
+      // here briefly exposed the clipboard view underneath the exit animation.
       s.setOpen(false)
       if (interactiveTimer !== undefined) window.clearTimeout(interactiveTimer)
       interactiveTimer = window.setTimeout(() => {
         interactiveTimer = undefined
         if (!useStore.getState().open) edge.setInteractive(false)
-      }, 180)
+      }, 300)
     }
 
     const closePanel = (allowWhileEditing = false) => {

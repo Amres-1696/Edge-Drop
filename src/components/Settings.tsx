@@ -227,7 +227,7 @@ export function Settings({ inlineIndicatorStyle }: { inlineIndicatorStyle?: bool
           </button>
         </div>
         <div className="app-version-footer">
-          {t('footer.version')} {currentVersion || '0.2.7'}
+          {t('footer.version')} {currentVersion || '0.2.9'}
         </div>
       </div>
     </>

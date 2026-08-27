@@ -18,8 +18,13 @@ import type { ItemData } from '../../shared/types'
  */
 export type NewItemHandler = (data: ItemData, imagePng?: Buffer) => void
 
+function getContentSignature(sig: string): string {
+  return sig.replace(/^seq:\d+:/, '')
+}
+
 export class ClipboardWatcher {
   private timer: NodeJS.Timeout | null = null
+  private settleTimer: NodeJS.Timeout | null = null
   private lastSig = 'empty'
   private paused = false
   private readonly intervalMs: number
@@ -40,19 +45,28 @@ export class ClipboardWatcher {
       const sig = clipboardSignature()
       if (sig === this.lastSig) return
 
+      // Record the sequence change immediately so repeated polls do not queue
+      // duplicate work while Windows is still publishing clipboard formats.
+      this.lastSig = sig
+
+      if (this.settleTimer) {
+        clearTimeout(this.settleTimer)
+      }
+
       // We detected a change. Wait a short moment to ensure it's not a transient 
       // injection by a dictation app or macro that quickly restores the clipboard.
-      setTimeout(async () => {
+      this.settleTimer = setTimeout(async () => {
+        this.settleTimer = null
         if (this.paused) return
         const stableSig = clipboardSignature()
         
         // If the signature changed AGAIN during this tiny window, it was a transient
         // copy-paste-restore operation. Ignore it and let the next tick handle the restored state.
-        if (stableSig !== sig) {
+        if (getContentSignature(stableSig) !== getContentSignature(sig) && stableSig !== sig) {
           return
         }
 
-        this.lastSig = sig
+        this.lastSig = stableSig
 
         // readClipboard is async: on Windows it awaits a PowerShell
         // GetFileDropList() call to retrieve ALL selected files.
@@ -72,13 +86,17 @@ export class ClipboardWatcher {
         } else {
           onNew(data)
         }
-      }, 250)
+      }, 150)
     }, this.intervalMs)
   }
 
   /** Temporarily stop recording (incognito mode or self-copy) without tearing down the timer. */
   setPaused(paused: boolean): void {
     this.paused = paused
+    if (paused && this.settleTimer) {
+      clearTimeout(this.settleTimer)
+      this.settleTimer = null
+    }
     // When resuming, refresh the signature so we ignore whatever was copied
     // during the paused state (e.g. self-copies or incognito copies).
     if (!paused) {
@@ -109,6 +127,10 @@ export class ClipboardWatcher {
    * more important.
    */
   resyncSignature(): void {
+    if (this.settleTimer) {
+      clearTimeout(this.settleTimer)
+      this.settleTimer = null
+    }
     this.lastSig = clipboardSignature()
   }
 
@@ -125,10 +147,18 @@ export class ClipboardWatcher {
    * (clipboard never changed), so hitCount would never increment on re-copy.
    */
   invalidateSignature(): void {
+    if (this.settleTimer) {
+      clearTimeout(this.settleTimer)
+      this.settleTimer = null
+    }
     this.lastSig = '__post-paste__'
   }
 
   stop(): void {
+    if (this.settleTimer) {
+      clearTimeout(this.settleTimer)
+      this.settleTimer = null
+    }
     if (this.timer) {
       clearInterval(this.timer)
       this.timer = null
